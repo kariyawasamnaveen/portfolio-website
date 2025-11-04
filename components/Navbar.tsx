@@ -32,6 +32,7 @@ export default function Navbar() {
     { name: 'Resume', href: '/resume' },
     { name: 'Playground', href: '/playground' },
     { name: 'Calculator', href: '/calculator' },
+    { name: 'Contact', href: '/contact' },
   ]
 
   return (
