@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import ProjectCard from '@/components/ProjectCard'
+import SmartRecommend from '@/components/SmartRecommend'
 import projectsData from '@/lib/projects.json'
 
 export default function ProjectsPage() {
@@ -60,6 +61,8 @@ export default function ProjectsPage() {
             </motion.div>
           ))}
         </motion.div>
+
+        <SmartRecommend />
       </div>
     </div>
   )

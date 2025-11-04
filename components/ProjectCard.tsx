@@ -1,7 +1,7 @@
 'use client'
 import { motion } from 'framer-motion'
 import { FiGithub, FiExternalLink } from 'react-icons/fi'
-import Image from 'next/image'
+import { trackProjectView } from '@/lib/analytics'
 
 interface Project {
   id: number
@@ -15,10 +15,15 @@ interface Project {
 }
 
 export default function ProjectCard({ project }: { project: Project }) {
+  const handleClick = () => {
+    trackProjectView(project.id)
+  }
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
       className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+      onClick={handleClick}
     >
       <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
         <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
@@ -51,6 +56,7 @@ export default function ProjectCard({ project }: { project: Project }) {
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+            onClick={(e) => e.stopPropagation()}
           >
             <FiGithub size={20} />
             <span>Code</span>
@@ -61,6 +67,7 @@ export default function ProjectCard({ project }: { project: Project }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+              onClick={(e) => e.stopPropagation()}
             >
               <FiExternalLink size={20} />
               <span>Demo</span>
