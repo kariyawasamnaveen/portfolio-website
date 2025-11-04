@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "AI Chatbot Platform",
+    "description": "Intelligent chatbot with NLP capabilities for business automation and customer support",
+    "image": "/images/chatbot.jpg",
+    "tags": ["AI/ML", "Python", "NLP", "Chatbot"],
+    "category": "AI/ML",
+    "github": "https://github.com/kariyawasamnaveen/ai-chatbot",
+    "demo": "#"
+  },
+  {
+    "id": 2,
+    "title": "Flutter E-Commerce App",
+    "description": "Full-featured mobile shopping app with payment integration and real-time inventory",
+    "image": "/images/ecommerce.jpg",
+    "tags": ["Flutter", "Mobile", "Firebase", "Payment"],
+    "category": "Flutter",
+    "github": "https://github.com/kariyawasamnaveen/flutter-ecommerce",
+    "demo": "#"
+  },
+  {
+    "id": 3,
+    "title": "ML Model Trainer",
+    "description": "Web platform for training and deploying machine learning models with visualization",
+    "image": "/images/ml-trainer.jpg",
+    "tags": ["AI/ML", "Python", "TensorFlow", "Web"],
+    "category": "AI/ML",
+    "github": "https://github.com/kariyawasamnaveen/ml-trainer",
+    "demo": "#"
+  },
+  {
+    "id": 4,
+    "title": "Flutter Weather App",
+    "description": "Beautiful weather app with real-time forecasts, animations and location tracking",
+    "image": "/images/weather.jpg",
+    "tags": ["Flutter", "Mobile", "API", "Maps"],
+    "category": "Flutter",
+    "github": "https://github.com/kariyawasamnaveen/flutter-weather",
+    "demo": "#"
+  },
+  {
+    "id": 5,
+    "title": "Business Data Analytics Chatbot",
+    "description": "AI chatbot that analyzes business data and generates interactive charts and insights",
+    "image": "/images/analytics-bot.jpg",
+    "tags": ["AI/ML", "Chatbot", "Data Analytics", "Python"],
+    "category": "AI/ML",
+    "github": "https://github.com/kariyawasamnaveen/analytics-chatbot",
+    "demo": "#"
+  },
+  {
+    "id": 6,
+    "title": "NetLogo Research Simulations",
+    "description": "Intelligent NetLogo simulations for academic research and complex system modeling",
+    "image": "/images/netlogo.jpg",
+    "tags": ["Research", "Simulation", "AI/ML", "NetLogo"],
+    "category": "Web",
+    "github": "https://github.com/kariyawasamnaveen/netlogo-simulations",
+    "demo": "#"
+  }
+]
