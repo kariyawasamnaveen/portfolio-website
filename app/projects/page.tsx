@@ -1,17 +1,42 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ProjectCard from '@/components/ProjectCard'
 import SmartRecommend from '@/components/SmartRecommend'
-import projectsData from '@/lib/projects.json'
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState('All')
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
   const categories = ['All', 'AI/ML', 'Flutter', 'Web']
 
+  useEffect(() => {
+    fetchProjects()
+  }, [])
+
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch('/api/projects')
+      const data = await res.json()
+      setProjects(data)
+    } catch (error) {
+      console.error('Error fetching projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredProjects = filter === 'All'
-    ? projectsData
-    : projectsData.filter((p) => p.category === filter)
+    ? projects
+    : projects.filter((p: any) => p.category === filter)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl">Loading projects...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 px-4">
@@ -49,7 +74,7 @@ export default function ProjectsPage() {
           layout
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {filteredProjects.map((project) => (
+          {filteredProjects.map((project: any) => (
             <motion.div
               key={project.id}
               layout
@@ -61,6 +86,12 @@ export default function ProjectsPage() {
             </motion.div>
           ))}
         </motion.div>
+
+        {filteredProjects.length === 0 && (
+          <div className="text-center text-gray-600 dark:text-gray-400 py-20">
+            No projects found in this category.
+          </div>
+        )}
 
         <SmartRecommend />
       </div>

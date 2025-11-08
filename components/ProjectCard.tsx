@@ -6,18 +6,31 @@ import { trackProjectView } from '@/lib/analytics'
 interface Project {
   id: number
   title: string
-  description: string
-  image: string
-  tags: string[]
+  short_description?: string
+  description?: string
+  image?: string
+  images?: string[]
+  tags?: string[]
+  technologies?: string[]
   category: string
-  github: string
-  demo: string
+  github_url?: string
+  github?: string
+  demo_url?: string
+  demo?: string
+  video_url?: string
 }
 
 export default function ProjectCard({ project }: { project: Project }) {
   const handleClick = () => {
     trackProjectView(project.id)
   }
+
+  // Handle both old JSON and new database format
+  const description = project.short_description || project.description || ''
+  const tags = project.technologies || project.tags || []
+  const githubUrl = project.github_url || project.github || '#'
+  const demoUrl = project.demo_url || project.demo || '#'
+  const imageUrl = project.images?.[0] || project.image || ''
 
   return (
     <motion.div
@@ -26,9 +39,13 @@ export default function ProjectCard({ project }: { project: Project }) {
       onClick={handleClick}
     >
       <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
-        <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
-          {project.title.charAt(0)}
-        </div>
+        {imageUrl ? (
+          <img src={imageUrl} alt={project.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
+            {project.title.charAt(0)}
+          </div>
+        )}
       </div>
 
       <div className="p-6">
@@ -36,11 +53,11 @@ export default function ProjectCard({ project }: { project: Project }) {
           {project.title}
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-          {project.description}
+          {description}
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
-          {project.tags.map((tag) => (
+          {tags.map((tag) => (
             <span
               key={tag}
               className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-full text-sm"
@@ -51,19 +68,21 @@ export default function ProjectCard({ project }: { project: Project }) {
         </div>
 
         <div className="flex gap-4">
-          <a
-            href={project.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <FiGithub size={20} />
-            <span>Code</span>
-          </a>
-          {project.demo !== '#' && (
+          {githubUrl && githubUrl !== '#' && (
             <a
-              href={project.demo}
+              href={githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FiGithub size={20} />
+              <span>Code</span>
+            </a>
+          )}
+          {demoUrl && demoUrl !== '#' && (
+            <a
+              href={demoUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition"
