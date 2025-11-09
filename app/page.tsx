@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload, FiExternalLink } from 'react-icons/fi'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Navbar from '@/components/Navbar'
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -15,6 +16,12 @@ export default function Home() {
     'Chatbot Specialist',
     'Web Developer'
   ]
+  return (
+    <>
+      <Navbar />
+      {/* rest of your home page code */}
+    </>
+  )
   
   const [skillIndex, setSkillIndex] = useState(0)
   const [displayText, setDisplayText] = useState('')
