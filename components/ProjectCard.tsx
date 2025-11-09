@@ -25,22 +25,29 @@ export default function ProjectCard({ project }: { project: Project }) {
     trackProjectView(project.id)
   }
 
-  // Handle both old JSON and new database format
   const description = project.short_description || project.description || ''
   const tags = project.technologies || project.tags || []
   const githubUrl = project.github_url || project.github || '#'
   const demoUrl = project.demo_url || project.demo || '#'
-  const imageUrl = project.images?.[0] || project.image || ''
+  
+  // Fix: Handle array of images from database
+  const imageUrl = Array.isArray(project.images) && project.images.length > 0 
+    ? project.images[0] 
+    : project.image || ''
 
   return (
     <motion.div
       whileHover={{ y: -5 }}
-      className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+      className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
       onClick={handleClick}
     >
       <div className="relative h-48 bg-gradient-to-br from-blue-500 to-purple-600">
         {imageUrl ? (
-          <img src={imageUrl} alt={project.title} className="w-full h-full object-cover" />
+          <img 
+            src={imageUrl} 
+            alt={project.title} 
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center text-white text-6xl font-bold opacity-20">
             {project.title.charAt(0)}
