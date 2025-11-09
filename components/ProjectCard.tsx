@@ -58,7 +58,7 @@ export default function ProjectCard({ project }: { project: Project }) {
           <div className="relative w-full h-full">
             {!isVideoPlaying ? (
               <div className="relative w-full h-full">
-                <video src={currentMedia.src} className="w-full h-full object-cover" />
+                <video src={currentMedia.src} className="w-full h-full object-contain bg-black" />
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsVideoPlaying(true) }}
                   className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40"
@@ -69,14 +69,14 @@ export default function ProjectCard({ project }: { project: Project }) {
                 </button>
               </div>
             ) : (
-              <video
-                src={currentMedia.src}
-                controls
-                autoPlay
-                className="w-full h-full object-cover"
-                onEnded={() => setIsVideoPlaying(false)}
-                onClick={(e) => e.stopPropagation()}
-              />
+<video
+  src={currentMedia.src}
+  controls
+  autoPlay
+  className="w-full h-full object-contain bg-black"
+  onEnded={() => setIsVideoPlaying(false)}
+  onClick={(e) => e.stopPropagation()}
+/>
             )}
           </div>
         )}
@@ -128,7 +128,7 @@ export default function ProjectCard({ project }: { project: Project }) {
                 <img src={media.src} alt="" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  <video src={media.src} className="w-full h-full object-cover" />
+                  <video src={media.src} className="w-full h-full object-contain" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
