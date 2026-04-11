@@ -1,48 +1,65 @@
 'use client'
-import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
 import ProjectCard from './ProjectCard'
-import { getViewedProjects, getSimilarProjects } from '@/lib/analytics'
-import projectsData from '@/lib/projects.json'
 
 export default function SmartRecommend() {
-  const [recommendations, setRecommendations] = useState<any[]>([])
+  const [recommendations, setRecommendations] = useState([])
 
   useEffect(() => {
-    const viewedIds = getViewedProjects()
-    if (viewedIds.length === 0) return
-
-    const lastViewedId = viewedIds[viewedIds.length - 1]
-    const lastViewed = projectsData.find(p => p.id === lastViewedId)
+    const viewedProjects = JSON.parse(localStorage.getItem('viewedProjects') || '[]')
     
-    if (lastViewed) {
-      const similar = getSimilarProjects(lastViewed, projectsData)
-      setRecommendations(similar)
+    if (viewedProjects.length > 0) {
+      fetchRecommendations(viewedProjects)
     }
   }, [])
+
+  const fetchRecommendations = async (viewedIds: number[]) => {
+    try {
+      const res = await fetch('/api/projects')
+      const allProjects = await res.json()
+      
+      const recommended = allProjects
+        .filter((p: any) => !viewedIds.includes(p.id))
+        .slice(0, 3)
+      
+      setRecommendations(recommended)
+    } catch (error) {
+      console.error('Error fetching recommendations:', error)
+    }
+  }
 
   if (recommendations.length === 0) return null
 
   return (
-    <div className="mt-16 pt-16 border-t border-gray-200 dark:border-gray-800">
+    <section className="mt-32 pt-16 border-t border-white/5">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="text-center mb-12"
       >
-        <h2 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+        <h2 className="text-3xl lg:text-4xl font-bold text-white mb-3">
           You Might Also Like
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-400">
           Based on your viewing history
         </p>
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {recommendations.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+        {recommendations.map((project: any, index: number) => (
+          <motion.div
+            key={project.id}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <ProjectCard project={project} />
+          </motion.div>
         ))}
       </div>
-    </div>
+    </section>
   )
 }

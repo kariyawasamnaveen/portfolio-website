@@ -8,7 +8,7 @@ export default function AddProject() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploadingFiles, setUploadingFiles] = useState(false)
-  
+
   const [formData, setFormData] = useState({
     title: '',
     short_description: '',
@@ -58,7 +58,7 @@ export default function AddProject() {
     try {
       // Upload images
       const imageUrls = await Promise.all(images.map(img => uploadFile(img)))
-      
+
       // Upload video
       let videoUrl = ''
       if (video) {
@@ -69,7 +69,7 @@ export default function AddProject() {
 
       // Save to database
       const techArray = formData.technologies.split(',').map(t => t.trim())
-      
+
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,13 +99,15 @@ export default function AddProject() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 px-4">
       <div className="max-w-4xl mx-auto">
-        <motion.h1
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-5xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
         >
-          Add New Project
-        </motion.h1>
+          <h1 className="text-5xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Add New Project
+          </h1>
+        </motion.div>
 
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg space-y-6">
           {/* Title */}
@@ -116,7 +118,7 @@ export default function AddProject() {
             <input
               required
               value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="AI Chatbot Platform"
             />
@@ -130,7 +132,7 @@ export default function AddProject() {
             <input
               required
               value={formData.short_description}
-              onChange={(e) => setFormData({...formData, short_description: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="Intelligent chatbot with NLP capabilities"
             />
@@ -143,7 +145,7 @@ export default function AddProject() {
             </label>
             <textarea
               value={formData.full_description}
-              onChange={(e) => setFormData({...formData, full_description: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, full_description: e.target.value })}
               rows={4}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="Detailed project description..."
@@ -157,7 +159,7 @@ export default function AddProject() {
             </label>
             <textarea
               value={formData.problem}
-              onChange={(e) => setFormData({...formData, problem: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
               rows={3}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="What problem did this solve?"
@@ -171,7 +173,7 @@ export default function AddProject() {
             </label>
             <textarea
               value={formData.solution}
-              onChange={(e) => setFormData({...formData, solution: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
               rows={3}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="How did you solve it?"
@@ -185,7 +187,7 @@ export default function AddProject() {
             </label>
             <textarea
               value={formData.results}
-              onChange={(e) => setFormData({...formData, results: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, results: e.target.value })}
               rows={3}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="50% faster response time, 500+ active users, etc."
@@ -200,7 +202,7 @@ export default function AddProject() {
             <input
               required
               value={formData.technologies}
-              onChange={(e) => setFormData({...formData, technologies: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="Python, TensorFlow, React, Firebase"
             />
@@ -214,7 +216,7 @@ export default function AddProject() {
             <select
               required
               value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
             >
               <option value="AI/ML">AI/ML</option>
@@ -230,7 +232,7 @@ export default function AddProject() {
             </label>
             <input
               value={formData.github_url}
-              onChange={(e) => setFormData({...formData, github_url: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="https://github.com/username/repo"
             />
@@ -243,7 +245,7 @@ export default function AddProject() {
             </label>
             <input
               value={formData.demo_url}
-              onChange={(e) => setFormData({...formData, demo_url: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, demo_url: e.target.value })}
               className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
               placeholder="https://demo.com"
             />

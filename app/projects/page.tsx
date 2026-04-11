@@ -3,15 +3,25 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import ProjectCard from '@/components/ProjectCard'
 import SmartRecommend from '@/components/SmartRecommend'
+import AiSearch from '@/components/AiSearch'
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState('All')
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const categories = ['All', 'AI/ML', 'Flutter', 'Web']
 
   useEffect(() => {
     fetchProjects()
+  }, [])
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
   const fetchProjects = async () => {
@@ -32,69 +42,98 @@ export default function ProjectsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl">Loading projects...</div>
-      </div>
+      <>
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="text-xl text-white/40">Loading projects...</div>
+        </div>
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20 px-4">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            My Projects
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400">
-            Explore my latest work in AI/ML, Flutter, and Web Development
-          </p>
-        </motion.div>
-
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-6 py-3 rounded-lg font-semibold transition ${
-                filter === cat
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+    <>
+      <div className="min-h-screen bg-black text-white overflow-hidden">
+        {/* Same Grid Background as Home */}
+        <div className="fixed inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#26D4C410_1px,transparent_1px),linear-gradient(to_bottom,#26D4C410_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(circle 800px at ${mousePosition.x}px ${mousePosition.y}px, rgba(38,212,196,0.15), transparent 50%)`
+            }}
+          />
         </div>
 
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {filteredProjects.map((project: any) => (
+        {/* Content */}
+        <div className="relative py-32 px-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
             <motion.div
-              key={project.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-16 space-y-4"
             >
-              <ProjectCard project={project} />
+              <h1 className="text-5xl lg:text-6xl font-bold text-white">
+                My Projects
+              </h1>
+              <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+                Explore my latest work in AI/ML, Flutter, and Web Development
+              </p>
             </motion.div>
-          ))}
-        </motion.div>
 
-        {filteredProjects.length === 0 && (
-          <div className="text-center text-gray-600 dark:text-gray-400 py-20">
-            No projects found in this category.
+
+
+            {/* AI Search */}
+            <AiSearch projects={projects} />
+
+            {/* Filter Buttons - Matching Home Style */}
+            <div className="flex flex-wrap justify-center gap-3 mb-16">
+              {categories.map((cat) => (
+                <motion.button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${filter === cat
+                    ? 'bg-[#26D4C4] text-black shadow-lg shadow-[#26D4C4]/20'
+                    : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 hover:border-[#26D4C4]/30'
+                    }`}
+                >
+                  {cat}
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Projects Grid */}
+            <motion.div
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {filteredProjects.map((project: any) => (
+                <motion.div
+                  key={project.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                >
+                  <ProjectCard project={project} />
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Empty State */}
+            {filteredProjects.length === 0 && (
+              <div className="text-center text-gray-500 py-20">
+                No projects found in this category.
+              </div>
+            )}
+
+            {/* Smart Recommendations */}
+            <SmartRecommend />
           </div>
-        )}
-
-        <SmartRecommend />
-      </div>
-    </div>
+        </div >
+      </div >
+    </>
   )
 }
