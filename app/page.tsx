@@ -67,7 +67,7 @@ const PROJECTS_DATA: Project[] = [
             { label: 'Persona Variations', value: 'Unlimited' }
         ],
         tech: ['Python', 'Streamlit', 'LangChain', 'Sleeper API'],
-        video: '/projects/commish-ai/commish-demo.mp4',
+        video: '/projects/commish-ai/VEDIO_1.mov',
         images: [
             '/projects/commish-ai/commish-hero.png',
             '/projects/commish-ai/screenshot-1.png',
