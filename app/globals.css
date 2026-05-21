@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-accent: #3b82f6;
+  --color-border: #1a1a1a;
+  --color-surface: #0a0a0a;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-outfit: "Outfit", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-outfit);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Production-Standard Layout */
+.viewport-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bottom Navigation Dock - Fixed & Clean */
+.bottom-nav-dock {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(10, 10, 10, 0.8);
+  border: 1px solid var(--color-border);
+  padding: 10px 20px;
+  border-radius: 100px;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Telemetry Styled Boxes */
+.telemetry-box {
+  position: fixed;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: 'monospace';
+  font-size: 8px;
+  color: #666;
+  z-index: 100;
+}
+
+.t-top-left { top: 20px; left: 20px; }
+.t-top-right { top: 20px; right: 20px; }
+.t-bottom-left { bottom: 20px; left: 20px; }
+.t-bottom-right { bottom: 20px; right: 20px; }
+
+/* Content Wrapper to avoid overlap */
+.content-wrapper {
+  z-index: 10;
+  text-align: center;
+  max-width: 90%;
+  width: 800px;
+  margin-top: -50px; /* Slight offset for visual balance */
+}
+
+/* High-Performance Cards */
+.refined-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: left;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refined-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+}
+
+/* Background Elements - Minimalist */
+.bg-subtle-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
 }

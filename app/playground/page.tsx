@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import Navbar from '@/components/Navbar'
+
 import CodeEditor from '@/components/CodeEditor'
 
 export default function PlaygroundPage() {
@@ -18,7 +18,7 @@ export default function PlaygroundPage() {
 
   return (
     <>
-      <Navbar />
+
       <div className="min-h-screen bg-black text-white overflow-hidden">
         {/* Background with Mouse Glow */}
         <div className="fixed inset-0">

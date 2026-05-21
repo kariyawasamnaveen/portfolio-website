@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiDownload } from 'react-icons/fi'
-import Navbar from '@/components/Navbar'
+
 
 export default function ResumePage() {
   const [filter, setFilter] = useState('All')
@@ -38,8 +38,8 @@ export default function ResumePage() {
 
   return (
     <>
-      <Navbar />
-      <div className="min-h-screen bg-black text-white overflow-hidden">
+
+      <div className="min-h-screen bg-background text-white overflow-hidden">
         {/* Same Grid Background with Mouse Glow */}
         <div className="fixed inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#26D4C410_1px,transparent_1px),linear-gradient(to_bottom,#26D4C410_1px,transparent_1px)] bg-[size:4rem_4rem]" />

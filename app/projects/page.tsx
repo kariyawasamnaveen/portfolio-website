@@ -43,7 +43,7 @@ export default function ProjectsPage() {
   if (loading) {
     return (
       <>
-        <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-xl text-white/40">Loading projects...</div>
         </div>
       </>
@@ -52,7 +52,7 @@ export default function ProjectsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white overflow-hidden">
+      <div className="min-h-screen bg-background text-white overflow-hidden">
         {/* Same Grid Background as Home */}
         <div className="fixed inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#26D4C410_1px,transparent_1px),linear-gradient(to_bottom,#26D4C410_1px,transparent_1px)] bg-[size:4rem_4rem]" />

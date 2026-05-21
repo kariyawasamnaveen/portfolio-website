@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import Navbar from '@/components/Navbar'
+
 
 export default function CalculatorPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -50,7 +50,7 @@ export default function CalculatorPage() {
 
   return (
     <>
-      <Navbar />
+
       <div className="min-h-screen bg-black text-white overflow-hidden">
         {/* Background with Mouse Glow */}
         <div className="fixed inset-0">

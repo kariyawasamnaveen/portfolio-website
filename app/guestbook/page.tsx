@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiSend, FiUser, FiMessageSquare } from 'react-icons/fi'
-import Navbar from '@/components/Navbar'
+
 
 interface GuestbookEntry {
     id: number
@@ -74,8 +74,8 @@ export default function Guestbook() {
 
     return (
         <>
-            <Navbar />
-            <div className="min-h-screen bg-black text-white pt-24 px-6 relative overflow-hidden">
+
+            <div className="min-h-screen bg-background text-white pt-24 px-6 relative overflow-hidden">
                 {/* Background Decoration */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
                     <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-[100px]" />

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiMail, FiPhone, FiLinkedin, FiGithub, FiSend } from 'react-icons/fi'
-import Navbar from '@/components/Navbar'
+
 
 export default function ContactPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -62,7 +62,7 @@ export default function ContactPage() {
 
   return (
     <>
-      <Navbar />
+
       <div className="min-h-screen bg-black text-white overflow-hidden">
         {/* Background with Mouse Glow */}
         <div className="fixed inset-0">
