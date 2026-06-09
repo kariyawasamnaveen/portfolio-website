@@ -67,7 +67,7 @@ const PROJECTS_DATA: Project[] = [
             { label: 'Persona Variations', value: 'Unlimited' }
         ],
         tech: ['Python', 'Streamlit', 'LangChain', 'Sleeper API'],
-        video: '/projects/commish-ai/VEDIO_1.mov',
+        video: 'https://www.youtube.com/embed/VSoQSh1bEU8?autoplay=1&mute=1&loop=1&playlist=VSoQSh1bEU8',
         images: [
             '/projects/commish-ai/commish-hero.png',
             '/projects/commish-ai/screenshot-1.png',
@@ -100,7 +100,7 @@ const PROJECTS_DATA: Project[] = [
             { label: 'Language Coverage', value: '100%' }
         ],
         tech: ['Node.js', 'Prisma', 'GPT-4 Vision', 'LangChain'],
-        video: '/projects/contractor-ai/video_final.mp4',
+        video: 'https://www.youtube.com/embed/sINMR-s-U8E?autoplay=1&mute=1&loop=1&playlist=sINMR-s-U8E',
         images: [
             '/projects/contractor-ai/hero.png',
             '/projects/contractor-ai/ss1.png',
@@ -136,7 +136,7 @@ const PROJECTS_DATA: Project[] = [
             { label: 'Hallucinations', value: '0%' }
         ],
         tech: ['React', 'FastAPI', 'LangChain', 'Pandas'],
-        video: '/projects/bizlangai/bizlangai-demo-video.mov',
+        video: 'https://www.youtube.com/embed/UgsJcJSqd74?autoplay=1&mute=1&loop=1&playlist=UgsJcJSqd74',
         images: [
             '/projects/bizlangai/bizlangai-hero.png',
             '/projects/bizlangai/bizlangai-demo-1.png',
@@ -170,7 +170,7 @@ const PROJECTS_DATA: Project[] = [
             { label: 'Encryption Status', value: 'Active' }
         ],
         tech: ['React', 'Framer Motion', 'TailwindCSS', 'Vite'],
-        video: '/love_app/Screen Recording 2026-05-21 at 22.42.34.mov',
+        video: 'https://www.youtube.com/embed/cIWpzyPnUSs?autoplay=1&mute=1&loop=1&playlist=cIWpzyPnUSs',
         images: [
             '/love_app/heartsync_cover.png',
             '/love_app/Screenshot 2026-05-21 at 22.33.31.png',
@@ -346,9 +346,18 @@ export default function Home() {
                 {selectedProject && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-black flex flex-col overflow-hidden h-screen">
                         <div className="absolute inset-0 bg-black">
-                            <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
-                                <source src={selectedProject.video} type="video/mp4" />
-                            </video>
+                            {selectedProject.video.includes('youtube.com') || selectedProject.video.includes('youtu.be') ? (
+                                <iframe 
+                                    className="w-full h-full object-cover opacity-20 pointer-events-none"
+                                    src={selectedProject.video}
+                                    frameBorder="0"
+                                    allow="autoplay; encrypted-media"
+                                />
+                            ) : (
+                                <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
+                                    <source src={selectedProject.video} type="video/mp4" />
+                                </video>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent" />
                         </div>
 
@@ -509,9 +518,19 @@ export default function Home() {
                             className="relative max-w-6xl w-full h-[85vh] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black/50 flex items-center justify-center p-4"
                         >
                             {expandedMedia.type === 'video' ? (
-                                <video autoPlay muted playsInline controls className="max-w-full max-h-full object-contain rounded-2xl">
-                                    <source src={expandedMedia.url} type="video/mp4" />
-                                </video>
+                                expandedMedia.url.includes('youtube.com') || expandedMedia.url.includes('youtu.be') ? (
+                                    <iframe 
+                                        className="w-full h-[80vh] aspect-video rounded-2xl shadow-2xl"
+                                        src={expandedMedia.url.replace('&mute=1', '').replace('autoplay=1', 'autoplay=1&controls=1')}
+                                        frameBorder="0"
+                                        allow="autoplay; encrypted-media; fullscreen"
+                                        allowFullScreen
+                                    />
+                                ) : (
+                                    <video autoPlay muted playsInline controls className="max-w-full max-h-full object-contain rounded-2xl">
+                                        <source src={expandedMedia.url} type="video/mp4" />
+                                    </video>
+                                )
                             ) : (
                                 <img src={expandedMedia.url} className="max-w-full max-h-full object-contain rounded-2xl" alt="Expanded project detail" />
                             )}
