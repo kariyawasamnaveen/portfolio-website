@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 
-type Zone = 'identity' | 'projects' | 'logic' | 'connect'
+type Zone = 'identity' | 'projects' | 'logic' | 'impact' | 'connect'
 
 interface CentralPortalNavProps {
     activeZone: Zone
@@ -14,6 +14,7 @@ export default function CentralPortalNav({ activeZone, onZoneChange }: CentralPo
         { id: 'identity', label: 'IDENTITY' },
         { id: 'projects', label: 'PROJECTS' },
         { id: 'logic', label: 'LOGIC' },
+        { id: 'impact', label: 'IMPACT' },
         { id: 'connect', label: 'CONNECT' }
     ]
 

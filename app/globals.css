@@ -100,3 +100,12 @@ body {
   background-size: 60px 60px;
   pointer-events: none;
 }
+
+@keyframes colorCycle {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+.animate-color-cycle {
+  animation: colorCycle 4s linear infinite;
+}
