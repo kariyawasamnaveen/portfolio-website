@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Float, Grid, Line } from '@react-three/drei';
+import { OrbitControls, Float, Grid, Line, MeshDistortMaterial, Environment } from '@react-three/drei';
 import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
@@ -121,27 +121,15 @@ function InterconnectedStruts({ outerGeo, innerGeo, color, lineWidth }: { outerG
     );
 }
 
-// The Ultimate Hero Core with God Rays, Cracks, and Halos!
-function RealGodTierCore({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
-    const machineRef = useRef<THREE.Group>(null);
-    const innerCoreRef = useRef<THREE.Mesh>(null);
+// LIQUID VOICE CORE
+function LiquidVoiceCore({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
     const sunMeshRef = useRef<THREE.Mesh>(null);
-    
-    // Geometries
-    const outerGeo = useMemo(() => new THREE.IcosahedronGeometry(2.4, 0), []);
-    const middleGeo = useMemo(() => {
-        const geo = new THREE.OctahedronGeometry(1.6, 0);
-        geo.rotateX(Math.PI / 4);
-        return geo;
-    }, []);
-    const innerGeo = useMemo(() => new THREE.IcosahedronGeometry(1.1, 0), []);
-
-    // Golden Amber
-    const baseColor = useMemo(() => new THREE.Color("#ff6600"), []); 
-    const activeColor = useMemo(() => new THREE.Color("#ffaa00"), []); 
-    const [currentEmissive, setCurrentEmissive] = useState(baseColor);
+    const coreRef = useRef<THREE.Mesh>(null);
+    const [distort, setDistort] = useState(0.2);
+    const [speed, setSpeed] = useState(2);
     const [intensity, setIntensity] = useState(2);
-
+    const [emissiveColor, setEmissiveColor] = useState("#ff4400");
+    
     useEffect(() => {
         if (sunMeshRef.current) {
             setSunRef(sunMeshRef.current);
@@ -151,99 +139,104 @@ function RealGodTierCore({ isListening, isSpeaking, setSunRef }: { isListening: 
     useFrame(({ clock }) => {
         const t = clock.getElapsedTime();
         
-        if (machineRef.current && innerCoreRef.current && sunMeshRef.current) {
-            machineRef.current.rotation.y = t * 0.1;
-            machineRef.current.rotation.x = t * 0.05;
+        let targetDistort = 0.2;
+        let targetSpeed = 2;
+        let targetIntensity = 2;
+        let targetEmissive = "#ff4400";
+        let targetScale = 1;
 
-            innerCoreRef.current.rotation.y = t * 0.2;
-            innerCoreRef.current.rotation.x = t * -0.1;
-            
-            let scale = 1;
-            let targetColor = baseColor;
-            let targetIntensity = 2;
+        if (isSpeaking) {
+            targetDistort = 0.6;
+            targetSpeed = 8;
+            targetIntensity = 8;
+            targetEmissive = "#ffaa00";
+            targetScale = 1.3;
+        } else if (isListening) {
+            targetDistort = 0.4;
+            targetSpeed = 4;
+            targetIntensity = 4;
+            targetEmissive = "#ff8800";
+            targetScale = 1.1;
+        }
+        
+        setDistort(THREE.MathUtils.lerp(distort, targetDistort, 0.1));
+        setSpeed(THREE.MathUtils.lerp(speed, targetSpeed, 0.1));
+        setIntensity(THREE.MathUtils.lerp(intensity, targetIntensity, 0.1));
+        setEmissiveColor(targetEmissive);
 
-            if (isSpeaking) {
-                scale = 1.08 + Math.sin(t * 25) * 0.03;
-                targetColor = activeColor;
-                targetIntensity = 8;
-            } else if (isListening) {
-                scale = 1.04 + Math.sin(t * 5) * 0.015;
-                targetColor = activeColor;
-                targetIntensity = 5;
-            } else {
-                scale = 1 + Math.sin(t * 1.2) * 0.01;
-                targetIntensity = 2;
-            }
-
-            setCurrentEmissive(targetColor);
-            setIntensity(targetIntensity);
-
-            machineRef.current.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.15);
-            innerCoreRef.current.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.15);
-            
-            // Pulse the sun (God Rays source)
-            sunMeshRef.current.scale.setScalar(scale * 0.5);
+        if (coreRef.current && sunMeshRef.current) {
+            coreRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+            sunMeshRef.current.scale.setScalar(targetScale * 0.5);
+            coreRef.current.rotation.y = t * 0.5;
         }
     });
 
     return (
         <group>
-            <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-                
-                {/* 1. THE SUN (Hidden from view, used only for GodRays volumetric scattering) */}
+            <Float speed={3} rotationIntensity={1} floatIntensity={2}>
                 <mesh ref={sunMeshRef} visible={true}>
-                    <sphereGeometry args={[0.5, 16, 16]} />
-                    <meshBasicMaterial color="#ffaa00" toneMapped={false} transparent opacity={0.5} />
+                    <sphereGeometry args={[1, 16, 16]} />
+                    <meshBasicMaterial color={emissiveColor} toneMapped={false} transparent opacity={0.2} />
                 </mesh>
 
-                {/* 2. INNER CORE - Dark Solid with PERFECT Cracks */}
-                <group ref={innerCoreRef}>
-                    <mesh geometry={innerGeo}>
-                        <meshStandardMaterial color="#020100" roughness={0.2} metalness={0.8} />
-                    </mesh>
-                    {/* Glowing Cracks: Using GlowingStructure with 0 nodeSize perfectly outlines the solid core! */}
-                    <GlowingStructure geometry={innerGeo} color={currentEmissive} lineWidth={2} nodeSize={0} opacity={0.8} />
-                </group>
-
-                {/* 3. UNIFIED MACHINERY (Web + Halos) */}
-                <group ref={machineRef}>
-                    <GlowingStructure geometry={outerGeo} color={currentEmissive} lineWidth={3} nodeSize={0.08} opacity={1} />
-                    <GlowingStructure geometry={middleGeo} color={currentEmissive} lineWidth={1.5} nodeSize={0.06} opacity={0.9} />
-                    <InterconnectedStruts outerGeo={outerGeo} innerGeo={middleGeo} color={currentEmissive} lineWidth={1} />
-                </group>
-
-                <pointLight distance={30} intensity={intensity * 10} color="#ffaa00" />
+                <mesh ref={coreRef}>
+                    <sphereGeometry args={[2, 64, 64]} />
+                    <MeshDistortMaterial
+                        color="#ff2200"
+                        emissive={emissiveColor}
+                        emissiveIntensity={intensity}
+                        roughness={0.2}
+                        metalness={0.8}
+                        distort={distort}
+                        speed={speed}
+                    />
+                </mesh>
+                <pointLight distance={30} intensity={intensity * 10} color={emissiveColor} />
             </Float>
         </group>
     );
 }
 
-// CLEAN & PREMIUM ENVIRONMENT
-function CinematicHorizon() {
+// REALISTIC MIDNIGHT OCEAN
+function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
+    const meshRef = useRef<THREE.Mesh>(null);
+    const speedRef = useRef(1);
+    
+    useFrame(({ clock }) => {
+        const t = clock.getElapsedTime() * speedRef.current;
+        speedRef.current = THREE.MathUtils.lerp(speedRef.current, isSpeaking ? 2.5 : 1, 0.05);
+
+        if (meshRef.current) {
+            const positions = meshRef.current.geometry.attributes.position;
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+                const wave1 = Math.sin(x * 0.5 + t) * 0.5;
+                const wave2 = Math.sin(y * 0.3 + t * 0.8) * 0.5;
+                const wave3 = Math.sin((x + y) * 0.2 + t * 1.2) * 0.3;
+                positions.setZ(i, wave1 + wave2 + wave3 - 3.5); 
+            }
+            positions.needsUpdate = true;
+            meshRef.current.geometry.computeVertexNormals();
+        }
+    });
+
     return (
-        <group>
-            <Grid 
-                position={[0, -3.5, 0]} 
-                args={[200, 200]} 
-                cellSize={1} 
-                cellThickness={1} 
-                cellColor="#06b6d4" 
-                sectionSize={5} 
-                sectionThickness={2} 
-                sectionColor="#0284c7" 
-                fadeDistance={100} 
-                fadeStrength={1.5}
+        <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[100, 100, 150, 150]} />
+            <meshStandardMaterial 
+                color="#00081a" 
+                roughness={0.1} 
+                metalness={0.9} 
             />
-            <pointLight position={[0, -1, -25]} intensity={500} color="#06b6d4" distance={50} decay={2} />
-            <pointLight position={[-25, -1, -25]} intensity={400} color="#0284c7" distance={50} decay={2} />
-            <pointLight position={[25, -1, -25]} intensity={400} color="#0284c7" distance={50} decay={2} />
-            <pointLight position={[0, -3, 0]} intensity={20} color="#06b6d4" distance={20} />
-        </group>
+        </mesh>
     );
 }
 
 // PURE CLEAN UI
-function PixelPerfectUI({ onExploreClick }: { onExploreClick: () => void }) {
+function PixelPerfectUI({ onExploreClick, activeZone }: { onExploreClick: () => void, activeZone?: string }) {
+    if (activeZone !== 'identity') return null;
+
     return (
         <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-center max-w-[1400px] mx-auto px-10">
             <div className="absolute top-[20%] left-[5%] pointer-events-auto select-none">
@@ -284,10 +277,11 @@ function PixelPerfectUI({ onExploreClick }: { onExploreClick: () => void }) {
 interface ThreeDTechLabProps {
     isListening: boolean;
     isSpeaking: boolean;
+    activeZone?: string;
     onExploreClick: () => void;
 }
 
-export default function ThreeDTechLab({ isListening, isSpeaking, onExploreClick }: ThreeDTechLabProps) {
+export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onExploreClick }: ThreeDTechLabProps) {
     const [mounted, setMounted] = useState(false);
     const [sunRef, setSunRef] = useState<THREE.Mesh | null>(null);
 
@@ -307,11 +301,13 @@ export default function ThreeDTechLab({ isListening, isSpeaking, onExploreClick 
                     <color attach="background" args={['#010308']} />
                     
                     <ambientLight intensity={0.2} />
+                    <directionalLight position={[10, 10, 5]} intensity={0.5} color="#0066ff" />
+                    <Suspense fallback={null}>
+                        <Environment preset="night" />
+                        <LiquidVoiceCore isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
+                        <RealisticOcean isSpeaking={isSpeaking} />
+                    </Suspense>
 
-                    <RealGodTierCore isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
-                    
-                    <CinematicHorizon />
-                    
                     <points>
                         <bufferGeometry>
                             <bufferAttribute 
@@ -354,7 +350,7 @@ export default function ThreeDTechLab({ isListening, isSpeaking, onExploreClick 
                 </Canvas>
             </div>
 
-            <PixelPerfectUI onExploreClick={onExploreClick} />
+            <PixelPerfectUI onExploreClick={onExploreClick} activeZone={activeZone} />
 
         </div>
     );

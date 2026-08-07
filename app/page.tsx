@@ -368,7 +368,7 @@ export default function Home() {
 
                 <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
 
-                <div className={`z-10 w-full max-w-7xl mx-auto px-10 flex ${['impact', 'projects'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto' : 'relative items-center h-screen'}`}>
+                <div className={`z-10 w-full max-w-7xl mx-auto px-10 flex ${['impact', 'projects'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto pointer-events-none' : 'relative items-center h-screen pointer-events-none'}`}>
                     <AnimatePresence mode="wait">
                         {activeZone === 'identity' && (
                             <motion.div 
@@ -376,11 +376,12 @@ export default function Home() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="w-full h-full"
+                                className="fixed inset-0 z-0"
                             >
                                 <ThreeDTechLab 
                                     isListening={isListening} 
                                     isSpeaking={isSpeaking} 
+                                    activeZone={activeZone}
                                     onExploreClick={() => setActiveZone('projects')}
                                 />
                             </motion.div>
@@ -388,8 +389,15 @@ export default function Home() {
 
 
                         {activeZone === 'projects' && (
-                            <motion.div key="projects" className="w-full max-w-4xl mx-auto px-10 pb-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <motion.div 
+                                key="projects" 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-0 bg-black pointer-events-auto overflow-y-auto custom-scrollbar"
+                            >
+                                <div className="w-full max-w-5xl mx-auto px-10 pb-20 pt-[15vh]">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     {PROJECTS_DATA.map((project) => (
                                     <motion.div 
                                         key={project.id} 
@@ -399,11 +407,11 @@ export default function Home() {
                                             boxShadow: "0 20px 40px -15px rgba(245, 158, 11, 0.15)"
                                         }}
                                         onClick={() => setSelectedProject(project)}
-                                        className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 cursor-pointer group shadow-2xl transition-all duration-500"
+                                        className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 cursor-pointer group shadow-2xl transition-all duration-500 backdrop-blur-md bg-black/20"
                                     >
                                         {/* Brightened Overlay */}
                                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10" />
-                                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-black" />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800/50 to-black/50" />
                                         
                                         {project.images && project.images[0] && (
                                             <img 
@@ -419,12 +427,13 @@ export default function Home() {
                                         <div className="absolute bottom-0 left-0 w-full p-8 z-20">
                                             <div className="flex items-center gap-3 mb-3">
                                                 <div className="h-[1px] w-8 bg-amber-500/50" />
-                                                <span className="text-[8px] font-black tracking-[0.4em] text-amber-500 uppercase leading-none opacity-80">Narrative Grid</span>
+                                                <span className="text-[8px] font-black tracking-[0.4em] text-amber-500 uppercase leading-none opacity-80">{project.role}</span>
                                             </div>
                                             <h3 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter leading-tight text-white/90 group-hover:text-white transition-colors">{project.title}</h3>
                                         </div>
                                     </motion.div>
                                 ))}
+                                </div>
                                 </div>
                             </motion.div>
                         )}
@@ -862,18 +871,24 @@ export default function Home() {
                 {selectedProject && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] bg-black flex flex-col overflow-hidden h-screen">
                         <div className="absolute inset-0 bg-black">
-                            {selectedProject.video.includes('youtube.com') || selectedProject.video.includes('youtu.be') ? (
-                                <iframe 
-                                    className="w-full h-full object-cover opacity-20 pointer-events-none"
-                                    src={selectedProject.video}
-                                    frameBorder="0"
-                                    allow="autoplay; encrypted-media"
-                                />
-                            ) : (
-                                <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
-                                    <source src={selectedProject.video} type="video/mp4" />
-                                </video>
-                            )}
+                            {(() => {
+                                const v = selectedProject.video;
+                                const videoUrl = Array.isArray(v) ? v[0] : v;
+                                if (!videoUrl) return null;
+
+                                return videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') ? (
+                                    <iframe 
+                                        className="w-full h-full object-cover opacity-20 pointer-events-none"
+                                        src={videoUrl}
+                                        frameBorder="0"
+                                        allow="autoplay; encrypted-media"
+                                    />
+                                ) : (
+                                    <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
+                                        <source src={videoUrl} type="video/mp4" />
+                                    </video>
+                                );
+                            })()}
                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent" />
                         </div>
 
