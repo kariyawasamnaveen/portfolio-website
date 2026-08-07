@@ -11,7 +11,7 @@ declare module '@react-three/fiber' {
     water: any;
   }
 }
-import { OrbitControls, Float, Grid, Line, MeshDistortMaterial, Environment, useTexture } from '@react-three/drei';
+import { OrbitControls, Float, Html, Grid, Line, MeshDistortMaterial, Environment, useTexture, MeshTransmissionMaterial } from '@react-three/drei';
 import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
@@ -130,78 +130,90 @@ function InterconnectedStruts({ outerGeo, innerGeo, color, lineWidth }: { outerG
     );
 }
 
-// LIQUID VOICE CORE
-function LiquidVoiceCore({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
+// REALISTIC FLOATING ORB (Rathu Dodol Bole)
+function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
+    const orbRef = useRef<THREE.Mesh>(null);
     const sunMeshRef = useRef<THREE.Mesh>(null);
-    const coreRef = useRef<THREE.Mesh>(null);
-    const [distort, setDistort] = useState(0.2);
-    const [speed, setSpeed] = useState(2);
-    const [intensity, setIntensity] = useState(2);
-    const [emissiveColor, setEmissiveColor] = useState("#ff4400");
+    
+    const [distort, setDistort] = useState(0.4);
+    const [speed, setSpeed] = useState(3);
     
     useEffect(() => {
-        if (sunMeshRef.current) {
-            setSunRef(sunMeshRef.current);
-        }
+        if (sunMeshRef.current) setSunRef(sunMeshRef.current);
     }, [setSunRef]);
 
-    useFrame(({ clock }) => {
-        const t = clock.getElapsedTime();
+    useFrame((state) => {
+        const t = state.clock.getElapsedTime();
         
-        let targetDistort = 0.2;
-        let targetSpeed = 2;
-        let targetIntensity = 2;
-        let targetEmissive = "#ff4400";
+        let targetDistort = 0.4;
+        let targetSpeed = 3;
         let targetScale = 1;
 
         if (isSpeaking) {
-            targetDistort = 0.6;
-            targetSpeed = 8;
-            targetIntensity = 8;
-            targetEmissive = "#ffaa00";
-            targetScale = 1.3;
+            targetDistort = 0.8;
+            targetSpeed = 6;
+            targetScale = 1.2;
         } else if (isListening) {
-            targetDistort = 0.4;
+            targetDistort = 0.6;
             targetSpeed = 4;
-            targetIntensity = 4;
-            targetEmissive = "#ff8800";
-            targetScale = 1.1;
+            targetScale = 1.05;
         }
         
         setDistort(THREE.MathUtils.lerp(distort, targetDistort, 0.1));
         setSpeed(THREE.MathUtils.lerp(speed, targetSpeed, 0.1));
-        setIntensity(THREE.MathUtils.lerp(intensity, targetIntensity, 0.1));
-        setEmissiveColor(targetEmissive);
 
-        if (coreRef.current && sunMeshRef.current) {
-            coreRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
-            sunMeshRef.current.scale.setScalar(targetScale * 0.5);
-            coreRef.current.rotation.y = t * 0.5;
+        if (orbRef.current && sunMeshRef.current) {
+            orbRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+            sunMeshRef.current.scale.setScalar(targetScale);
+            orbRef.current.rotation.y = t * 0.2;
+            orbRef.current.rotation.z = Math.sin(t * 0.5) * 0.1;
+            
+            // Float on water (RealisticOcean is at y = 0)
+            // Bob up and down on the waves
+            const bobbing = Math.sin(t * 2) * 0.2 + 0.8; // Offset by 0.8 so it sits mostly on top of the water
+            
+            // Mouse Follow Interaction
+            const mouseX = state.pointer.x * 8; 
+            const mouseZ = -5 + (state.pointer.y * -4); 
+            
+            // Smoothly move towards mouse position, but keep floating on water
+            const targetPos = new THREE.Vector3(mouseX, bobbing, mouseZ);
+            
+            if (isSpeaking) {
+                targetPos.set(0, 1.5, -3); // Rise up and come close when speaking
+            }
+            
+            orbRef.current.position.lerp(targetPos, 0.05);
+            
+            // Dynamic color for the orb
+            const mat = orbRef.current.material as any;
+            const targetColor = isSpeaking ? new THREE.Color("#ff0044") : new THREE.Color("#aa0011"); 
+            const targetEmissive = isSpeaking ? new THREE.Color("#ff0022") : new THREE.Color("#440000");
+            mat.color.lerp(targetColor, 0.05);
+            mat.emissive.lerp(targetEmissive, 0.05);
+            mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, isSpeaking ? 1.5 : 0.5, 0.1);
         }
     });
 
     return (
         <group>
-            <Float speed={3} rotationIntensity={1} floatIntensity={2}>
-                <mesh ref={sunMeshRef} visible={true}>
-                    <sphereGeometry args={[1, 16, 16]} />
-                    <meshBasicMaterial color={emissiveColor} toneMapped={false} transparent opacity={0.2} />
-                </mesh>
-
-                <mesh ref={coreRef}>
-                    <sphereGeometry args={[2, 64, 64]} />
-                    <MeshDistortMaterial
-                        color="#ff3300"
-                        emissive="#ff0000"
-                        emissiveIntensity={intensity * 0.2}
-                        roughness={0.1}
-                        metalness={0.6}
-                        distort={distort}
-                        speed={speed}
-                    />
-                </mesh>
-                <pointLight distance={15} intensity={intensity * 2} color={emissiveColor} decay={2} />
-            </Float>
+            <mesh ref={sunMeshRef} visible={false}>
+                <sphereGeometry args={[1.5, 8, 8]} />
+            </mesh>
+            
+            <mesh ref={orbRef}>
+                <sphereGeometry args={[1.5, 64, 64]} />
+                <MeshDistortMaterial
+                    color="#aa0011"
+                    emissive="#440000"
+                    emissiveIntensity={isSpeaking ? 1.5 : 0.5}
+                    roughness={0.1}
+                    metalness={0.8}
+                    clearcoat={1}
+                    distort={distort}
+                    speed={speed}
+                />
+            </mesh>
         </group>
     );
 }
@@ -230,6 +242,14 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
     );
 
     const speedRef = useRef(1);
+
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.material.side = THREE.DoubleSide;
+            ref.current.material.transparent = true;
+            ref.current.material.opacity = 0.9;
+        }
+    }, []);
 
     useFrame((state, delta) => {
         speedRef.current = THREE.MathUtils.lerp(speedRef.current, isSpeaking ? 2.5 : 1, 0.05);
@@ -260,22 +280,10 @@ function PixelPerfectUI({ onExploreClick, activeZone }: { onExploreClick: () => 
 
     return (
         <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-center max-w-[1400px] mx-auto px-10">
-            <div className="absolute top-[20%] left-[5%] pointer-events-auto select-none">
-                <h1 className="text-[3.5rem] leading-[1.1] font-black uppercase tracking-tight text-white mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-                    Voice Bot<br/>Architect
-                </h1>
-                <h2 className="text-xl font-semibold text-cyan-400 tracking-wide mb-1 drop-shadow-[0_0_10px_rgba(6,182,212,0.5)]">NAVEEN SANDEEPA</h2>
-                <p className="text-sm text-neutral-400 font-mono tracking-widest uppercase">Elite Backend Engineer</p>
-            </div>
+            {/* Removed text block based on request */}
 
-            {/* Sleek Premium CTA Button */}
+            {/* Social Icons only */}
             <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center gap-6">
-                <button 
-                    onClick={onExploreClick}
-                    className="px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/20 backdrop-blur-md text-white font-black text-xs tracking-[0.2em] uppercase rounded-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(6,182,212,0.3)] hover:border-cyan-400/50"
-                >
-                    Explore My Projects
-                </button>
                 <div className="flex justify-center gap-6 text-neutral-500">
                     <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
                         <FiGithub size={20} />
@@ -325,7 +333,7 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
                     <spotLight position={[0, 20, 20]} intensity={100} decay={2} distance={100} color="#00aaff" penumbra={1} angle={Math.PI / 3} />
                     <Suspense fallback={null}>
                         <Environment preset="city" environmentIntensity={0.1} />
-                        <LiquidVoiceCore isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
+                        <FloatingOrb isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
                         <RealisticOcean isSpeaking={isSpeaking} />
                     </Suspense>
 
