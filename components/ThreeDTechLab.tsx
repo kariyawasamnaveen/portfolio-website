@@ -130,16 +130,32 @@ function InterconnectedStruts({ outerGeo, innerGeo, color, lineWidth }: { outerG
     );
 }
 
+// Global State to sync ocean waves between the Water and the Floating Orb
+const GlobalOceanState = {
+    time: 0,
+    speed: 1,
+    getWaveHeight(worldX: number, worldZ: number) {
+        const localX = worldX;
+        const localY = -worldZ; // Plane local Y is World -Z because of -Math.PI/2 rotation
+        const t = this.time;
+        const wave1 = Math.sin(localX * 0.3 + t * 0.8) * 0.8;
+        const wave2 = Math.sin(localY * 0.2 + t * 0.5) * 0.5;
+        const wave3 = Math.sin((localX + localY) * 0.15 + t * 1.0) * 0.4;
+        return wave1 + wave2 + wave3 - 3.5;
+    }
+};
+
 // REALISTIC FLOATING ORB (Rathu Dodol Bole)
 function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
     const orbRef = useRef<THREE.Mesh>(null);
-    const sunMeshRef = useRef<THREE.Mesh>(null);
     
     const [distort, setDistort] = useState(0.4);
     const [speed, setSpeed] = useState(3);
     
     useEffect(() => {
-        if (sunMeshRef.current) setSunRef(sunMeshRef.current);
+        if (orbRef.current) {
+            setSunRef(orbRef.current);
+        }
     }, [setSunRef]);
 
     useFrame((state) => {
@@ -162,28 +178,28 @@ function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: bool
         setDistort(THREE.MathUtils.lerp(distort, targetDistort, 0.1));
         setSpeed(THREE.MathUtils.lerp(speed, targetSpeed, 0.1));
 
-        if (orbRef.current && sunMeshRef.current) {
+        if (orbRef.current) {
             orbRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
-            sunMeshRef.current.scale.setScalar(targetScale);
             orbRef.current.rotation.y = t * 0.2;
             orbRef.current.rotation.z = Math.sin(t * 0.5) * 0.1;
-            
-            // Float on water (RealisticOcean is at y = 0)
-            // Bob up and down on the waves
-            const bobbing = Math.sin(t * 2) * 0.2 + 0.8; // Offset by 0.8 so it sits mostly on top of the water
             
             // Mouse Follow Interaction
             const mouseX = state.pointer.x * 8; 
             const mouseZ = -5 + (state.pointer.y * -4); 
             
-            // Smoothly move towards mouse position, but keep floating on water
+            // Bob up and down on the PHYSICAL waves
+            // We sample the wave height at the orb's target (x,z) position
+            const waveHeight = GlobalOceanState.getWaveHeight(mouseX, mouseZ);
+            const bobbing = waveHeight + 1.2; // Offset by 1.2 so it sits mostly on top of the water
+            
+            // Smoothly move towards mouse position, but lock Y to wave height
             const targetPos = new THREE.Vector3(mouseX, bobbing, mouseZ);
             
             if (isSpeaking) {
                 targetPos.set(0, 1.5, -3); // Rise up and come close when speaking
             }
             
-            orbRef.current.position.lerp(targetPos, 0.05);
+            orbRef.current.position.lerp(targetPos, 0.08);
             
             // Dynamic color for the orb
             const mat = orbRef.current.material as any;
@@ -197,11 +213,7 @@ function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: bool
 
     return (
         <group>
-            <mesh ref={sunMeshRef} visible={false}>
-                <sphereGeometry args={[1.5, 8, 8]} />
-            </mesh>
-            
-            <mesh ref={orbRef}>
+            <mesh ref={orbRef} castShadow>
                 <sphereGeometry args={[1.5, 64, 64]} />
                 <MeshDistortMaterial
                     color="#aa0011"
@@ -215,6 +227,82 @@ function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: bool
                 />
             </mesh>
         </group>
+    );
+}
+
+// HEAVY RAIN PARTICLE SYSTEM (REALISTIC DROPS)
+function Rain() {
+    const rainRef = useRef<THREE.Points>(null);
+    const dropCount = 12000;
+    
+    // Create a perfectly round, soft droplet texture programmatically
+    const dropTexture = useMemo(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const context = canvas.getContext('2d');
+        if (context) {
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+        }
+        return new THREE.CanvasTexture(canvas);
+    }, []);
+
+    const [positions, velocities] = useMemo(() => {
+        const positions = new Float32Array(dropCount * 3);
+        const velocities = new Float32Array(dropCount);
+        for (let i = 0; i < dropCount; i++) {
+            positions[i * 3] = (Math.random() - 0.5) * 100; // x
+            positions[i * 3 + 1] = Math.random() * 40; // y
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 100; // z
+            velocities[i] = 0.5 + Math.random() * 0.5; // fall speed
+        }
+        return [positions, velocities];
+    }, []);
+
+    useFrame((state, delta) => {
+        if (rainRef.current) {
+            const pos = rainRef.current.geometry.attributes.position.array as Float32Array;
+            for (let i = 0; i < dropCount; i++) {
+                // Drastically reduced speed (from 70 down to 12)
+                pos[i * 3 + 1] -= velocities[i] * delta * 12; 
+                
+                // Slight wind effect
+                pos[i * 3] -= velocities[i] * delta * 1.5; 
+
+                if (pos[i * 3 + 1] < -2) {
+                    pos[i * 3 + 1] = 40; // reset to top
+                    pos[i * 3] = (Math.random() - 0.5) * 100; // reset X to avoid gaps
+                }
+            }
+            rainRef.current.geometry.attributes.position.needsUpdate = true;
+        }
+    });
+
+    return (
+        <points ref={rainRef}>
+            <bufferGeometry>
+                <bufferAttribute 
+                    attach="attributes-position" 
+                    count={dropCount} 
+                    array={positions} 
+                    itemSize={3} 
+                />
+            </bufferGeometry>
+            <pointsMaterial 
+                map={dropTexture}
+                size={0.12} 
+                color="#b3d4ff" 
+                transparent 
+                opacity={0.6} 
+                depthWrite={false} 
+                blending={THREE.AdditiveBlending} 
+            />
+        </points>
     );
 }
 
@@ -248,24 +336,62 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
             ref.current.material.side = THREE.DoubleSide;
             ref.current.material.transparent = true;
             ref.current.material.opacity = 0.9;
+            
+            // Inject Sea Foam and Subsurface Scattering into THREE.Water shader
+            ref.current.material.onBeforeCompile = (shader: any) => {
+                // Pass Z position (Wave Height) to Fragment Shader
+                shader.vertexShader = shader.vertexShader.replace(
+                    'void main() {',
+                    'varying float vHeight;\nvoid main() {'
+                );
+                shader.vertexShader = shader.vertexShader.replace(
+                    '#include <begin_vertex>',
+                    '#include <begin_vertex>\nvHeight = position.z;'
+                );
+                
+                // Receive in Fragment Shader
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    'void main() {',
+                    'varying float vHeight;\nvoid main() {'
+                );
+                
+                // Inject Foam (white peaks) and Subsurface Scattering (cyan bleeding)
+                shader.fragmentShader = shader.fragmentShader.replace(
+                    '#include <tonemapping_fragment>',
+                    `
+                    // Foam at peaks (height > 0.5)
+                    float foam = smoothstep(0.5, 1.8, vHeight);
+                    gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 1.0, 1.0), foam * 0.9);
+                    
+                    // Subsurface Scattering (Cyan light bleeding through waves)
+                    float sss = smoothstep(-0.5, 1.5, vHeight);
+                    gl_FragColor.rgb += vec3(0.0, 0.4, 0.8) * sss * 0.6;
+                    
+                    #include <tonemapping_fragment>
+                    `
+                );
+            };
         }
     }, []);
 
     useFrame((state, delta) => {
-        speedRef.current = THREE.MathUtils.lerp(speedRef.current, isSpeaking ? 2.5 : 1, 0.05);
+        // Accumulate time continuously based on speed to prevent jumps
+        GlobalOceanState.speed = THREE.MathUtils.lerp(GlobalOceanState.speed, isSpeaking ? 2.5 : 1, 0.05);
+        GlobalOceanState.time += delta * GlobalOceanState.speed;
+        
         if (ref.current) {
-            ref.current.material.uniforms.time.value += delta * speedRef.current * 0.5;
+            ref.current.material.uniforms.time.value += delta * GlobalOceanState.speed * 0.5;
         }
 
         const positions = geom.attributes.position;
-        const t = state.clock.getElapsedTime() * speedRef.current;
         for (let i = 0; i < positions.count; i++) {
             const x = positions.getX(i);
             const y = positions.getY(i);
-            const wave1 = Math.sin(x * 0.3 + t * 0.8) * 0.8;
-            const wave2 = Math.sin(y * 0.2 + t * 0.5) * 0.5;
-            const wave3 = Math.sin((x + y) * 0.15 + t * 1.0) * 0.4;
-            positions.setZ(i, wave1 + wave2 + wave3 - 3.5); 
+            
+            // Reuse the global wave math to modify the vertex Z (which becomes World Y)
+            // We pass (x, -y) because local Y is World -Z
+            const height = GlobalOceanState.getWaveHeight(x, -y);
+            positions.setZ(i, height); 
         }
         positions.needsUpdate = true;
         geom.computeVertexNormals();
@@ -326,44 +452,40 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
             <div className="absolute inset-0 z-0">
                 <Canvas camera={{ position: [0, 1.5, 12], fov: 45 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
                     
-                    <fog attach="fog" args={['#010611', 10, 60]} />
+                    {/* Volumetric Surface Fog */}
+                    <fog attach="fog" args={['#010611', 2, 40]} />
                     <color attach="background" args={['#010611']} />
                     
                     <ambientLight intensity={0.5} color="#002244" />
                     <spotLight position={[0, 20, 20]} intensity={100} decay={2} distance={100} color="#00aaff" penumbra={1} angle={Math.PI / 3} />
+                    
+                    {/* Deep Volumetric Sub-lighting (Red light from abyss) */}
+                    <pointLight position={[0, -15, 0]} intensity={250} distance={40} decay={1.5} color="#ff0022" />
+                    
                     <Suspense fallback={null}>
-                        <Environment preset="city" environmentIntensity={0.1} />
+                        {/* Night HDRI for realistic dark water reflections */}
+                        <Environment preset="night" background={false} environmentIntensity={0.5} />
                         <FloatingOrb isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
                         <RealisticOcean isSpeaking={isSpeaking} />
                     </Suspense>
 
-                    <points>
-                        <bufferGeometry>
-                            <bufferAttribute 
-                                attach="attributes-position" 
-                                count={1500} 
-                                array={new Float32Array(4500).map(() => (Math.random() - 0.5) * 80)} 
-                                itemSize={3} 
-                            />
-                        </bufferGeometry>
-                        <pointsMaterial size={0.06} color="#06b6d4" transparent opacity={0.5} sizeAttenuation />
-                    </points>
+                    <Rain />
 
                     {/* POST PROCESSING (Bloom + Volumetric God Rays) */}
                     <EffectComposer disableNormalPass multisampling={0}>
                         {sunRef && (
                             <GodRays 
                                 sun={sunRef} 
-                                samples={60} 
-                                density={0.8} 
-                                decay={0.9} 
-                                weight={0.3} 
-                                exposure={0.2} 
+                                samples={100} 
+                                density={0.96} 
+                                decay={0.93} 
+                                weight={0.6} 
+                                exposure={0.8} 
                                 clampMax={1} 
                                 blur={true}
                             />
                         )}
-                        <Bloom luminanceThreshold={0.8} mipmapBlur intensity={1.5} />
+                        <Bloom luminanceThreshold={0.5} mipmapBlur intensity={2.0} />
                     </EffectComposer>
 
                     <OrbitControls 
