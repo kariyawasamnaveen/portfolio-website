@@ -1,8 +1,17 @@
 "use client";
 
 import React, { useRef, useMemo, useState, useEffect, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Float, Grid, Line, MeshDistortMaterial, Environment } from '@react-three/drei';
+import { Canvas, useFrame, useThree, extend } from '@react-three/fiber';
+import { Water } from 'three-stdlib';
+
+extend({ Water });
+
+declare module '@react-three/fiber' {
+  interface ThreeElements {
+    water: any;
+  }
+}
+import { OrbitControls, Float, Grid, Line, MeshDistortMaterial, Environment, useTexture } from '@react-three/drei';
 import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
@@ -182,16 +191,16 @@ function LiquidVoiceCore({ isListening, isSpeaking, setSunRef }: { isListening: 
                 <mesh ref={coreRef}>
                     <sphereGeometry args={[2, 64, 64]} />
                     <MeshDistortMaterial
-                        color="#ff2200"
-                        emissive={emissiveColor}
-                        emissiveIntensity={intensity}
-                        roughness={0.2}
-                        metalness={0.8}
+                        color="#ff3300"
+                        emissive="#ff0000"
+                        emissiveIntensity={intensity * 0.2}
+                        roughness={0.1}
+                        metalness={0.6}
                         distort={distort}
                         speed={speed}
                     />
                 </mesh>
-                <pointLight distance={30} intensity={intensity * 10} color={emissiveColor} />
+                <pointLight distance={15} intensity={intensity * 2} color={emissiveColor} decay={2} />
             </Float>
         </group>
     );
@@ -199,38 +208,50 @@ function LiquidVoiceCore({ isListening, isSpeaking, setSunRef }: { isListening: 
 
 // REALISTIC MIDNIGHT OCEAN
 function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const speedRef = useRef(1);
+    const ref = useRef<any>(null);
+    const gl = useThree((state) => state.gl);
+    const waterNormals = useTexture('/waternormals.jpg');
+    waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+    const geom = useMemo(() => new THREE.PlaneGeometry(100, 100, 150, 150), []);
     
-    useFrame(({ clock }) => {
-        const t = clock.getElapsedTime() * speedRef.current;
-        speedRef.current = THREE.MathUtils.lerp(speedRef.current, isSpeaking ? 2.5 : 1, 0.05);
+    const config = useMemo(
+        () => ({
+            textureWidth: 512,
+            textureHeight: 512,
+            waterNormals,
+            sunDirection: new THREE.Vector3(0, 1, 1).normalize(),
+            sunColor: 0x00ffff,
+            waterColor: 0x000a1f,
+            distortionScale: 3.7,
+            fog: true,
+            format: gl.outputColorSpace,
+        }),
+        [waterNormals, gl]
+    );
 
-        if (meshRef.current) {
-            const positions = meshRef.current.geometry.attributes.position;
-            for (let i = 0; i < positions.count; i++) {
-                const x = positions.getX(i);
-                const y = positions.getY(i);
-                const wave1 = Math.sin(x * 0.5 + t) * 0.5;
-                const wave2 = Math.sin(y * 0.3 + t * 0.8) * 0.5;
-                const wave3 = Math.sin((x + y) * 0.2 + t * 1.2) * 0.3;
-                positions.setZ(i, wave1 + wave2 + wave3 - 3.5); 
-            }
-            positions.needsUpdate = true;
-            meshRef.current.geometry.computeVertexNormals();
+    const speedRef = useRef(1);
+
+    useFrame((state, delta) => {
+        speedRef.current = THREE.MathUtils.lerp(speedRef.current, isSpeaking ? 2.5 : 1, 0.05);
+        if (ref.current) {
+            ref.current.material.uniforms.time.value += delta * speedRef.current * 0.5;
         }
+
+        const positions = geom.attributes.position;
+        const t = state.clock.getElapsedTime() * speedRef.current;
+        for (let i = 0; i < positions.count; i++) {
+            const x = positions.getX(i);
+            const y = positions.getY(i);
+            const wave1 = Math.sin(x * 0.3 + t * 0.8) * 0.8;
+            const wave2 = Math.sin(y * 0.2 + t * 0.5) * 0.5;
+            const wave3 = Math.sin((x + y) * 0.15 + t * 1.0) * 0.4;
+            positions.setZ(i, wave1 + wave2 + wave3 - 3.5); 
+        }
+        positions.needsUpdate = true;
+        geom.computeVertexNormals();
     });
 
-    return (
-        <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[100, 100, 150, 150]} />
-            <meshStandardMaterial 
-                color="#00081a" 
-                roughness={0.1} 
-                metalness={0.9} 
-            />
-        </mesh>
-    );
+    return <water ref={ref} args={[geom, config]} rotation={[-Math.PI / 2, 0, 0]} />;
 }
 
 // PURE CLEAN UI
@@ -292,18 +313,18 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
     if (!mounted) return null;
 
     return (
-        <div className="fixed inset-0 w-full h-full bg-[#010308] overflow-hidden">
+        <div className="fixed inset-0 w-full h-full bg-[#010611] overflow-hidden">
             
             <div className="absolute inset-0 z-0">
                 <Canvas camera={{ position: [0, 1.5, 12], fov: 45 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
                     
-                    <fog attach="fog" args={['#010308', 10, 100]} />
-                    <color attach="background" args={['#010308']} />
+                    <fog attach="fog" args={['#010611', 10, 60]} />
+                    <color attach="background" args={['#010611']} />
                     
-                    <ambientLight intensity={0.2} />
-                    <directionalLight position={[10, 10, 5]} intensity={0.5} color="#0066ff" />
+                    <ambientLight intensity={0.5} color="#002244" />
+                    <spotLight position={[0, 20, 20]} intensity={100} decay={2} distance={100} color="#00aaff" penumbra={1} angle={Math.PI / 3} />
                     <Suspense fallback={null}>
-                        <Environment preset="night" />
+                        <Environment preset="city" environmentIntensity={0.1} />
                         <LiquidVoiceCore isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
                         <RealisticOcean isSpeaking={isSpeaking} />
                     </Suspense>
@@ -326,15 +347,15 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
                             <GodRays 
                                 sun={sunRef} 
                                 samples={60} 
-                                density={0.96} 
+                                density={0.8} 
                                 decay={0.9} 
-                                weight={0.6} 
-                                exposure={0.8} 
+                                weight={0.3} 
+                                exposure={0.2} 
                                 clampMax={1} 
                                 blur={true}
                             />
                         )}
-                        <Bloom luminanceThreshold={0.4} mipmapBlur intensity={2} />
+                        <Bloom luminanceThreshold={0.8} mipmapBlur intensity={1.5} />
                     </EffectComposer>
 
                     <OrbitControls 
