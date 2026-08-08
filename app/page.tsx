@@ -345,25 +345,25 @@ export default function Home() {
                 {/* Background Grid */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#111_1px,transparent_1px),linear-gradient(to_bottom,#111_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-500/5 blur-[150px] rounded-full" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[150px] rounded-full" />
                 </div>
 
                 {/* Header */}
-                <header className="fixed top-0 left-0 w-full p-10 z-[100] flex justify-between items-center">
-                    <div className="flex items-center gap-5">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-amber-500/20 blur-md rounded-full" />
-                            <img src="/logo-kariyawasam.jpg" alt="Logo" className="relative h-12 w-12 object-cover rounded-full border border-amber-500/30 shadow-2xl" />
+                <header className="fixed top-0 left-0 w-full p-10 z-[100] flex justify-between items-center pointer-events-none">
+                    <div className="flex items-center gap-5 pointer-events-auto">
+                        <div className="relative group cursor-pointer">
+                            <div className="absolute inset-0 bg-emerald-500/20 blur-md rounded-full group-hover:bg-emerald-400/40 transition-colors duration-500" />
+                            <img src="/logo-kariyawasam.jpg" alt="Logo" className="relative h-12 w-12 object-cover rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]" />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black tracking-[0.5em] text-amber-500 uppercase leading-none mb-1">Architect</span>
-                            <span className="text-sm font-bold tracking-tighter uppercase">Naveen.K</span>
+                            <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
+                            <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 bg-white/5 backdrop-blur-xl border border-white/10 px-5 py-2.5 rounded-full shadow-2xl">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_#10b981]" />
-                        <span className="text-[9px] font-black tracking-[0.3em] text-neutral-300 uppercase leading-none">Status: Live for Hire</span>
-                    </div>
+                    <button className="flex items-center gap-4 bg-neutral-950/40 backdrop-blur-md border border-emerald-500/20 px-5 py-2.5 rounded-full shadow-[0_5px_20px_rgba(0,0,0,0.5)] hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all duration-300 pointer-events-auto group">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)] group-hover:shadow-[0_0_15px_rgba(16,185,129,1)]" />
+                        <span className="text-[9px] font-black tracking-[0.3em] text-neutral-300 group-hover:text-emerald-400 uppercase leading-none transition-colors duration-300">For Hire</span>
+                    </button>
                 </header>
 
                 <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />

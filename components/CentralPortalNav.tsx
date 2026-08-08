@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
 
 type Zone = 'identity' | 'projects' | 'logic' | 'impact' | 'connect'
 
@@ -19,34 +20,53 @@ export default function CentralPortalNav({ activeZone, onZoneChange }: CentralPo
     ]
 
     return (
-        <div className="bottom-nav-dock">
-            {zones.map((zone) => (
-                <button
-                    key={zone.id}
-                    onClick={() => onZoneChange(zone.id)}
-                    className="relative px-6 py-2 group"
-                >
-                    <span className={`
-                        text-[10px] font-bold tracking-[0.2em] transition-colors duration-300
-                        ${activeZone === zone.id ? 'text-amber-500' : 'text-neutral-500 group-hover:text-white'}
-                    `}>
-                        {zone.label}
-                    </span>
-                    
-                    {activeZone === zone.id && (
-                        <motion.div 
-                            layoutId="nav-indicator"
-                            className="absolute -bottom-2 left-0 right-0 h-[2px] bg-amber-500"
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        />
-                    )}
-                </button>
-            ))}
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center gap-4">
             
-            {/* Minimal Decorative Ring - now just part of the dock decoration */}
-            <div className="w-[1px] h-4 bg-neutral-800 mx-2" />
-            <div className="w-8 h-8 rounded-full border border-amber-500/20 flex items-center justify-center animate-spin-slow">
-                <div className="w-1 h-1 bg-amber-500 rounded-full" />
+            {/* Social Icons Integrated into Dock Area */}
+            <div className="flex justify-center gap-6 text-neutral-500 mb-1">
+                <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noopener noreferrer" 
+                   className="hover:text-white transition-colors duration-300">
+                    <FiGithub size={14} />
+                </a>
+                <a href="https://www.linkedin.com/in/naveen-kariyawasam-b85507229/" target="_blank" rel="noopener noreferrer" 
+                   className="hover:text-white transition-colors duration-300">
+                    <FiLinkedin size={14} />
+                </a>
+                <button onClick={() => {
+                    navigator.clipboard.writeText('hknskariyawasamnaveen@gmail.com');
+                    alert('Email copied!');
+                }} className="hover:text-white transition-colors duration-300">
+                    <FiMail size={14} />
+                </button>
+            </div>
+
+            {/* Deep Sea Glassmorphism Nav Dock */}
+            <div className="flex items-center bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/5 pl-2 pr-1 py-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                {zones.map((zone) => (
+                    <button
+                        key={zone.id}
+                        onClick={() => onZoneChange(zone.id)}
+                        className="relative px-6 py-2 group flex items-center justify-center"
+                    >
+                        <span className={`
+                            text-[9px] font-bold tracking-[0.25em] transition-all duration-300 z-10
+                            ${activeZone === zone.id 
+                                ? 'text-[#00FF9D] drop-shadow-[0_0_8px_rgba(0,255,157,0.6)]' 
+                                : 'text-neutral-500 group-hover:text-neutral-300'}
+                        `}>
+                            {zone.label}
+                        </span>
+                        
+                        {activeZone === zone.id && (
+                            <motion.div 
+                                layoutId="nav-indicator"
+                                className="absolute bottom-0 left-4 right-4 h-[2px] bg-[#00FF9D] shadow-[0_0_12px_rgba(0,255,157,1)] rounded-t-full"
+                                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            />
+                        )}
+                    </button>
+                ))}
+                
             </div>
         </div>
     )

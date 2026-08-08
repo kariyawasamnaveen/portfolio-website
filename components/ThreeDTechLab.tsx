@@ -9,10 +9,10 @@ extend({ Water });
 declare module '@react-three/fiber' {
   interface ThreeElements {
     water: any;
-  }
 }
-import { OrbitControls, Float, Html, Grid, Line, MeshDistortMaterial, Environment, useTexture, MeshTransmissionMaterial } from '@react-three/drei';
-import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
+}
+import { OrbitControls, Float, Html, Grid, Line, MeshDistortMaterial, Environment, useTexture, MeshTransmissionMaterial, SpotLight, Stars, Sparkles } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
 
@@ -134,6 +134,7 @@ function InterconnectedStruts({ outerGeo, innerGeo, color, lineWidth }: { outerG
 const GlobalOceanState = {
     time: 0,
     speed: 1,
+    sunPosition: new THREE.Vector3(0, 1, 1),
     getWaveHeight(worldX: number, worldZ: number) {
         const localX = worldX;
         const localY = -worldZ; // Plane local Y is World -Z because of -Math.PI/2 rotation
@@ -144,122 +145,350 @@ const GlobalOceanState = {
         return wave1 + wave2 + wave3 - 3.5;
     }
 };
+// COSMIC LIGHTNING (Connects Orb to Stars)
+function CosmicLightning({ isActive }: { isActive: boolean }) {
+    const linesRef = useRef<THREE.LineSegments>(null);
+    const geomRef = useRef<THREE.BufferGeometry>(null);
 
-// REALISTIC FLOATING ORB (Rathu Dodol Bole)
+    const maxLines = 5;
+    const segments = 12;
+    const maxPoints = maxLines * segments * 2; // Line segments need start and end
+
+    useEffect(() => {
+        if (geomRef.current) {
+            const positions = new Float32Array(maxPoints * 3);
+            geomRef.current.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        }
+    }, []);
+
+    useFrame(() => {
+        if (!linesRef.current || !geomRef.current) return;
+        
+        linesRef.current.visible = isActive;
+        if (!isActive) return;
+
+        const positions = geomRef.current.attributes.position.array as Float32Array;
+        if (!positions) return;
+        
+        let ptIdx = 0;
+        const numBolts = Math.floor(Math.random() * 3) + 3; // 3 to 5 bolts
+        
+        for (let i = 0; i < numBolts; i++) {
+            let prev = new THREE.Vector3(0, 0, 0);
+            
+            // Target a distant star high up
+            const target = new THREE.Vector3(
+                (Math.random() - 0.5) * 300,
+                150 + Math.random() * 100,
+                (Math.random() - 0.5) * 300
+            );
+            
+            for (let j = 1; j <= segments; j++) {
+                const progress = j / segments;
+                const current = new THREE.Vector3().lerpVectors(new THREE.Vector3(0,0,0), target, progress);
+                
+                // Add jagged jitter
+                const jitter = progress * 40;
+                current.x += (Math.random() - 0.5) * jitter;
+                current.y += (Math.random() - 0.5) * jitter;
+                current.z += (Math.random() - 0.5) * jitter;
+
+                // Add line segment (prev -> current)
+                positions[ptIdx++] = prev.x;
+                positions[ptIdx++] = prev.y;
+                positions[ptIdx++] = prev.z;
+                positions[ptIdx++] = current.x;
+                positions[ptIdx++] = current.y;
+                positions[ptIdx++] = current.z;
+                
+                prev.copy(current);
+            }
+        }
+        
+        // Zero out remaining unused points in the buffer
+        for (; ptIdx < positions.length; ptIdx++) {
+            positions[ptIdx] = 0;
+        }
+        
+        geomRef.current.attributes.position.needsUpdate = true;
+    });
+
+    return (
+        <lineSegments ref={linesRef}>
+            <bufferGeometry ref={geomRef} />
+            <lineBasicMaterial color="#ff3377" transparent opacity={0.9} blending={THREE.AdditiveBlending} />
+        </lineSegments>
+    );
+}
+// COSMIC ENERGY HORIZON (Aurora/Storm Ring)
+function VoiceAuraLight({ isSpeaking }: { isSpeaking: boolean }) {
+    const lightRef = useRef<THREE.PointLight>(null);
+
+    useFrame(({ clock }) => {
+        if (lightRef.current) {
+            const t = clock.getElapsedTime();
+            if (isSpeaking) {
+                // Energetic pulsing effect when speaking
+                const targetIntensity = 1500 + Math.sin(t * 8) * 500;
+                lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetIntensity, 0.2);
+            } else {
+                // Fade out completely when silent
+                lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 0, 0.1);
+            }
+        }
+    });
+
+    // Massive light from above to illuminate the ocean 360 degrees
+    return <pointLight ref={lightRef} position={[0, 100, -30]} distance={2000} color="#00e6ff" intensity={0} decay={1.5} />;
+}
+
+// REALISTIC FLOATING ORB (Quantum AI Core)
 function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: boolean; isSpeaking: boolean, setSunRef: (ref: THREE.Mesh) => void }) {
-    const orbRef = useRef<THREE.Mesh>(null);
+    const orbGroupRef = useRef<THREE.Group>(null);
+    const coreMatRef = useRef<any>(null);
+    const lightRef = useRef<THREE.PointLight>(null);
+    const auraRef = useRef<THREE.Mesh>(null);
+    const gyroRef = useRef<THREE.Group>(null);
+    const shockwaveRef = useRef<THREE.Mesh>(null);
     
-    const [distort, setDistort] = useState(0.4);
-    const [speed, setSpeed] = useState(3);
+    // Voice Resonance Simulator Refs
+    const simulatedVolumeRef = useRef(0);
+    const lastVolumeChangeRef = useRef(0);
     
     useEffect(() => {
-        if (orbRef.current) {
-            setSunRef(orbRef.current);
+        if (orbGroupRef.current) {
+            setSunRef(orbGroupRef.current as any);
         }
     }, [setSunRef]);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
         
-        let targetDistort = 0.4;
-        let targetSpeed = 3;
         let targetScale = 1;
 
+        // Base Idle Position
+        let hoverX = Math.sin(t * 0.5) * 8;
+        let hoverZ = -150; 
+        let hoverYOffset = 2.5;
+
         if (isSpeaking) {
-            targetDistort = 0.8;
-            targetSpeed = 6;
-            targetScale = 1.2;
+            // Fly around the horizon (Lissajous curve trajectory)
+            hoverX = Math.sin(t * 1.5) * 30 + Math.cos(t * 0.8) * 25; 
+            hoverZ = -150 + Math.sin(t * 1.2) * 25; // Swings from -175 to -125
+            hoverYOffset = 10 + Math.sin(t * 2.0) * 15; 
+            
+            // Subtle scaling when it moves
+            targetScale = THREE.MathUtils.mapLinear(hoverZ, -175, -125, 1.0, 1.3); 
+            targetScale = Math.max(1.0, targetScale);
         } else if (isListening) {
-            targetDistort = 0.6;
-            targetSpeed = 4;
             targetScale = 1.05;
         }
-        
-        setDistort(THREE.MathUtils.lerp(distort, targetDistort, 0.1));
-        setSpeed(THREE.MathUtils.lerp(speed, targetSpeed, 0.1));
 
-        if (orbRef.current) {
-            orbRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
-            orbRef.current.rotation.y = t * 0.2;
-            orbRef.current.rotation.z = Math.sin(t * 0.5) * 0.1;
-            
-            // Mouse Follow Interaction
-            const mouseX = state.pointer.x * 8; 
-            const mouseZ = -5 + (state.pointer.y * -4); 
+        // Simulate speech volume (Syllables / Anunadaya)
+        if (isSpeaking) {
+            // Update volume target every ~80ms to mimic fast syllable changes
+            if (t - lastVolumeChangeRef.current > 0.08) {
+                // Speech is spiky. 30% chance of a pause (low volume), 70% chance of a syllable (high volume)
+                const isPause = Math.random() > 0.7;
+                simulatedVolumeRef.current = isPause ? Math.random() * 0.2 : Math.random() * 0.8 + 0.2;
+                lastVolumeChangeRef.current = t;
+            }
+        } else {
+            simulatedVolumeRef.current = 0;
+        }
+
+        const currentVol = simulatedVolumeRef.current; // Value from 0.0 to 1.0
+
+        if (orbGroupRef.current) {
+            orbGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+            orbGroupRef.current.rotation.y = t * 0.2;
+            orbGroupRef.current.rotation.z = Math.sin(t * 0.5) * 0.1;
             
             // Bob up and down on the PHYSICAL waves
-            // We sample the wave height at the orb's target (x,z) position
-            const waveHeight = GlobalOceanState.getWaveHeight(mouseX, mouseZ);
-            const bobbing = waveHeight + 1.2; // Offset by 1.2 so it sits mostly on top of the water
+            const waveHeight = GlobalOceanState.getWaveHeight(hoverX, hoverZ);
+            const bobbing = waveHeight + hoverYOffset; 
             
-            // Smoothly move towards mouse position, but lock Y to wave height
-            const targetPos = new THREE.Vector3(mouseX, bobbing, mouseZ);
+            const targetPos = new THREE.Vector3(hoverX, bobbing, hoverZ);
+            orbGroupRef.current.position.lerp(targetPos, 0.08);
+        }
+        
+        // Inner Core Plasma Animation (Audio Reactive)
+        if (coreMatRef.current) {
+            // Colors cycle through hot energy colors when speaking, influenced by volume
+            const colors = ["#ff0022", "#00ffcc", "#dd00ff", "#ffffff"]; // Added Cyan for advanced tech look
+            const targetColorIndex = isSpeaking ? Math.floor(t * 5 + currentVol * 2) % colors.length : 0;
+            const targetColor = new THREE.Color(colors[targetColorIndex]);
             
-            if (isSpeaking) {
-                targetPos.set(0, 1.5, -3); // Rise up and come close when speaking
+            coreMatRef.current.color.lerp(targetColor, 0.2); // Faster lerp for audio react
+            coreMatRef.current.emissive.lerp(targetColor, 0.2);
+            
+            // Distort and Speed react instantly to volume!
+            const targetDistort = isSpeaking ? 0.4 + currentVol * 0.8 : 0.2;
+            const targetSpeed = isSpeaking ? 3 + currentVol * 25 : 2;
+            const targetEmissive = isSpeaking ? 3.0 + currentVol * 15.0 : 2.0;
+
+            coreMatRef.current.distort = THREE.MathUtils.lerp(coreMatRef.current.distort, targetDistort, 0.2);
+            coreMatRef.current.speed = THREE.MathUtils.lerp(coreMatRef.current.speed, targetSpeed, 0.3);
+            coreMatRef.current.emissiveIntensity = THREE.MathUtils.lerp(coreMatRef.current.emissiveIntensity, targetEmissive, 0.3);
+        }
+
+        if (gyroRef.current) {
+            const baseRotSpeed = 0.5;
+            const targetRotSpeed = isSpeaking ? 5 + currentVol * 15 : baseRotSpeed;
+            
+            // Spin individual rings
+            gyroRef.current.children[0].rotation.x += targetRotSpeed * 0.01;
+            gyroRef.current.children[1].rotation.y += targetRotSpeed * 0.015;
+            gyroRef.current.children[2].rotation.z += targetRotSpeed * 0.02;
+
+            // Flash rings on volume
+            gyroRef.current.children.forEach((child: any) => {
+                if (child.material) {
+                    child.material.opacity = THREE.MathUtils.lerp(child.material.opacity, isSpeaking ? 0.3 + currentVol * 0.7 : 0.1, 0.2);
+                }
+            });
+        }
+        
+        if (shockwaveRef.current) {
+            if (isSpeaking && currentVol > 0.7) { // High volume spike triggers a shockwave
+                if (shockwaveRef.current.scale.x > 8 || shockwaveRef.current.scale.x === 1) { // Reset if too big or fresh
+                    shockwaveRef.current.scale.set(1, 1, 1);
+                    (shockwaveRef.current.material as THREE.MeshBasicMaterial).opacity = 0.9;
+                }
             }
+            // Expand wave and fade out
+            shockwaveRef.current.scale.addScalar(0.4);
+            const mat = shockwaveRef.current.material as THREE.MeshBasicMaterial;
+            mat.opacity = Math.max(0, mat.opacity - 0.02);
+        }
+
+        if (lightRef.current) {
+            // Massive light burst on the water reacting to syllables
+            const targetLight = isSpeaking ? 2500 + currentVol * 15000 : 2500;
+            lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, targetLight, 0.2);
+        }
+
+        if (auraRef.current) {
+            const auraMat = auraRef.current.material as any;
+            const targetOpacity = isSpeaking ? 0.2 + currentVol * 0.6 : 0.1;
+            auraMat.opacity = THREE.MathUtils.lerp(auraMat.opacity, targetOpacity, 0.2);
             
-            orbRef.current.position.lerp(targetPos, 0.08);
-            
-            // Dynamic color for the orb
-            const mat = orbRef.current.material as any;
-            const targetColor = isSpeaking ? new THREE.Color("#ff0044") : new THREE.Color("#aa0011"); 
-            const targetEmissive = isSpeaking ? new THREE.Color("#ff0022") : new THREE.Color("#440000");
-            mat.color.lerp(targetColor, 0.05);
-            mat.emissive.lerp(targetEmissive, 0.05);
-            mat.emissiveIntensity = THREE.MathUtils.lerp(mat.emissiveIntensity, isSpeaking ? 1.5 : 0.5, 0.1);
+            // Pulsing energy size for aura, pulsing with voice!
+            const auraScale = 1.05 + Math.sin(t * 15) * 0.02 + (currentVol * 0.3);
+            auraRef.current.scale.set(auraScale, auraScale, auraScale);
         }
     });
 
     return (
-        <group>
-            <mesh ref={orbRef} castShadow>
-                <sphereGeometry args={[1.5, 64, 64]} />
-                <MeshDistortMaterial
-                    color="#aa0011"
-                    emissive="#440000"
-                    emissiveIntensity={isSpeaking ? 1.5 : 0.5}
-                    roughness={0.1}
-                    metalness={0.8}
+        <group ref={orbGroupRef}>
+            {/* Outer Refractive Glass Shell - Resized */}
+            <mesh castShadow>
+                <sphereGeometry args={[14, 64, 64]} />
+                <MeshTransmissionMaterial 
+                    color="#ff4444" 
+                    roughness={0.0}
+                    transmission={1.0} // Fully glass
+                    thickness={1.5} // Refraction thickness
+                    ior={1.4} // Index of Refraction
                     clearcoat={1}
-                    distort={distort}
-                    speed={speed}
                 />
             </mesh>
+
+            {/* Inner Bubbling Plasma Core - Resized */}
+            <mesh>
+                <sphereGeometry args={[10.8, 64, 64]} />
+                <MeshDistortMaterial
+                    ref={coreMatRef}
+                    color="#aa0011"
+                    emissive="#ff0011"
+                    emissiveIntensity={2}
+                    distort={0.2}
+                    speed={2}
+                />
+            </mesh>
+            
+            {/* Energy Aura (Outer Glow) - Resized */}
+            <mesh ref={auraRef}>
+                <sphereGeometry args={[14.8, 32, 32]} />
+                <meshBasicMaterial color="#ff0022" transparent opacity={0.1} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+            
+            {/* Quantum Gyroscope Rings */}
+            <group ref={gyroRef}>
+                <mesh rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[16.8, 0.08, 16, 100]} />
+                    <meshBasicMaterial color="#ffffff" transparent opacity={0.2} blending={THREE.AdditiveBlending} depthWrite={false}/>
+                </mesh>
+                <mesh rotation={[0, Math.PI / 4, 0]}>
+                    <torusGeometry args={[18.0, 0.08, 16, 100]} />
+                    <meshBasicMaterial color="#00ffcc" transparent opacity={0.2} blending={THREE.AdditiveBlending} depthWrite={false}/>
+                </mesh>
+                <mesh rotation={[0, -Math.PI / 4, 0]}>
+                    <torusGeometry args={[19.2, 0.08, 16, 100]} />
+                    <meshBasicMaterial color="#ff0044" transparent opacity={0.2} blending={THREE.AdditiveBlending} depthWrite={false}/>
+                </mesh>
+            </group>
+            
+            {/* Neural Spark Swarm */}
+            <Sparkles 
+                count={isSpeaking ? 800 : 200} 
+                scale={12} 
+                size={isSpeaking ? 15 : 6} 
+                speed={isSpeaking ? 8 : 1} 
+                opacity={0.8} 
+                color={isSpeaking ? "#00ffcc" : "#ff0044"} 
+            />
+            
+            {/* Audio Shockwave Ring (lays flat on ocean surface) */}
+            <mesh ref={shockwaveRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.5, 0]}>
+                <ringGeometry args={[3, 3.5, 64]} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </mesh>
+
+            {/* Massive internal power source that illuminates the dark ocean */}
+            <pointLight ref={lightRef} color="#ff0022" intensity={2500} distance={200} decay={1.5} />
+            
+            {/* Intergalactic Cosmic Lightning Connection */}
+            <CosmicLightning isActive={isSpeaking || isListening} />
         </group>
     );
 }
 
-// HEAVY RAIN PARTICLE SYSTEM (REALISTIC DROPS)
-function Rain() {
-    const rainRef = useRef<THREE.Points>(null);
-    const dropCount = 12000;
-    
-    // Create a perfectly round, soft droplet texture programmatically
-    const dropTexture = useMemo(() => {
+// REALISTIC RAIN STREAK TEXTURE
+function useRaindropTexture() {
+    return useMemo(() => {
         const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const context = canvas.getContext('2d');
-        if (context) {
-            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-            gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.4)');
-            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-            context.fillStyle = gradient;
-            context.fillRect(0, 0, 32, 32);
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            // Draw a realistic thin long vertical streak for fast moving rain
+            const gradient = ctx.createLinearGradient(32, 0, 32, 64);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)');
+            gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.6)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(31, 0, 2, 64); // Very thin 2px line in the center
         }
         return new THREE.CanvasTexture(canvas);
     }, []);
+}
 
+// CINEMATIC RAIN (REALISTIC DROPLETS)
+function Rain() {
+    const rainRef = useRef<THREE.Points>(null);
+    const dropCount = 6000;
+    const dropTexture = useRaindropTexture();
+    
     const [positions, velocities] = useMemo(() => {
         const positions = new Float32Array(dropCount * 3);
         const velocities = new Float32Array(dropCount);
+        
         for (let i = 0; i < dropCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 100; // x
-            positions[i * 3 + 1] = Math.random() * 40; // y
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 100; // z
-            velocities[i] = 0.5 + Math.random() * 0.5; // fall speed
+            positions[i * 3] = (Math.random() - 0.5) * 100;
+            positions[i * 3 + 1] = Math.random() * 40;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+            velocities[i] = 40 + Math.random() * 30; // Very fast falling speed for realism
         }
         return [positions, velocities];
     }, []);
@@ -268,15 +497,12 @@ function Rain() {
         if (rainRef.current) {
             const pos = rainRef.current.geometry.attributes.position.array as Float32Array;
             for (let i = 0; i < dropCount; i++) {
-                // Drastically reduced speed (from 70 down to 12)
-                pos[i * 3 + 1] -= velocities[i] * delta * 12; 
+                pos[i * 3 + 1] -= velocities[i] * delta; // Fall down rapidly
+                pos[i * 3] -= velocities[i] * delta * 0.1; // Slight wind blowing to the left
                 
-                // Slight wind effect
-                pos[i * 3] -= velocities[i] * delta * 1.5; 
-
                 if (pos[i * 3 + 1] < -2) {
-                    pos[i * 3 + 1] = 40; // reset to top
-                    pos[i * 3] = (Math.random() - 0.5) * 100; // reset X to avoid gaps
+                    pos[i * 3 + 1] = 40 + Math.random() * 10;
+                    pos[i * 3] = (Math.random() - 0.5) * 100 + 10; // Offset start to compensate wind
                 }
             }
             rainRef.current.geometry.attributes.position.needsUpdate = true;
@@ -294,16 +520,165 @@ function Rain() {
                 />
             </bufferGeometry>
             <pointsMaterial 
-                map={dropTexture}
-                size={0.12} 
-                color="#b3d4ff" 
+                size={0.6} 
+                map={dropTexture} 
                 transparent 
-                opacity={0.6} 
+                opacity={0.7} 
                 depthWrite={false} 
                 blending={THREE.AdditiveBlending} 
             />
         </points>
     );
+}
+
+// FIRST PERSON CINEMATIC CAMERA (360 Look Around)
+function FirstPersonCamera({ isListening, isSpeaking }: { isListening: boolean; isSpeaking: boolean }) {
+    const { camera } = useThree();
+    const controlsRef = useRef<any>(null);
+    const spotLightRef = useRef<THREE.SpotLight>(null);
+    const targetObj = useMemo(() => new THREE.Object3D(), []);
+
+    // Initialize camera offset (high elevation)
+    useEffect(() => {
+        // Start further back so OrbitControls computes the angle correctly before pulling in
+        camera.position.set(0, 2.9, 5);
+    }, [camera]);
+
+    useFrame((state, delta) => {
+        if (controlsRef.current) {
+            // Bobbing: set target Y based on wave height at center (0,0)
+            const waveY = GlobalOceanState.getWaveHeight(0, 0);
+            const targetCamY = waveY + 3; // High elevation
+            
+            // Move BOTH camera and target Y by the same delta to preserve user pitch/yaw
+            const diff = targetCamY - camera.position.y;
+            const moveY = diff * 0.08;
+            
+            camera.position.y += moveY;
+            controlsRef.current.target.y += moveY;
+            
+
+            
+            controlsRef.current.update();
+            
+            // Sync flashlight to camera
+            if (spotLightRef.current) {
+                // Raised hand position: slightly above and to the right of the eye level
+                const offset = new THREE.Vector3(0.4, 0.6, 0).applyQuaternion(camera.quaternion);
+                spotLightRef.current.position.copy(camera.position).add(offset);
+                
+                // Point flashlight EXACTLY where the camera is looking
+                const lookDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                targetObj.position.copy(spotLightRef.current.position).add(lookDirection);
+            }
+        }
+    });
+
+    return (
+        <>
+            <primitive object={targetObj} />
+            {/* The Flashlight Beam (Powerful Searchlight) */}
+            <SpotLight
+                ref={spotLightRef}
+                target={targetObj}
+                color="#cce6ff" // Cold cinematic LED light
+                intensity={2000} // Powerful intensity for a good searchlight
+                distance={400} // Reaches 100m easily
+                angle={0.15} // Perfect searchlight cone (not too wide, not laser thin)
+                penumbra={0.5} // Realistic edge
+                decay={1.2} 
+                castShadow
+            />
+            <OrbitControls 
+                ref={controlsRef}
+                target={[0, 3, 0]} // True center target at high elevation
+                enableZoom={false} 
+                enablePan={false} 
+                enableDamping={true}
+                dampingFactor={0.05}
+                minDistance={0.01} 
+                maxDistance={0.01} // Locked distance for true first-person rotation
+                minPolarAngle={0} // Look all the way up to the sky
+                maxPolarAngle={Math.PI} // Look all the way down to the water
+                rotateSpeed={0.6} // Smooth drag speed
+                makeDefault
+            />
+        </>
+    );
+}
+
+// DYNAMIC LIGHTNING STRIKES
+function Lightning() {
+    const lightRef = useRef<THREE.PointLight>(null);
+    
+    useFrame((state, delta) => {
+        if (lightRef.current) {
+            // Random lightning strikes (1% chance per frame)
+            if (Math.random() > 0.99) {
+                // Flash intensely
+                lightRef.current.intensity = 5000 + Math.random() * 5000;
+                lightRef.current.position.set((Math.random() - 0.5) * 100, 40 + Math.random() * 20, (Math.random() - 0.5) * 100);
+            } else {
+                // Fade out quickly to simulate flash decay
+                lightRef.current.intensity = THREE.MathUtils.lerp(lightRef.current.intensity, 0, delta * 15);
+            }
+        }
+    });
+
+    return <pointLight ref={lightRef} color="#ffffff" distance={200} decay={2} />;
+}
+
+// PROCEDURAL 3D AUDIO SYSTEM (Web Audio API)
+function ProceduralAudioSystem() {
+    useEffect(() => {
+        // Only run in browser
+        if (typeof window === 'undefined') return;
+
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        const ctx = new AudioContextClass();
+
+        // 1. Wind Noise (Pink/Brown noise filter)
+        const bufferSize = ctx.sampleRate * 2; // 2 seconds
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+
+        const windSource = ctx.createBufferSource();
+        windSource.buffer = noiseBuffer;
+        windSource.loop = true;
+
+        const windFilter = ctx.createBiquadFilter();
+        windFilter.type = 'lowpass';
+        windFilter.frequency.value = 400; // Low rumble
+
+        const windGain = ctx.createGain();
+        windGain.gain.value = 0.5;
+
+        windSource.connect(windFilter);
+        windFilter.connect(windGain);
+        windGain.connect(ctx.destination);
+        windSource.start();
+
+        // Must resume context on interaction
+        const resumeAudio = () => {
+            if (ctx.state === 'suspended') ctx.resume();
+        };
+        document.addEventListener('click', resumeAudio);
+        document.addEventListener('touchstart', resumeAudio);
+
+        return () => {
+            document.removeEventListener('click', resumeAudio);
+            document.removeEventListener('touchstart', resumeAudio);
+            windSource.stop();
+            ctx.close();
+        };
+    }, []);
+
+    return null;
 }
 
 // REALISTIC MIDNIGHT OCEAN
@@ -312,19 +687,20 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
     const gl = useThree((state) => state.gl);
     const waterNormals = useTexture('/waternormals.jpg');
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
-    const geom = useMemo(() => new THREE.PlaneGeometry(100, 100, 150, 150), []);
+    const geom = useMemo(() => new THREE.PlaneGeometry(2000, 2000, 250, 250), []);
     
     const config = useMemo(
         () => ({
             textureWidth: 512,
             textureHeight: 512,
             waterNormals,
-            sunDirection: new THREE.Vector3(0, 1, 1).normalize(),
-            sunColor: 0x00ffff,
-            waterColor: 0x000a1f,
-            distortionScale: 3.7,
+            sunDirection: new THREE.Vector3(0, 1, 0.5).normalize(), // Directs the specular highlight towards the camera
+            sunColor: 0xff0022, // Quantum AI Core Red reflection
+            waterColor: 0x000511, // Extremely deep, dark cinematic ocean blue
+            distortionScale: 4.5, // Increased distortion for more liquid feel
             fog: true,
             format: gl.outputColorSpace,
+            alpha: 0.9, // Slightly more opaque for better reflections
         }),
         [waterNormals, gl]
     );
@@ -359,13 +735,22 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
                 shader.fragmentShader = shader.fragmentShader.replace(
                     '#include <tonemapping_fragment>',
                     `
-                    // Foam at peaks (height > 0.5)
-                    float foam = smoothstep(0.5, 1.8, vHeight);
-                    gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 1.0, 1.0), foam * 0.9);
+                    // --- ADVANCED SUBSURFACE SCATTERING ---
+                    // Deep oceanic teal/cyan glow bleeding through the waves
+                    float sssAmount = smoothstep(0.0, 2.0, vHeight);
+                    vec3 sssColor = vec3(0.0, 0.5, 0.3); // Vibrant deep sea teal
+                    gl_FragColor.rgb += sssColor * sssAmount * 0.9;
                     
-                    // Subsurface Scattering (Cyan light bleeding through waves)
-                    float sss = smoothstep(-0.5, 1.5, vHeight);
-                    gl_FragColor.rgb += vec3(0.0, 0.4, 0.8) * sss * 0.6;
+                    // --- DYNAMIC SEA FOAM ---
+                    // Brilliant white foam at the sharp peaks of the waves
+                    float foamAmount = smoothstep(0.8, 2.0, vHeight);
+                    vec3 foamColor = vec3(0.9, 0.95, 1.0); 
+                    
+                    // Blend foam on top
+                    gl_FragColor.rgb = mix(gl_FragColor.rgb, foamColor, foamAmount * 0.85);
+                    
+                    // Maintain slight transparency for depth
+                    gl_FragColor.a = 0.9;
                     
                     #include <tonemapping_fragment>
                     `
@@ -400,33 +785,11 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
     return <water ref={ref} args={[geom, config]} rotation={[-Math.PI / 2, 0, 0]} />;
 }
 
+// DYNAMIC DAY/NIGHT SKY MANAGER HAS BEEN REMOVED
+
 // PURE CLEAN UI
 function PixelPerfectUI({ onExploreClick, activeZone }: { onExploreClick: () => void, activeZone?: string }) {
-    if (activeZone !== 'identity') return null;
-
-    return (
-        <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-center max-w-[1400px] mx-auto px-10">
-            {/* Removed text block based on request */}
-
-            {/* Social Icons only */}
-            <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 pointer-events-auto flex flex-col items-center gap-6">
-                <div className="flex justify-center gap-6 text-neutral-500">
-                    <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-                        <FiGithub size={20} />
-                    </a>
-                    <a href="https://www.linkedin.com/in/naveen-kariyawasam-b85507229/" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">
-                        <FiLinkedin size={20} />
-                    </a>
-                    <button onClick={() => {
-                        navigator.clipboard.writeText('hknskariyawasamnaveen@gmail.com');
-                        alert('Email copied!');
-                    }} className="hover:text-cyan-400 transition-colors">
-                        <FiMail size={20} />
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    return null; // Entirely handled by CentralPortalNav now
 }
 
 interface ThreeDTechLabProps {
@@ -436,7 +799,8 @@ interface ThreeDTechLabProps {
     onExploreClick: () => void;
 }
 
-export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onExploreClick }: ThreeDTechLabProps) {
+export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, onExploreClick }: ThreeDTechLabProps) {
+    // Only render on client to avoid hydration mismatch with Canvas
     const [mounted, setMounted] = useState(false);
     const [sunRef, setSunRef] = useState<THREE.Mesh | null>(null);
 
@@ -450,18 +814,34 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
         <div className="fixed inset-0 w-full h-full bg-[#010611] overflow-hidden">
             
             <div className="absolute inset-0 z-0">
-                <Canvas camera={{ position: [0, 1.5, 12], fov: 45 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
+                <Canvas camera={{ position: [0, 1.5, 0], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
                     
-                    {/* Volumetric Surface Fog */}
-                    <fog attach="fog" args={['#010611', 2, 40]} />
+                    {/* Volumetric Surface Fog - Extended distance for infinite horizon */}
+                    <fog attach="fog" args={['#010611', 5, 400]} />
                     <color attach="background" args={['#010611']} />
                     
-                    <ambientLight intensity={0.5} color="#002244" />
-                    <spotLight position={[0, 20, 20]} intensity={100} decay={2} distance={100} color="#00aaff" penumbra={1} angle={Math.PI / 3} />
-                    
+                    {/* The Deep Abyss Floor (Seabed) */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -25, 0]}>
+                        <planeGeometry args={[1000, 1000]} />
+                        <meshStandardMaterial color="#000511" roughness={1} metalness={0} />
+                    </mesh>
+
+                    <ambientLight intensity={0.4} color="#001122" />
+                    <spotLight position={[0, 20, 20]} intensity={50} decay={2} distance={100} color="#004466" penumbra={1} angle={Math.PI / 3} />
+
+                    {/* INTERGALACTIC STARRY SKY */}
+                    <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={2} />
+
+                    {/* VOICE ASSISTANT 360 LIGHTING */}
+                    <VoiceAuraLight isSpeaking={isSpeaking} />
+
                     {/* Deep Volumetric Sub-lighting (Red light from abyss) */}
                     <pointLight position={[0, -15, 0]} intensity={250} distance={40} decay={1.5} color="#ff0022" />
                     
+                    {/* WEATHER & SOUNDS */}
+                    <ProceduralAudioSystem />
+                    <Lightning />
+
                     <Suspense fallback={null}>
                         {/* Night HDRI for realistic dark water reflections */}
                         <Environment preset="night" background={false} environmentIntensity={0.5} />
@@ -471,33 +851,14 @@ export default function ThreeDTechLab({ isListening, isSpeaking, activeZone, onE
 
                     <Rain />
 
-                    {/* POST PROCESSING (Bloom + Volumetric God Rays) */}
-                    <EffectComposer disableNormalPass multisampling={0}>
-                        {sunRef && (
-                            <GodRays 
-                                sun={sunRef} 
-                                samples={100} 
-                                density={0.96} 
-                                decay={0.93} 
-                                weight={0.6} 
-                                exposure={0.8} 
-                                clampMax={1} 
-                                blur={true}
-                            />
-                        )}
-                        <Bloom luminanceThreshold={0.5} mipmapBlur intensity={2.0} />
+                    {/* POST PROCESSING (Cinematic Stack - Crisp & Clear without blur) */}
+                    <EffectComposer multisampling={0}>
+                        <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} />
+                        <Vignette eskil={false} offset={0.1} darkness={1.2} />
+                        <Noise opacity={0.03} />
                     </EffectComposer>
 
-                    <OrbitControls 
-                        enableZoom={false} 
-                        enablePan={false} 
-                        autoRotate 
-                        autoRotateSpeed={0.3} 
-                        minPolarAngle={Math.PI / 2.5}
-                        maxPolarAngle={Math.PI / 2.1}
-                        minAzimuthAngle={-Math.PI / 6}
-                        maxAzimuthAngle={Math.PI / 6}
-                    />
+                    <FirstPersonCamera isListening={isListening} isSpeaking={isSpeaking} />
                 </Canvas>
             </div>
 
