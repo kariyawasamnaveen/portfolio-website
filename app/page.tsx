@@ -49,6 +49,7 @@ export default function Home() {
     const [isListening, setIsListening] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
     const [isBotActive, setIsBotActive] = useState(false)
+    const [isUiRevealed, setIsUiRevealed] = useState(false) // New state for voice-activated UI reveal
     const recognitionRef = useRef<any>(null)
     const isBotActiveRef = useRef(false)
     const isSpeakingRef = useRef(false)
@@ -108,6 +109,7 @@ export default function Home() {
         onSpeechStart: () => {
             console.log("[Voice AI 🗣️] Speech started! (Deep Debug: Silero VAD detected human voice)");
             setIsListening(true);
+            setIsUiRevealed(true); // User spoke, reveal the UI!
             if (window.speechSynthesis.speaking) {
                 console.log("[Voice AI 🛑] BARGE-IN DETECTED! Muting bot (Deep Debug: Cancelling TTS)...");
                 window.speechSynthesis.cancel();
@@ -290,46 +292,111 @@ export default function Home() {
                             <motion.button
                                 onClick={() => {
                                     setIsPoweringUp(true);
+                                    
+                                    // Play Ocean Wind (Synthesized Brown Noise)
+                                    try {
+                                        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                                        const bufferSize = audioCtx.sampleRate * 15;
+                                        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                                        const data = buffer.getChannelData(0);
+                                        
+                                        let lastOut = 0;
+                                        for (let i = 0; i < bufferSize; i++) {
+                                            const white = Math.random() * 2 - 1;
+                                            data[i] = (lastOut + (0.02 * white)) / 1.02;
+                                            lastOut = data[i];
+                                            data[i] *= 3.5; 
+                                        }
+
+                                        const noiseSource = audioCtx.createBufferSource();
+                                        noiseSource.buffer = buffer;
+                                        
+                                        const filter = audioCtx.createBiquadFilter();
+                                        filter.type = 'lowpass';
+                                        filter.frequency.setValueAtTime(100, audioCtx.currentTime); 
+                                        filter.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 5); 
+                                        filter.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 10);
+                                        
+                                        const gainNode = audioCtx.createGain();
+                                        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                                        gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 2);
+                                        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime + 12);
+                                        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 15);
+
+                                        noiseSource.connect(filter);
+                                        filter.connect(gainNode);
+                                        gainNode.connect(audioCtx.destination);
+                                        
+                                        noiseSource.start();
+                                    } catch (e) { console.warn("AudioContext not supported", e); }
+
                                     setTimeout(() => {
                                         setHasPoweredUp(true);
                                         setIsBotActive(true);
-                                        // Trigger AI Voice
+                                        
+                                        // Philosophical Voiceover
                                         const synth = window.speechSynthesis;
-                                        const utterance = new SpeechSynthesisUtterance("Systems Online. Hi, I am Naveen's AI assistant. How can I help you explore his work?");
-                                        const preferredVoice = getPreferredMaleVoice(synth);
-                                        if (preferredVoice) utterance.voice = preferredVoice;
-                                        utterance.pitch = 1.0;
-                                        synth.speak(utterance);
-                                    }, 1500);
+                                        const voice = getPreferredMaleVoice(synth);
+                                        
+                                        const lines = [
+                                            "We are all adrift...",
+                                            "on the endless ocean of existence.",
+                                            "Surrounded by the unknown...",
+                                            "consumed by the great silence.",
+                                            "But even in the deepest isolation...",
+                                            "the mind searches for a beacon."
+                                        ];
+                                        
+                                        lines.forEach((text, i) => {
+                                            setTimeout(() => {
+                                                const utterance = new SpeechSynthesisUtterance(text);
+                                                if (voice) utterance.voice = voice;
+                                                utterance.pitch = 0.8; 
+                                                utterance.rate = 0.85; 
+                                                
+                                                // When the LAST line finishes, auto-reveal the UI
+                                                if (i === lines.length - 1) {
+                                                    utterance.onend = () => {
+                                                        setTimeout(() => setIsUiRevealed(true), 500);
+                                                    };
+                                                    // Fallback: if TTS fails silently, reveal after 3s anyway
+                                                    setTimeout(() => setIsUiRevealed(true), 3000);
+                                                }
+                                                
+                                                synth.speak(utterance);
+                                            }, i * 3500); // 3.5 seconds between each line
+                                        });
+                                        
+                                        // Safety fallback: reveal UI after full drift + TTS duration
+                                        // drift(16s) + delay(1s) + 6 lines × 3.5s = 38s max — reveal at 20s just in case
+                                        setTimeout(() => setIsUiRevealed(true), 20000);
+                                    }, 1000);
                                 }}
-                                animate={isPoweringUp ? { scale: [1, 0.9, 2], opacity: [1, 1, 0] } : { scale: [1, 1.02, 1] }}
-                                transition={isPoweringUp ? { duration: 1.5, ease: "easeInOut" } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                animate={isPoweringUp ? { scale: [1, 0.5, 4], opacity: [1, 1, 0] } : { scale: 1 }}
+                                transition={isPoweringUp ? { duration: 1.5, ease: "easeInOut" } : { duration: 0 }}
                                 className="relative w-40 h-40 md:w-56 md:h-56 flex items-center justify-center group outline-none cursor-pointer"
                             >
+                                {/* The Lonely Lantern */}
                                 <motion.div 
-                                    animate={{ opacity: [0.1, 0.3, 0.1], scale: [0.9, 1.1, 0.9] }}
+                                    animate={{ opacity: [0.7, 1, 0.6, 0.9, 1], scale: [0.95, 1.05, 0.98, 1.02, 1] }}
                                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                    className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.4)_0%,transparent_60%)] pointer-events-none"
+                                    className="w-10 h-10 rounded-full bg-amber-500 shadow-[0_0_40px_15px_rgba(245,158,11,0.5)] mix-blend-screen"
                                 />
-                                <img 
-                                    src="/fingerprint.png" 
-                                    alt="Fingerprint Scanner" 
-                                    className={`w-full h-full object-contain mix-blend-screen transition-all duration-700 relative z-10 ${isPoweringUp ? 'scale-110' : 'group-hover:scale-110'}`} 
-                                />
-                                <div className="absolute -bottom-8 w-full text-center">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-neutral-600 group-hover:text-amber-500 transition-colors duration-500">
-                                        {isPoweringUp ? 'Initializing...' : 'Authenticate'}
+                                
+                                <div className="absolute -bottom-16 w-full text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-neutral-600 group-hover:text-amber-500 transition-colors duration-700 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                                        {isPoweringUp ? 'Drifting...' : '[ DRIFT INTO THE DARKNESS ]'}
                                     </p>
                                 </div>
                             </motion.button>
                         
-                        {/* Dramatic Grid Lines when powering up */}
+                        {/* Fog/Darkness expanding on click */}
                         {isPoweringUp && (
                             <motion.div 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: [0, 1, 0], scale: [0.8, 1.2, 1.5] }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
                                 transition={{ duration: 1.5, ease: "easeOut" }}
-                                className="absolute inset-0 bg-[linear-gradient(rgba(245,158,11,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(245,158,11,0.15)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none"
+                                className="absolute inset-0 bg-black pointer-events-none"
                             />
                         )}
                     </motion.div>
@@ -348,26 +415,81 @@ export default function Home() {
                     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[150px] rounded-full" />
                 </div>
 
-                {/* Header */}
-                <header className="fixed top-0 left-0 w-full p-10 z-[100] flex justify-between items-center pointer-events-none">
-                    <div className="flex items-center gap-5 pointer-events-auto">
-                        <div className="relative group cursor-pointer">
-                            <div className="absolute inset-0 bg-emerald-500/20 blur-md rounded-full group-hover:bg-emerald-400/40 transition-colors duration-500" />
-                            <img src="/logo-kariyawasam.jpg" alt="Logo" className="relative h-12 w-12 object-cover rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
-                            <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
-                        </div>
-                    </div>
-                    <button className="flex items-center gap-4 bg-neutral-950/40 backdrop-blur-md border border-emerald-500/20 px-5 py-2.5 rounded-full shadow-[0_5px_20px_rgba(0,0,0,0.5)] hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all duration-300 pointer-events-auto group">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)] group-hover:shadow-[0_0_15px_rgba(16,185,129,1)]" />
-                        <span className="text-[9px] font-black tracking-[0.3em] text-neutral-300 group-hover:text-emerald-400 uppercase leading-none transition-colors duration-300">For Hire</span>
-                    </button>
-                </header>
+                <AnimatePresence>
+                    {isUiRevealed && (
+                        <>
+                            {/* Header - slides in from top */}
+                            <motion.header 
+                                initial={{ y: -80, opacity: 0, filter: "blur(10px)" }}
+                                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                                transition={{ type: "spring", damping: 22, stiffness: 120, delay: 0.1 }}
+                                className="fixed top-0 left-0 w-full p-8 z-[100] flex justify-between items-center pointer-events-none"
+                            >
+                                <div className="flex items-center gap-5 pointer-events-auto">
+                                    <motion.div 
+                                        className="relative group cursor-pointer"
+                                        whileHover={{ scale: 1.1 }}
+                                        transition={{ type: "spring", stiffness: 400 }}
+                                    >
+                                        <div className="absolute inset-0 bg-emerald-500/20 blur-md rounded-full group-hover:bg-emerald-400/40 transition-colors duration-500" />
+                                        <img src="/logo-kariyawasam.jpg" alt="Logo" className="relative h-12 w-12 object-cover rounded-full border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.3)]" />
+                                    </motion.div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
+                                        <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
+                                    </div>
+                                    <motion.div 
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ type: "spring", delay: 0.5 }}
+                                        className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+                                        <span className="text-[9px] font-black tracking-[0.2em] text-emerald-400/80 uppercase">For Hire</span>
+                                    </motion.div>
+                                </div>
+                            </motion.header>
 
-                <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
-
+                            {/* Top Right Social Buttons - stagger in from right */}
+                            <motion.div 
+                                className="fixed top-8 right-10 z-[100] flex items-center gap-3"
+                            >
+                                {[
+                                    { href: "https://github.com/kariyawasamnaveen", icon: <FiGithub size={18} />, label: "GitHub" },
+                                    { href: "https://linkedin.com/in/naveen-sandeepa", icon: <FiLinkedin size={18} />, label: "LinkedIn" },
+                                    { href: "mailto:hknskariyawasamnaveen@gmail.com", icon: <FiMail size={18} />, label: "Email" },
+                                ].map((item, i) => (
+                                    <motion.a
+                                        key={item.label}
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        initial={{ x: 40, opacity: 0, scale: 0.8 }}
+                                        animate={{ x: 0, opacity: 1, scale: 1 }}
+                                        transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.3 + i * 0.1 }}
+                                        whileHover={{ scale: 1.15, y: -2 }}
+                                        className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300"
+                                    >
+                                        {item.icon}
+                                    </motion.a>
+                                ))}
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+                {/* Central Bottom Navigation - macOS Dock style spring pop */}
+                <AnimatePresence>
+                    {isUiRevealed && (
+                        <motion.div 
+                            initial={{ y: 120, opacity: 0, scale: 0.8 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", damping: 16, stiffness: 180, delay: 0.6 }}
+                            className="relative z-[100]"
+                        >
+                            <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <div className={`z-10 w-full max-w-7xl mx-auto px-10 flex ${['impact', 'projects'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto pointer-events-none' : 'relative items-center h-screen pointer-events-none'}`}>
                     <AnimatePresence mode="wait">
                         {activeZone === 'identity' && (

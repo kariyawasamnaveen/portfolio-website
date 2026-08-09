@@ -239,7 +239,7 @@ function VoiceAuraLight({ isSpeaking }: { isSpeaking: boolean }) {
     });
 
     // Massive light from above to illuminate the ocean 360 degrees
-    return <pointLight ref={lightRef} position={[0, 100, -30]} distance={2000} color="#00e6ff" intensity={0} decay={1.5} />;
+    return <pointLight ref={lightRef} position={[0, 100, -50]} distance={2000} color="#00e6ff" intensity={0} decay={1.5} />;
 }
 
 // REALISTIC FLOATING ORB (Quantum AI Core)
@@ -268,17 +268,17 @@ function FloatingOrb({ isListening, isSpeaking, setSunRef }: { isListening: bool
 
         // Base Idle Position
         let hoverX = Math.sin(t * 0.5) * 8;
-        let hoverZ = -150; 
+        let hoverZ = -50; 
         let hoverYOffset = 2.5;
 
         if (isSpeaking) {
             // Fly around the horizon (Lissajous curve trajectory)
             hoverX = Math.sin(t * 1.5) * 30 + Math.cos(t * 0.8) * 25; 
-            hoverZ = -150 + Math.sin(t * 1.2) * 25; // Swings from -175 to -125
+            hoverZ = -50 + Math.sin(t * 1.2) * 25; // Swings from -75 to -25
             hoverYOffset = 10 + Math.sin(t * 2.0) * 15; 
             
             // Subtle scaling when it moves
-            targetScale = THREE.MathUtils.mapLinear(hoverZ, -175, -125, 1.0, 1.3); 
+            targetScale = THREE.MathUtils.mapLinear(hoverZ, -75, -25, 1.0, 1.3); 
             targetScale = Math.max(1.0, targetScale);
         } else if (isListening) {
             targetScale = 1.05;
@@ -531,76 +531,100 @@ function Rain() {
     );
 }
 
-// FIRST PERSON CINEMATIC CAMERA (360 Look Around)
+// FIRST PERSON CINEMATIC CAMERA (Raft Drift + First Person after)
 function FirstPersonCamera({ isListening, isSpeaking }: { isListening: boolean; isSpeaking: boolean }) {
     const { camera } = useThree();
     const controlsRef = useRef<any>(null);
     const spotLightRef = useRef<THREE.SpotLight>(null);
     const targetObj = useMemo(() => new THREE.Object3D(), []);
+    const startTimeRef = useRef(Date.now());
+    const driftDoneRef = useRef(false);
+    
+    // The raft drift: camera starts at Z=150, drifts to Z=20 over 16 seconds.
+    // The Red Orb sits at Z=-50. So the camera will end up 70 units away, looking at it.
+    const driftDuration = 16000;
+    const startZ = 150;
+    const endZ = 20;
+    const orbLookAt = new THREE.Vector3(0, 8, -50); // The orb center
 
-    // Initialize camera offset (high elevation)
+    // Initialize
     useEffect(() => {
-        // Start further back so OrbitControls computes the angle correctly before pulling in
-        camera.position.set(0, 2.9, 5);
+        startTimeRef.current = Date.now();
+        driftDoneRef.current = false;
+        // Start far, looking at orb
+        camera.position.set(0, 4, startZ);
+        camera.lookAt(orbLookAt);
+        // Disable controls initially
+        if (controlsRef.current) {
+            controlsRef.current.enabled = false;
+        }
     }, [camera]);
 
-    useFrame((state, delta) => {
-        if (controlsRef.current) {
-            // Bobbing: set target Y based on wave height at center (0,0)
-            const waveY = GlobalOceanState.getWaveHeight(0, 0);
-            const targetCamY = waveY + 3; // High elevation
+    useFrame(() => {
+        const elapsed = Date.now() - startTimeRef.current;
+        
+        // NO Y bobbing during drift - keep camera level and stable so orb stays in view
+        if (elapsed < driftDuration) {
+            // PHASE 1: Cinematic drift
+            if (controlsRef.current) controlsRef.current.enabled = false;
             
-            // Move BOTH camera and target Y by the same delta to preserve user pitch/yaw
-            const diff = targetCamY - camera.position.y;
-            const moveY = diff * 0.08;
+            const progress = elapsed / driftDuration;
+            const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+            const currentZ = startZ - ((startZ - endZ) * ease);
             
-            camera.position.y += moveY;
-            controlsRef.current.target.y += moveY;
-            
-
-            
-            controlsRef.current.update();
-            
-            // Sync flashlight to camera
-            if (spotLightRef.current) {
-                // Raised hand position: slightly above and to the right of the eye level
-                const offset = new THREE.Vector3(0.4, 0.6, 0).applyQuaternion(camera.quaternion);
-                spotLightRef.current.position.copy(camera.position).add(offset);
-                
-                // Point flashlight EXACTLY where the camera is looking
-                const lookDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                targetObj.position.copy(spotLightRef.current.position).add(lookDirection);
+            camera.position.z = currentZ;
+            camera.position.y = 4; // Fixed height, no bobbing
+            // Always look directly at the orb
+            camera.lookAt(orbLookAt);
+        } else {
+            // PHASE 2: Hand off to OrbitControls for first-person look-around
+            if (!driftDoneRef.current && controlsRef.current) {
+                driftDoneRef.current = true;
+                // CRITICAL: set target 0.01 units AHEAD of camera's current look direction
+                // This keeps camera at current position instead of teleporting it to the orb
+                const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                const newTarget = camera.position.clone().add(lookDir.multiplyScalar(0.01));
+                controlsRef.current.target.copy(newTarget);
+                controlsRef.current.enabled = true;
             }
+        }
+
+        // Sync lantern to camera
+        if (spotLightRef.current) {
+            const forward = new THREE.Vector3(0, -0.3, -1).applyQuaternion(camera.quaternion).normalize();
+            spotLightRef.current.position.copy(camera.position).add(new THREE.Vector3(0, 0.3, 0));
+            targetObj.position.copy(camera.position).add(forward.multiplyScalar(50));
         }
     });
 
     return (
         <>
             <primitive object={targetObj} />
-            {/* The Flashlight Beam (Powerful Searchlight) */}
+            {/* The Lantern Beam */}
             <SpotLight
                 ref={spotLightRef}
                 target={targetObj}
-                color="#cce6ff" // Cold cinematic LED light
-                intensity={2000} // Powerful intensity for a good searchlight
-                distance={400} // Reaches 100m easily
-                angle={0.15} // Perfect searchlight cone (not too wide, not laser thin)
-                penumbra={0.5} // Realistic edge
-                decay={1.2} 
+                color="#f59e0b"
+                intensity={600}
+                distance={120}
+                angle={0.7}
+                penumbra={0.9}
+                decay={1.5}
                 castShadow
             />
             <OrbitControls 
                 ref={controlsRef}
-                target={[0, 3, 0]} // True center target at high elevation
+                target={[0, 8, -50]}
+                enabled={false}
                 enableZoom={false} 
                 enablePan={false} 
                 enableDamping={true}
                 dampingFactor={0.05}
                 minDistance={0.01} 
-                maxDistance={0.01} // Locked distance for true first-person rotation
-                minPolarAngle={0} // Look all the way up to the sky
-                maxPolarAngle={Math.PI} // Look all the way down to the water
-                rotateSpeed={0.6} // Smooth drag speed
+                maxDistance={0.01}
+                minPolarAngle={0.1}
+                maxPolarAngle={Math.PI - 0.1}
+                rotateSpeed={0.6}
                 makeDefault
             />
         </>
@@ -814,10 +838,10 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, onE
         <div className="fixed inset-0 w-full h-full bg-[#010611] overflow-hidden">
             
             <div className="absolute inset-0 z-0">
-                <Canvas camera={{ position: [0, 1.5, 0], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
+                <Canvas camera={{ position: [0, 4, 150], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
                     
-                    {/* Volumetric Surface Fog - Extended distance for infinite horizon */}
-                    <fog attach="fog" args={['#010611', 5, 400]} />
+                    {/* Fog: thin enough that orb is always visible at ~70 unit distance */}
+                    <fog attach="fog" args={['#010611', 20, 90]} />
                     <color attach="background" args={['#010611']} />
                     
                     {/* The Deep Abyss Floor (Seabed) */}
@@ -836,15 +860,15 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, onE
                     <VoiceAuraLight isSpeaking={isSpeaking} />
 
                     {/* Deep Volumetric Sub-lighting (Red light from abyss) */}
-                    <pointLight position={[0, -15, 0]} intensity={250} distance={40} decay={1.5} color="#ff0022" />
+                    <pointLight position={[0, -15, -50]} intensity={250} distance={80} decay={1.5} color="#ff0022" />
                     
                     {/* WEATHER & SOUNDS */}
                     <ProceduralAudioSystem />
                     <Lightning />
 
                     <Suspense fallback={null}>
-                        {/* Night HDRI for realistic dark water reflections */}
-                        <Environment preset="night" background={false} environmentIntensity={0.5} />
+                        {/* Embedded env map (no file fetch needed) */}
+                        <Environment preset="city" background={false} environmentIntensity={0.3} />
                         <FloatingOrb isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
                         <RealisticOcean isSpeaking={isSpeaking} />
                     </Suspense>
