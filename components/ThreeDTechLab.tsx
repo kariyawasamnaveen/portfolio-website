@@ -532,7 +532,7 @@ function Rain() {
 }
 
 // FIRST PERSON CINEMATIC CAMERA (Raft Drift + First Person after)
-function FirstPersonCamera({ isListening, isSpeaking }: { isListening: boolean; isSpeaking: boolean }) {
+function FirstPersonCamera({ isListening, isSpeaking, hasCompletedIntro }: { isListening: boolean; isSpeaking: boolean, hasCompletedIntro?: boolean }) {
     const { camera } = useThree();
     const controlsRef = useRef<any>(null);
     const spotLightRef = useRef<THREE.SpotLight>(null);
@@ -549,16 +549,30 @@ function FirstPersonCamera({ isListening, isSpeaking }: { isListening: boolean; 
 
     // Initialize
     useEffect(() => {
-        startTimeRef.current = Date.now();
-        driftDoneRef.current = false;
-        // Start far, looking at orb
-        camera.position.set(0, 4, startZ);
-        camera.lookAt(orbLookAt);
-        // Disable controls initially
-        if (controlsRef.current) {
-            controlsRef.current.enabled = false;
+        if (hasCompletedIntro) {
+            // Instantly jump to final state, skip animation
+            camera.position.set(0, 4, endZ);
+            camera.lookAt(orbLookAt);
+            if (controlsRef.current) {
+                const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                const newTarget = camera.position.clone().add(lookDir.multiplyScalar(0.01));
+                controlsRef.current.target.copy(newTarget);
+                controlsRef.current.enabled = true;
+            }
+            driftDoneRef.current = true;
+            startTimeRef.current = Date.now() - driftDuration - 1000; // Force elapsed > driftDuration
+        } else {
+            startTimeRef.current = Date.now();
+            driftDoneRef.current = false;
+            // Start far, looking at orb
+            camera.position.set(0, 4, startZ);
+            camera.lookAt(orbLookAt);
+            // Disable controls initially
+            if (controlsRef.current) {
+                controlsRef.current.enabled = false;
+            }
         }
-    }, [camera]);
+    }, [camera, hasCompletedIntro]);
 
     useFrame(() => {
         const elapsed = Date.now() - startTimeRef.current;
@@ -820,10 +834,11 @@ interface ThreeDTechLabProps {
     isListening: boolean;
     isSpeaking: boolean;
     activeZone?: string;
+    hasCompletedIntro?: boolean;
     onExploreClick: () => void;
 }
 
-export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, onExploreClick }: ThreeDTechLabProps) {
+export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, hasCompletedIntro, onExploreClick }: ThreeDTechLabProps) {
     // Only render on client to avoid hydration mismatch with Canvas
     const [mounted, setMounted] = useState(false);
     const [sunRef, setSunRef] = useState<THREE.Mesh | null>(null);
@@ -882,7 +897,7 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, onE
                         <Noise opacity={0.03} />
                     </EffectComposer>
 
-                    <FirstPersonCamera isListening={isListening} isSpeaking={isSpeaking} />
+                    <FirstPersonCamera isListening={isListening} isSpeaking={isSpeaking} hasCompletedIntro={hasCompletedIntro} />
                 </Canvas>
             </div>
 

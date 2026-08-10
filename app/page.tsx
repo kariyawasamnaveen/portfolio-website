@@ -532,6 +532,7 @@ export default function Home() {
                                     isListening={isListening} 
                                     isSpeaking={isSpeaking} 
                                     activeZone={activeZone}
+                                    hasCompletedIntro={isUiRevealed}
                                     onExploreClick={() => setActiveZone('projects')}
                                 />
                             </motion.div>
@@ -544,10 +545,11 @@ export default function Home() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-0 bg-black pointer-events-auto overflow-y-auto custom-scrollbar"
+                                className="fixed inset-0 z-0 bg-black pointer-events-auto overflow-hidden flex items-center justify-center"
                             >
-                                <div className="w-full max-w-5xl mx-auto px-10 pb-20 pt-[15vh]">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                {/* Adjusted max-width to allow 3 columns without shrinking cards, and centered it vertically */}
+                                <div className="w-full max-w-[1400px] mx-auto px-10">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                                     {PROJECTS_DATA.map((project) => (
                                     <motion.div 
                                         key={project.id} 
