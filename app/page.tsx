@@ -50,6 +50,7 @@ export default function Home() {
     const [isSpeaking, setIsSpeaking] = useState(false)
     const [isBotActive, setIsBotActive] = useState(false)
     const [isUiRevealed, setIsUiRevealed] = useState(false) // New state for voice-activated UI reveal
+    const [isRevealing, setIsRevealing] = useState(false) // Cinematic reveal trigger
     const recognitionRef = useRef<any>(null)
     const isBotActiveRef = useRef(false)
     const isSpeakingRef = useRef(false)
@@ -347,6 +348,13 @@ export default function Home() {
                                             "the mind searches for a beacon."
                                         ];
                                         
+                                        const triggerReveal = () => {
+                                            setIsRevealing(true);          // Stage 1: Orb pulse
+                                            setTimeout(() => {             // Stage 2: UI appears after glitch
+                                                setIsUiRevealed(true);
+                                            }, 2500);
+                                        };
+                                        
                                         lines.forEach((text, i) => {
                                             setTimeout(() => {
                                                 const utterance = new SpeechSynthesisUtterance(text);
@@ -354,39 +362,79 @@ export default function Home() {
                                                 utterance.pitch = 0.8; 
                                                 utterance.rate = 0.85; 
                                                 
-                                                // When the LAST line finishes, auto-reveal the UI
+                                                // When the LAST line finishes, trigger cinematic reveal
                                                 if (i === lines.length - 1) {
                                                     utterance.onend = () => {
-                                                        setTimeout(() => setIsUiRevealed(true), 500);
+                                                        setTimeout(() => triggerReveal(), 500);
                                                     };
-                                                    // Fallback: if TTS fails silently, reveal after 3s anyway
-                                                    setTimeout(() => setIsUiRevealed(true), 3000);
+                                                    // Fallback: if TTS ends silently
+                                                    setTimeout(() => triggerReveal(), 3000);
                                                 }
                                                 
                                                 synth.speak(utterance);
-                                            }, i * 3500); // 3.5 seconds between each line
+                                            }, i * 3500);
                                         });
                                         
-                                        // Safety fallback: reveal UI after full drift + TTS duration
-                                        // drift(16s) + delay(1s) + 6 lines × 3.5s = 38s max — reveal at 20s just in case
-                                        setTimeout(() => setIsUiRevealed(true), 20000);
+                                        // Hard safety fallback at 20s
+                                        setTimeout(() => triggerReveal(), 20000);
                                     }, 1000);
                                 }}
                                 animate={isPoweringUp ? { scale: [1, 0.5, 4], opacity: [1, 1, 0] } : { scale: 1 }}
                                 transition={isPoweringUp ? { duration: 1.5, ease: "easeInOut" } : { duration: 0 }}
                                 className="relative w-40 h-40 md:w-56 md:h-56 flex items-center justify-center group outline-none cursor-pointer"
                             >
-                                {/* The Lonely Lantern */}
-                                <motion.div 
-                                    animate={{ opacity: [0.7, 1, 0.6, 0.9, 1], scale: [0.95, 1.05, 0.98, 1.02, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                    className="w-10 h-10 rounded-full bg-amber-500 shadow-[0_0_40px_15px_rgba(245,158,11,0.5)] mix-blend-screen"
-                                />
+                                {/* --- The Irresistible Beacon --- */}
                                 
-                                <div className="absolute -bottom-16 w-full text-center">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.6em] text-neutral-600 group-hover:text-amber-500 transition-colors duration-700 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
-                                        {isPoweringUp ? 'Drifting...' : '[ DRIFT INTO THE DARKNESS ]'}
+                                {/* 1. Sonar Ripples (Expanding Rings) */}
+                                <motion.div 
+                                    animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
+                                    className="absolute w-12 h-12 rounded-full border border-amber-500/40 group-hover:border-amber-400/60"
+                                />
+                                <motion.div 
+                                    animate={{ scale: [1, 3.5], opacity: [0.4, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
+                                    className="absolute w-12 h-12 rounded-full border border-amber-600/30 group-hover:border-amber-500/50"
+                                />
+
+                                {/* 2. Floating Embers (Orbiting particles) */}
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                    className="absolute w-24 h-24 rounded-full pointer-events-none"
+                                >
+                                    <div className="absolute top-0 left-1/2 w-[3px] h-[3px] bg-amber-200 rounded-full shadow-[0_0_6px_rgba(253,230,138,1)] opacity-80" />
+                                    <div className="absolute bottom-2 right-2 w-[4px] h-[4px] bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,1)] opacity-60" />
+                                </motion.div>
+                                <motion.div
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                    className="absolute w-32 h-32 rounded-full pointer-events-none"
+                                >
+                                    <div className="absolute top-1/4 -left-1 w-[2px] h-[2px] bg-yellow-100 rounded-full shadow-[0_0_4px_rgba(254,240,138,1)] opacity-50" />
+                                </motion.div>
+
+                                {/* 3. The Living Core */}
+                                <motion.div 
+                                    // Heartbeat breathing animation
+                                    animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.7, 1, 0.7] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                    className="relative w-12 h-12 rounded-full flex items-center justify-center bg-amber-600 shadow-[0_0_30px_10px_rgba(245,158,11,0.2)] group-hover:bg-amber-500 group-hover:shadow-[0_0_70px_25px_rgba(245,158,11,0.6)] transition-all duration-700"
+                                >
+                                    {/* White-hot center */}
+                                    <div className="w-5 h-5 rounded-full bg-yellow-200 shadow-[0_0_15px_5px_rgba(255,255,255,0.7)] group-hover:bg-white group-hover:shadow-[0_0_25px_10px_rgba(255,255,255,1)] group-hover:scale-110 transition-all duration-700" />
+                                </motion.div>
+                                
+                                {/* 4. Interactive Typography */}
+                                <div className="absolute -bottom-20 w-full text-center flex flex-col items-center">
+                                    <p className="flex items-center gap-2 text-[10px] font-black uppercase text-neutral-700 group-hover:text-amber-400 transition-colors duration-700 drop-shadow-[0_0_0px_rgba(245,158,11,0)] group-hover:drop-shadow-[0_0_15px_rgba(245,158,11,0.8)]">
+                                        <span className="text-neutral-800 group-hover:text-amber-500 group-hover:-translate-x-2 transition-all duration-700">[</span>
+                                        <span className="tracking-[0.4em] group-hover:tracking-[0.7em] transition-all duration-700 whitespace-nowrap">
+                                            {isPoweringUp ? 'DRIFTING...' : 'DRIFT INTO THE DARKNESS'}
+                                        </span>
+                                        <span className="text-neutral-800 group-hover:text-amber-500 group-hover:translate-x-2 transition-all duration-700">]</span>
                                     </p>
+                                    <span className="w-20 h-[1px] bg-amber-500/0 group-hover:bg-amber-500/50 mt-3 transition-all duration-700 scale-0 group-hover:scale-100" />
                                 </div>
                             </motion.button>
                         
@@ -438,41 +486,21 @@ export default function Home() {
                                         <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
                                         <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
                                     </div>
-                                    <motion.div 
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ type: "spring", delay: 0.5 }}
-                                        className="flex items-center gap-2 ml-4 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
-                                        <span className="text-[9px] font-black tracking-[0.2em] text-emerald-400/80 uppercase">For Hire</span>
-                                    </motion.div>
                                 </div>
                             </motion.header>
 
-                            {/* Top Right Social Buttons - stagger in from right */}
+                            {/* Top Right 'For Hire' Badge */}
                             <motion.div 
-                                className="fixed top-8 right-10 z-[100] flex items-center gap-3"
+                                className="fixed top-10 right-10 z-[100] flex items-center gap-3"
+                                initial={{ x: 40, opacity: 0, scale: 0.8 }}
+                                animate={{ x: 0, opacity: 1, scale: 1 }}
+                                transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.5 }}
+                                whileHover={{ scale: 1.05, y: -2 }}
                             >
-                                {[
-                                    { href: "https://github.com/kariyawasamnaveen", icon: <FiGithub size={18} />, label: "GitHub" },
-                                    { href: "https://linkedin.com/in/naveen-sandeepa", icon: <FiLinkedin size={18} />, label: "LinkedIn" },
-                                    { href: "mailto:hknskariyawasamnaveen@gmail.com", icon: <FiMail size={18} />, label: "Email" },
-                                ].map((item, i) => (
-                                    <motion.a
-                                        key={item.label}
-                                        href={item.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        initial={{ x: 40, opacity: 0, scale: 0.8 }}
-                                        animate={{ x: 0, opacity: 1, scale: 1 }}
-                                        transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.3 + i * 0.1 }}
-                                        whileHover={{ scale: 1.15, y: -2 }}
-                                        className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white/50 hover:text-emerald-400 hover:border-emerald-500/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all duration-300"
-                                    >
-                                        {item.icon}
-                                    </motion.a>
-                                ))}
+                                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse drop-shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+                                    <span className="text-[10px] font-black tracking-[0.2em] text-emerald-400/90 uppercase">For Hire</span>
+                                </div>
                             </motion.div>
                         </>
                     )}
