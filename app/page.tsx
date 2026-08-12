@@ -244,8 +244,8 @@ export default function Home() {
             console.warn("[Voice AI ⚙️] No preferred male voice found, using default.");
         }
         
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
+        utterance.rate = 0.9;
+        utterance.pitch = 0.8;
         
         utterance.onstart = () => console.log("[Voice AI ⚙️] 🔊 TTS Audio started playing...");
         
@@ -357,7 +357,7 @@ export default function Home() {
                                             setTimeout(() => {
                                                 const utterance = new SpeechSynthesisUtterance(text);
                                                 if (voice) utterance.voice = voice;
-                                                utterance.pitch = 0.8; 
+                                                utterance.pitch = 0.75; 
                                                 utterance.rate = 0.85; 
                                                 
                                                 // When the LAST line finishes, trigger cinematic reveal
