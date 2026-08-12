@@ -340,12 +340,10 @@ export default function Home() {
                                         const voice = getPreferredMaleVoice(synth);
                                         
                                         const lines = [
-                                            "We are all adrift...",
-                                            "on the endless ocean of existence.",
-                                            "Surrounded by the unknown...",
-                                            "consumed by the great silence.",
-                                            "But even in the deepest isolation...",
-                                            "the mind searches for a beacon."
+                                            "Just as still water reflects the clear moon...",
+                                            "A calm mind reveals the deepest truths.",
+                                            "Welcome to Naveen's realm.",
+                                            "Take a deep breath. What do you seek today, and how may I guide you?"
                                         ];
                                         
                                         const triggerReveal = () => {
