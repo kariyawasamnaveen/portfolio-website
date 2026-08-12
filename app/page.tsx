@@ -53,7 +53,22 @@ export default function Home() {
     const [isRevealing, setIsRevealing] = useState(false) // Cinematic reveal trigger
     const recognitionRef = useRef<any>(null)
     const isBotActiveRef = useRef(false)
+    const [voicesLoaded, setVoicesLoaded] = useState(false)
     const isSpeakingRef = useRef(false)
+    
+    // Eagerly load voices to prevent empty array on first click
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+            const synth = window.speechSynthesis;
+            const loadVoices = () => {
+                if (synth.getVoices().length > 0) setVoicesLoaded(true);
+            };
+            loadVoices();
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = loadVoices;
+            }
+        }
+    }, [])
 
     const processAudio = async (base64data: string) => {
         try {
@@ -212,15 +227,25 @@ export default function Home() {
 
     const getPreferredMaleVoice = useCallback((synth: SpeechSynthesis) => {
         const voices = synth.getVoices();
-        return voices.find(v => v.name === 'Google UK English Male')
-            || voices.find(v => v.name.includes('David'))
-            || voices.find(v => v.name.includes('Mark'))
-            || voices.find(v => v.name === 'Daniel')
-            || voices.find(v => v.name === 'Alex')
-            || voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('boy'))
-            || voices.find(v => v.lang.includes('en-GB'))
-            || voices.find(v => v.lang.includes('en'))
-            || voices[0];
+        
+        // 1. Check known Male voices across macOS, Windows, Chrome
+        const exactMaleNames = ['Google UK English Male', 'Daniel', 'Alex', 'Fred', 'Bruce', 'Ralph', 'Albert', 'Microsoft David', 'Microsoft Mark', 'Arthur'];
+        
+        for (const name of exactMaleNames) {
+            const found = voices.find(v => v.name.includes(name));
+            if (found) return found;
+        }
+
+        // 2. Generic "male" match
+        let found = voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('boy'));
+        if (found) return found;
+
+        // 3. Fallback: Any English voice that is NOT a known female voice (Samantha, Karen, Moira, Tessa etc are female)
+        const knownFemale = ['samantha', 'karen', 'tessa', 'moira', 'veena', 'victoria', 'fiona', 'siri', 'zira', 'hazel', 'catherine', 'gordon', 'sandy', 'shelley', 'luciana', 'mari', 'yuri'];
+        
+        found = voices.find(v => v.lang.startsWith('en') && !knownFemale.some(f => v.name.toLowerCase().includes(f)));
+        
+        return found || voices[0];
     }, []);
 
     const speakResponse = useCallback((text: string) => {
