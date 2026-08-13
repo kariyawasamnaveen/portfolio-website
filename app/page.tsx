@@ -20,9 +20,18 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
     }
     return window.btoa(binary);
 }
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useMotionTemplate } from 'framer-motion'
 import CentralPortalNav from '@/components/CentralPortalNav'
-import ThreeDTechLab from '@/components/ThreeDTechLab'
+import dynamic from 'next/dynamic'
+import { CodeTerminal, type TechId } from '@/components/CodeTerminal'
+const ThreeDTechLab = dynamic(() => import('@/components/ThreeDTechLab'), {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-[#010611] z-0" />
+})
+const Scene = dynamic(() => import('@/components/Scene'), {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-[#010611] z-0" />
+})
 import LoadingScreen from '@/components/LoadingScreen'
 import { 
     FiGithub, FiLinkedin, FiMail, FiCpu, FiLayers, FiZap, 
@@ -37,38 +46,118 @@ type Zone = 'identity' | 'projects' | 'logic' | 'impact' | 'connect'
 
 import { Project, PROJECTS_DATA } from '@/data/projects'
 
+// Preload voices immediately on script evaluation
+if (typeof window !== 'undefined') {
+    window.speechSynthesis.getVoices();
+}
+
+function ProjectCard({ project, onClick }: { project: any, onClick: () => void }) {
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseXSpring = useSpring(x, { stiffness: 300, damping: 30 });
+    const mouseYSpring = useSpring(y, { stiffness: 300, damping: 30 });
+
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["10deg", "-10deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-10deg", "10deg"]);
+    
+    // Percentage for the glare effect
+    const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ["0%", "100%"]);
+    const glareY = useTransform(mouseYSpring, [-0.5, 0.5], ["0%", "100%"]);
+    const background = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(255,255,255,0.15) 0%, transparent 60%)`;
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.div 
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onClick={onClick}
+            whileHover={{ scale: 1.02 }}
+            className="relative aspect-video rounded-[32px] border border-white/10 cursor-pointer shadow-2xl bg-white/5 backdrop-blur-3xl overflow-hidden group"
+        >
+            {/* Glass Glare Highlight */}
+            <motion.div 
+                className="absolute inset-0 z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ background }}
+            />
+            
+            {/* The Vibrant Image without muddy filters */}
+            {project.images && project.images[0] && (
+                <img 
+                    src={project.images[0]} 
+                    alt={project.title} 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                />
+            )}
+            
+            {/* Clean bottom gradient for crisp text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+            
+            {/* Content elevated in 3D space */}
+            <div className="absolute bottom-0 left-0 w-full p-8 z-20" style={{ transform: "translateZ(30px)" }}>
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="h-[2px] w-8 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+                    <span className="text-[10px] font-black tracking-[0.4em] text-cyan-400 uppercase leading-none drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">{project.role}</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold uppercase tracking-tight leading-tight text-white drop-shadow-lg">{project.title}</h3>
+            </div>
+        </motion.div>
+    );
+}
+
 export default function Home() {
     const [activeZone, setActiveZone] = useState<Zone>('identity')
     const [lightboxReviewIndex, setLightboxReviewIndex] = useState<number | null>(null)
     const [currentReviewIndex, setCurrentReviewIndex] = useState(1)
     const [currentReelIndex, setCurrentReelIndex] = useState(1)
     const [isReelMuted, setIsReelMuted] = useState(true)
-    const [showLoading, setShowLoading] = useState(true)
-    const [hasPoweredUp, setHasPoweredUp] = useState(false)
     const [isPoweringUp, setIsPoweringUp] = useState(false)
     const [isListening, setIsListening] = useState(false)
     const [isSpeaking, setIsSpeaking] = useState(false)
-    const [isBotActive, setIsBotActive] = useState(false)
-    const [isUiRevealed, setIsUiRevealed] = useState(false) // New state for voice-activated UI reveal
-    const [isRevealing, setIsRevealing] = useState(false) // Cinematic reveal trigger
+    const [hasPoweredUp, setHasPoweredUp] = useState(false);
+    const [isUiRevealed, setIsUiRevealed] = useState(false);
+    const [showLoading, setShowLoading] = useState(true);
+    const [isAssetsReady, setIsAssetsReady] = useState(false);
+    const [startDrift, setStartDrift] = useState(false);
+    const [isBotActive, setIsBotActive] = useState(true);
+    const [isRevealing, setIsRevealing] = useState(true)
+    const [activeTech, setActiveTech] = useState<TechId>(null) // Logic page code terminal
+    const [isAnalyzing, setIsAnalyzing] = useState(false) // AI Code Review state
     const recognitionRef = useRef<any>(null)
     const isBotActiveRef = useRef(false)
-    const [voicesLoaded, setVoicesLoaded] = useState(false)
     const isSpeakingRef = useRef(false)
-    
-    // Eagerly load voices to prevent empty array on first click
+
     useEffect(() => {
-        if (typeof window !== "undefined" && window.speechSynthesis) {
-            const synth = window.speechSynthesis;
-            const loadVoices = () => {
-                if (synth.getVoices().length > 0) setVoicesLoaded(true);
-            };
-            loadVoices();
-            if (synth.onvoiceschanged !== undefined) {
-                synth.onvoiceschanged = loadVoices;
-            }
+        // Force browser to load voices into memory as early as possible
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+            console.log("[Voice AI ⚙️] Voices loaded into memory.");
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!showLoading) {
+            // As soon as the loading screen vanishes, power up the main UI so the Ocean Scene becomes visible
+            setHasPoweredUp(true);
         }
-    }, [])
+    }, [showLoading]);
 
     const processAudio = async (base64data: string) => {
         try {
@@ -118,10 +207,7 @@ export default function Home() {
         baseAssetPath: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.30/dist/",
         onnxWASMBasePath: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/",
         positiveSpeechThreshold: 0.85,
-        minSpeechFrames: 5,
-        onVADLoad: () => {
-            console.log("[Voice AI 🟢] VAD Model Loaded Successfully! (Deep Debug: Core engine initialized)");
-        },
+        minSpeechMs: 50,
         onSpeechStart: () => {
             console.log("[Voice AI 🗣️] Speech started! (Deep Debug: Silero VAD detected human voice)");
             setIsListening(true);
@@ -225,28 +311,117 @@ export default function Home() {
         isSpeakingRef.current = isSpeaking
     }, [isSpeaking])
 
-    const getPreferredMaleVoice = useCallback((synth: SpeechSynthesis) => {
+    // Proactive AI Tour Guide
+    const visitedZonesRef = useRef<Set<Zone>>(new Set(['identity']))
+
+    useEffect(() => {
+        if (!isBotActive) return;
+        if (visitedZonesRef.current.has(activeZone)) return;
+
+        visitedZonesRef.current.add(activeZone);
+
+        const synth = window.speechSynthesis;
+        
+        // Let the tab transition happen first
+        setTimeout(() => {
+            let greeting = "";
+            if (activeZone === 'projects') {
+                greeting = "Welcome to the showcase. I highly recommend looking at Shemet Dating. Shall I open it for you?";
+            } else if (activeZone === 'logic') {
+                greeting = "Naveen is very strict about his architecture. Ask me how he structures scalable systems.";
+            } else if (activeZone === 'impact') {
+                greeting = "Here is real client feedback. Feel free to ask me about his global reputation.";
+            }
+
+            if (greeting) {
+                // Cancel any ongoing speech so the AI immediately reacts to the new tab
+                if (synth.speaking) synth.cancel();
+                
+                // We must use getPreferredMaleVoice directly inside here or wait until it's defined
+                // Since getPreferredMaleVoice is defined below, we'll fetch voices directly here for simplicity
+                const voice = getPreferredVoice(synth);
+
+                const utterance = new SpeechSynthesisUtterance(greeting);
+                if (voice) utterance.voice = voice;
+                utterance.pitch = 0.8; // Friendly, warm, natural male voice
+                utterance.rate = 0.95; // Energetic and conversational speed
+                utterance.volume = 1.0;
+                utterance.onstart = () => setIsSpeaking(true);
+                utterance.onend = () => setIsSpeaking(false);
+                synth.speak(utterance);
+            }
+        }, 800);
+    }, [activeZone, isBotActive]);
+
+    const getPreferredVoice = useCallback((synth: SpeechSynthesis) => {
         const voices = synth.getVoices();
-        
-        // 1. Check known Male voices across macOS, Windows, Chrome
-        const exactMaleNames = ['Google UK English Male', 'Daniel', 'Alex', 'Fred', 'Bruce', 'Ralph', 'Albert', 'Microsoft David', 'Microsoft Mark', 'Arthur'];
-        
-        for (const name of exactMaleNames) {
-            const found = voices.find(v => v.name.includes(name));
-            if (found) return found;
-        }
+        if (!voices || voices.length === 0) return null;
 
-        // 2. Generic "male" match
-        let found = voices.find(v => v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('boy'));
-        if (found) return found;
+        // Strict male voices list to prevent accidental female fallback
+        const strictMaleVoice = voices.find(v => v.name === 'Google UK English Male')
+            || voices.find(v => v.name === 'Daniel') // macOS British Male
+            || voices.find(v => v.name === 'Alex') // macOS American Male
+            || voices.find(v => v.name === 'Arthur') // macOS British Male
+            || voices.find(v => v.name === 'Oliver') // macOS British Male
+            || voices.find(v => v.name === 'Fred') // macOS Male
+            || voices.find(v => v.name.includes('David')) // Windows Male
+            || voices.find(v => v.name.includes('Mark')) // Windows Male
+            || voices.find(v => v.name.toLowerCase().includes('male'))
+            || voices.find(v => v.name.toLowerCase().includes('boy'));
 
-        // 3. Fallback: Any English voice that is NOT a known female voice (Samantha, Karen, Moira, Tessa etc are female)
-        const knownFemale = ['samantha', 'karen', 'tessa', 'moira', 'veena', 'victoria', 'fiona', 'siri', 'zira', 'hazel', 'catherine', 'gordon', 'sandy', 'shelley', 'luciana', 'mari', 'yuri'];
-        
-        found = voices.find(v => v.lang.startsWith('en') && !knownFemale.some(f => v.name.toLowerCase().includes(f)));
-        
-        return found || voices[0];
+        if (strictMaleVoice) return strictMaleVoice;
+
+        // If ABSOLUTELY no explicitly male voice is found, we filter OUT known female names
+        const knownFemale = ['samantha', 'karen', 'victoria', 'moira', 'tessa', 'veena', 'fiona', 'luciana', 'female', 'woman', 'girl', 'zira', 'hazel', 'siri', 'catherine', 'martha'];
+        const safeFallback = voices.find(v => !knownFemale.some(f => v.name.toLowerCase().includes(f)) && v.lang.includes('en'));
+
+        return safeFallback || voices[0];
     }, []);
+
+    // Context-Aware Interruption (Project Focus)
+    const visitedProjectsRef = useRef<Set<string>>(new Set())
+
+    useEffect(() => {
+        if (!isBotActive || !selectedProject) return;
+        if (visitedProjectsRef.current.has(selectedProject.id)) return;
+
+        visitedProjectsRef.current.add(selectedProject.id);
+
+        const synth = window.speechSynthesis;
+        
+        // Wait a short moment after the modal opens
+        setTimeout(() => {
+            let comment = "";
+            if (selectedProject.id === 'shemet') {
+                comment = "Oh, I absolutely love Shemet! This was a really fun project for Naveen. He wanted to solve the huge problem of fake profiles in modern dating apps. So, he built a super secure system using Google ML-Kit for real-time face verification. He also added Agora and DeepAR to make the video dates incredibly immersive and fun. It's a really great example of secure, real-time engineering!";
+            } else if (selectedProject.id === 'habit-flow') {
+                comment = "Ah, Habit Flow! This is a beautiful example of clean architecture. Naveen built this using Flutter and the BLoC pattern, which makes the app feel incredibly smooth and stable. It’s highly modular, so it's super easy to scale. Honestly, looking at this code is a joy for any tech lead.";
+            } else if (selectedProject.id === 'recapai') {
+                comment = "Recap AI is amazing! Naveen built this entire artificial intelligence engine in just three weeks. By orchestrating a robust backend pipeline, he managed to handle massive amounts of text processing so quickly! The way he structured the asynchronous tasks here is exactly why you want him on your team.";
+            } else if (selectedProject.id === 'bizlangai') {
+                comment = "Bizlang AI is such a clever piece of engineering. Naveen used advanced natural language processing to translate casual slang into highly professional corporate language. The context-awareness he built into it is elegant and really highly optimized. It's so cool!";
+            } else if (selectedProject.id === 'heartsync') {
+                comment = "Heart Sync is fantastic! Naveen built it with absolute security in mind, implementing strict end-to-end encryption for all communications. He didn't just build a chat app; he built a fortress. The real-time synchronization is flawless and so smooth to use.";
+            } else {
+                comment = `Oh, ${selectedProject.title}! That's a great piece of engineering. If you look closely at the technologies used here, you'll see Naveen's signature clean architecture. He really knows how to build things the right way!`;
+            }
+
+            if (comment) {
+                if (synth.speaking) synth.cancel();
+                
+                const voice = getPreferredVoice(synth);
+
+                const utterance = new SpeechSynthesisUtterance(comment);
+                if (voice) utterance.voice = voice;
+                utterance.pitch = 0.8; // Friendly, warm, natural male voice
+                utterance.rate = 0.95; // Energetic and conversational speed
+                utterance.volume = 1.0;
+                utterance.onstart = () => setIsSpeaking(true);
+                utterance.onend = () => setIsSpeaking(false);
+                synth.speak(utterance);
+            }
+        }, 1500);
+    }, [selectedProject, isBotActive]);
 
     const speakResponse = useCallback((text: string) => {
         console.log(`[Voice AI ⚙️] speakResponse called with text: "${text}"`);
@@ -261,16 +436,17 @@ export default function Home() {
         const synth = window.speechSynthesis;
         const utterance = new SpeechSynthesisUtterance(text);
         
-        const preferredVoice = getPreferredMaleVoice(synth);
+        const preferredVoice = getPreferredVoice(synth);
         if (preferredVoice) {
             console.log(`[Voice AI ⚙️] Selected Voice: ${preferredVoice.name} (${preferredVoice.lang})`);
             utterance.voice = preferredVoice;
         } else {
-            console.warn("[Voice AI ⚙️] No preferred male voice found, using default.");
+            console.warn("[Voice AI ⚙️] No preferred female voice found, using default.");
         }
         
-        utterance.rate = 0.9;
-        utterance.pitch = 0.8;
+        utterance.rate = 0.95; // Energetic and conversational speed
+        utterance.pitch = 0.8; // Friendly, warm, natural male voice
+        utterance.volume = 1.0; // Max volume
         
         utterance.onstart = () => console.log("[Voice AI ⚙️] 🔊 TTS Audio started playing...");
         
@@ -294,196 +470,38 @@ export default function Home() {
 
         console.log("[Voice AI ⚙️] Invoking synth.speak()...");
         synth.speak(utterance);
-    }, [getPreferredMaleVoice]);
+    }, [getPreferredVoice]);
 
     // Legacy manual logic completely removed, using Silero VAD above
 
     return (
         <>
-            <AnimatePresence>
-                {showLoading && (
-                    <LoadingScreen onLoadingComplete={() => setShowLoading(false)} />
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {!hasPoweredUp && !showLoading && (
-                    <motion.div 
-                        key="power-up"
-                        exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-                        transition={{ duration: 1.5, ease: "easeInOut" }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black overflow-hidden"
-                    >
-
-                            <motion.button
-                                onClick={() => {
-                                    setIsPoweringUp(true);
-                                    
-                                    // Play Ocean Wind (Synthesized Brown Noise)
-                                    try {
-                                        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-                                        const bufferSize = audioCtx.sampleRate * 15;
-                                        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                                        const data = buffer.getChannelData(0);
-                                        
-                                        let lastOut = 0;
-                                        for (let i = 0; i < bufferSize; i++) {
-                                            const white = Math.random() * 2 - 1;
-                                            data[i] = (lastOut + (0.02 * white)) / 1.02;
-                                            lastOut = data[i];
-                                            data[i] *= 3.5; 
-                                        }
-
-                                        const noiseSource = audioCtx.createBufferSource();
-                                        noiseSource.buffer = buffer;
-                                        
-                                        const filter = audioCtx.createBiquadFilter();
-                                        filter.type = 'lowpass';
-                                        filter.frequency.setValueAtTime(100, audioCtx.currentTime); 
-                                        filter.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 5); 
-                                        filter.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 10);
-                                        
-                                        const gainNode = audioCtx.createGain();
-                                        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-                                        gainNode.gain.linearRampToValueAtTime(0.8, audioCtx.currentTime + 2);
-                                        gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime + 12);
-                                        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 15);
-
-                                        noiseSource.connect(filter);
-                                        filter.connect(gainNode);
-                                        gainNode.connect(audioCtx.destination);
-                                        
-                                        noiseSource.start();
-                                    } catch (e) { console.warn("AudioContext not supported", e); }
-
-                                    setTimeout(() => {
-                                        setHasPoweredUp(true);
-                                        setIsBotActive(true);
-                                        
-                                        // Philosophical Voiceover
-                                        const synth = window.speechSynthesis;
-                                        const voice = getPreferredMaleVoice(synth);
-                                        
-                                        const lines = [
-                                            "Just as still water reflects the clear moon...",
-                                            "A calm mind reveals the deepest truths.",
-                                            "Welcome to Naveen's realm.",
-                                            "Take a deep breath. What do you seek today, and how may I guide you?"
-                                        ];
-                                        
-                                        const triggerReveal = () => {
-                                            setIsRevealing(true);          // Stage 1: Orb pulse
-                                            setTimeout(() => {             // Stage 2: UI appears after glitch
-                                                setIsUiRevealed(true);
-                                            }, 2500);
-                                        };
-                                        
-                                        lines.forEach((text, i) => {
-                                            setTimeout(() => {
-                                                const utterance = new SpeechSynthesisUtterance(text);
-                                                if (voice) utterance.voice = voice;
-                                                utterance.pitch = 0.75; 
-                                                utterance.rate = 0.85; 
-                                                
-                                                // When the LAST line finishes, trigger cinematic reveal
-                                                if (i === lines.length - 1) {
-                                                    utterance.onend = () => {
-                                                        setTimeout(() => triggerReveal(), 500);
-                                                    };
-                                                    // Fallback: if TTS ends silently
-                                                    setTimeout(() => triggerReveal(), 3000);
-                                                }
-                                                
-                                                synth.speak(utterance);
-                                            }, i * 3500);
-                                        });
-                                        
-                                        // Hard safety fallback at 20s
-                                        setTimeout(() => triggerReveal(), 20000);
-                                    }, 1000);
-                                }}
-                                animate={isPoweringUp ? { scale: [1, 0.5, 4], opacity: [1, 1, 0] } : { scale: 1 }}
-                                transition={isPoweringUp ? { duration: 1.5, ease: "easeInOut" } : { duration: 0 }}
-                                className="relative w-40 h-40 md:w-56 md:h-56 flex items-center justify-center group outline-none cursor-pointer"
-                            >
-                                {/* --- The Irresistible Beacon --- */}
-                                
-                                {/* 1. Sonar Ripples (Expanding Rings) */}
-                                <motion.div 
-                                    animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
-                                    className="absolute w-12 h-12 rounded-full border border-amber-500/40 group-hover:border-amber-400/60"
-                                />
-                                <motion.div 
-                                    animate={{ scale: [1, 3.5], opacity: [0.4, 0] }}
-                                    transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1.5 }}
-                                    className="absolute w-12 h-12 rounded-full border border-amber-600/30 group-hover:border-amber-500/50"
-                                />
-
-                                {/* 2. Floating Embers (Orbiting particles) */}
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                    className="absolute w-24 h-24 rounded-full pointer-events-none"
-                                >
-                                    <div className="absolute top-0 left-1/2 w-[3px] h-[3px] bg-amber-200 rounded-full shadow-[0_0_6px_rgba(253,230,138,1)] opacity-80" />
-                                    <div className="absolute bottom-2 right-2 w-[4px] h-[4px] bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,1)] opacity-60" />
-                                </motion.div>
-                                <motion.div
-                                    animate={{ rotate: -360 }}
-                                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                                    className="absolute w-32 h-32 rounded-full pointer-events-none"
-                                >
-                                    <div className="absolute top-1/4 -left-1 w-[2px] h-[2px] bg-yellow-100 rounded-full shadow-[0_0_4px_rgba(254,240,138,1)] opacity-50" />
-                                </motion.div>
-
-                                {/* 3. The Living Core */}
-                                <motion.div 
-                                    // Heartbeat breathing animation
-                                    animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.7, 1, 0.7] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                    className="relative w-12 h-12 rounded-full flex items-center justify-center bg-amber-600 shadow-[0_0_30px_10px_rgba(245,158,11,0.2)] group-hover:bg-amber-500 group-hover:shadow-[0_0_70px_25px_rgba(245,158,11,0.6)] transition-all duration-700"
-                                >
-                                    {/* White-hot center */}
-                                    <div className="w-5 h-5 rounded-full bg-yellow-200 shadow-[0_0_15px_5px_rgba(255,255,255,0.7)] group-hover:bg-white group-hover:shadow-[0_0_25px_10px_rgba(255,255,255,1)] group-hover:scale-110 transition-all duration-700" />
-                                </motion.div>
-                                
-                                {/* 4. Interactive Typography */}
-                                <div className="absolute -bottom-20 w-full text-center flex flex-col items-center">
-                                    <p className="flex items-center gap-2 text-[10px] font-black uppercase text-neutral-700 group-hover:text-amber-400 transition-colors duration-700 drop-shadow-[0_0_0px_rgba(245,158,11,0)] group-hover:drop-shadow-[0_0_15px_rgba(245,158,11,0.8)]">
-                                        <span className="text-neutral-800 group-hover:text-amber-500 group-hover:-translate-x-2 transition-all duration-700">[</span>
-                                        <span className="tracking-[0.4em] group-hover:tracking-[0.7em] transition-all duration-700 whitespace-nowrap">
-                                            {isPoweringUp ? 'DRIFTING...' : 'DRIFT INTO THE DARKNESS'}
-                                        </span>
-                                        <span className="text-neutral-800 group-hover:text-amber-500 group-hover:translate-x-2 transition-all duration-700">]</span>
-                                    </p>
-                                    <span className="w-20 h-[1px] bg-amber-500/0 group-hover:bg-amber-500/50 mt-3 transition-all duration-700 scale-0 group-hover:scale-100" />
-                                </div>
-                            </motion.button>
-                        
-                        {/* Fog/Darkness expanding on click */}
-                        {isPoweringUp && (
-                            <motion.div 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
-                                className="absolute inset-0 bg-black pointer-events-none"
-                            />
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                <AnimatePresence>
+                    {showLoading && (
+                        <LoadingScreen 
+                            onDriftStart={() => setStartDrift(true)}
+                            onLoadingComplete={() => setShowLoading(false)} 
+                            isReady={isAssetsReady}
+                        />
+                    )}
+                </AnimatePresence>
 
             <motion.main 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: hasPoweredUp ? 1 : 0 }}
                 transition={{ duration: 1.5 }}
-                className="viewport-container bg-[#050505] text-white min-h-screen h-screen relative overflow-hidden flex flex-col"
+                className="relative z-10 min-h-screen flex flex-col pointer-events-none"
             >
-                {/* Background Grid */}
-                <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#111_1px,transparent_1px),linear-gradient(to_bottom,#111_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20" />
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[150px] rounded-full" />
+                {/* 3D SCENE BACKGROUND */}
+                <div className={`fixed inset-0 z-0 transition-all duration-1000 ${activeZone === 'identity' ? 'opacity-100' : 'opacity-60 blur-sm'} pointer-events-auto`}>
+                    <Scene 
+                        isListening={isListening} 
+                        isSpeaking={isSpeaking}
+                        hasCompletedIntro={isUiRevealed}
+                        startDrift={startDrift}
+                        onDriftComplete={() => setIsUiRevealed(true)}
+                        onReady={(ready) => setIsAssetsReady(ready)}
+                    />
                 </div>
 
                 <AnimatePresence>
@@ -509,6 +527,30 @@ export default function Home() {
                                         <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
                                         <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
                                     </div>
+
+                                    {/* The Voice AI Persistent Visualizer (Hidden on Identity page) */}
+                                    {activeZone !== 'identity' && (
+                                        <div className="ml-6 pl-6 border-l border-white/10 flex items-center">
+                                            <div 
+                                                className={`relative w-6 h-6 rounded-full transition-all duration-700 
+                                                    ${isSpeaking ? 'bg-red-500 shadow-[0_0_25px_8px_rgba(239,68,68,0.8)] scale-125' : 
+                                                      isListening ? 'bg-red-600 shadow-[0_0_20px_5px_rgba(220,38,38,0.7)] animate-pulse' : 
+                                                      'bg-red-950 shadow-[0_0_10px_2px_rgba(153,27,27,0.5)]'}`}
+                                                style={{
+                                                    background: 'radial-gradient(circle at 30% 30%, #ef4444, #991b1b, #450a0a)'
+                                                }}
+                                            >
+                                                {/* Glossy top highlight for 3D sphere look */}
+                                                <div className="absolute top-[15%] left-[20%] w-[50%] h-[35%] rounded-full bg-white/40 blur-[1px] -rotate-12" />
+                                                
+                                                {/* Core glow */}
+                                                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-300 blur-[2px] transition-all duration-700 ${isSpeaking ? 'opacity-100' : isListening ? 'opacity-60' : 'opacity-0'}`} />
+                                                
+                                                {/* Ripple effect */}
+                                                {(isSpeaking || isListening) && <div className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-50 duration-1000" />}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </motion.header>
 
@@ -535,79 +577,34 @@ export default function Home() {
                             initial={{ y: 120, opacity: 0, scale: 0.8 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
                             transition={{ type: "spring", damping: 16, stiffness: 180, delay: 0.6 }}
-                            className="relative z-[100]"
+                            className="relative z-[100] pointer-events-auto"
                         >
                             <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+
                 <div className={`z-10 w-full max-w-7xl mx-auto px-10 flex ${['impact', 'projects'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto pointer-events-none' : 'relative items-center h-screen pointer-events-none'}`}>
                     <AnimatePresence mode="wait">
-                        {activeZone === 'identity' && (
-                            <motion.div 
-                                key="identity" 
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-0"
-                            >
-                                <ThreeDTechLab 
-                                    isListening={isListening} 
-                                    isSpeaking={isSpeaking} 
-                                    activeZone={activeZone}
-                                    hasCompletedIntro={isUiRevealed}
-                                    onExploreClick={() => setActiveZone('projects')}
-                                />
-                            </motion.div>
-                        )}
-
-
                         {activeZone === 'projects' && (
                             <motion.div 
                                 key="projects" 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-0 bg-black pointer-events-auto overflow-hidden flex items-center justify-center"
+                                className="fixed inset-0 z-10 pointer-events-auto overflow-hidden flex items-center justify-center bg-[#010611]/60 backdrop-blur-xl"
                             >
-                                {/* Adjusted max-width to allow 3 columns without shrinking cards, and centered it vertically */}
-                                <div className="w-full max-w-[1400px] mx-auto px-10">
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                {/* Adjusted max-width to make cards slightly smaller */}
+                                <div className="w-full max-w-[1100px] mx-auto px-10">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                     {PROJECTS_DATA.map((project) => (
-                                    <motion.div 
-                                        key={project.id} 
-                                        whileHover={{ 
-                                            y: -8, 
-                                            scale: 1.01,
-                                            boxShadow: "0 20px 40px -15px rgba(245, 158, 11, 0.15)"
-                                        }}
-                                        onClick={() => setSelectedProject(project)}
-                                        className="relative aspect-video rounded-[32px] overflow-hidden border border-white/10 cursor-pointer group shadow-2xl transition-all duration-500 backdrop-blur-md bg-black/20"
-                                    >
-                                        {/* Brightened Overlay */}
-                                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10" />
-                                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-800/50 to-black/50" />
-                                        
-                                        {project.images && project.images[0] && (
-                                            <img 
-                                                src={project.images[0]} 
-                                                alt={project.title} 
-                                                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700" 
-                                            />
-                                        )}
-                                        
-                                        {/* Premium Ambient Light */}
-                                        <div className="absolute -inset-2 bg-gradient-to-br from-amber-500/0 via-amber-500/5 to-amber-500/0 opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-700" />
-                                        
-                                        <div className="absolute bottom-0 left-0 w-full p-8 z-20">
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <div className="h-[1px] w-8 bg-amber-500/50" />
-                                                <span className="text-[8px] font-black tracking-[0.4em] text-amber-500 uppercase leading-none opacity-80">{project.role}</span>
-                                            </div>
-                                            <h3 className="text-2xl md:text-3xl font-bold uppercase tracking-tighter leading-tight text-white/90 group-hover:text-white transition-colors">{project.title}</h3>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                        <ProjectCard 
+                                            key={project.id} 
+                                            project={project} 
+                                            onClick={() => setSelectedProject(project)} 
+                                        />
+                                    ))}
                                 </div>
                                 </div>
                             </motion.div>
@@ -619,77 +616,107 @@ export default function Home() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="w-full max-w-5xl mx-auto px-10 space-y-24 pb-32"
+                                className="w-full max-w-6xl mx-auto px-6 space-y-20 pb-32 pt-4"
                             >
-                                {/* Section 1: Tech Stack */}
-                                <div className="space-y-12">
+                                {/* Section 1: Live Code Terminal */}
+                                <div className="space-y-8">
                                     <div className="flex items-center gap-6">
-                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-amber-500/50" />
-                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">The Tech Stack</h2>
-                                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-amber-500/50" />
+                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-cyan-500/50" />
+                                        <div className="text-center">
+                                            <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">Engineering Terminal</h2>
+                                            <p className="text-xs text-neutral-500 mt-1 tracking-widest">SELECT A TECHNOLOGY TO INJECT PRODUCTION CODE</p>
+                                        </div>
+                                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-cyan-500/50" />
                                     </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                                    <CodeTerminal
+                                        activeTech={activeTech}
+                                        setActiveTech={setActiveTech}
+                                        isAnalyzing={isAnalyzing}
+                                        onAnalyze={(tech) => {
+                                            if (!tech || !isBotActive) return;
+                                            setIsAnalyzing(true);
+                                            const reviews: Record<string, string> = {
+                                                flutter: "Look at this BLoC implementation. Notice how Naveen completely decouples the AuthBloc from the UI layer. By injecting the AuthRepository as a dependency, this code is 100% unit-testable. Any CTO who reviews this immediately knows they're dealing with an engineer who thinks in systems, not just features.",
+                                                node: "This is elegant. Look at the Matchmaking Engine using Redis GEORADIUS. That's an O(log N) geolocation query, meaning even with a million users online, the response time stays well under 50 milliseconds. Naveen didn't just build a feature here; he built a scalable infrastructure.",
+                                                firebase: "The Firestore batch operation here is critical. By using a batch commit for user creation and wallet initialization, Naveen guarantees atomic data integrity. If the wallet creation fails, the user creation rolls back too. Zero risk of orphaned records. This is production-grade database engineering.",
+                                                mlkit: "This liveness detection algorithm is brilliant. Naveen uses 3D facial contour analysis, not just a face photo check. By requiring both eye-open probabilities to exceed 80%, he prevents 2D photo spoofing attacks. This is why Shemet has zero fake profile penetrations."
+                                            };
+                                            speakResponse(reviews[tech] || "Let me analyze this architecture for you.");
+                                            setTimeout(() => setIsAnalyzing(false), 3000);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Section 2: Architecture Flow */}
+                                <div className="space-y-8">
+                                    <div className="flex items-center gap-6">
+                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-emerald-500/50" />
+                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">Clean Architecture Stack</h2>
+                                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-emerald-500/50" />
+                                    </div>
+                                    <div className="flex flex-col md:flex-row items-stretch justify-center gap-0">
                                         {[
-                                            { name: 'Flutter', icon: <SiFlutter size={32} />, color: 'text-[#02569B]', border: 'group-hover:border-[#02569B]/50' },
-                                            { name: 'Dart', icon: <SiDart size={32} />, color: 'text-[#0175C2]', border: 'group-hover:border-[#0175C2]/50' },
-                                            { name: 'Firebase', icon: <SiFirebase size={32} />, color: 'text-[#FFCA28]', border: 'group-hover:border-[#FFCA28]/50' },
-                                            { name: 'Node.js', icon: <SiNodedotjs size={32} />, color: 'text-[#339933]', border: 'group-hover:border-[#339933]/50' },
-                                            { name: 'ML Kit', icon: <SiGooglecloud size={32} />, color: 'text-[#4285F4]', border: 'group-hover:border-[#4285F4]/50' },
-                                            { name: 'Agora / AR', icon: <FiVideo size={32} />, color: 'text-amber-500', border: 'group-hover:border-amber-500/50' }
-                                        ].map((tech, i) => (
-                                            <motion.div
-                                                key={i}
-                                                whileHover={{ y: -5, scale: 1.05 }}
-                                                className={`group flex flex-col items-center justify-center p-8 bg-neutral-900/50 backdrop-blur-xl rounded-[24px] border border-white/5 transition-all duration-300 ${tech.border} shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:bg-neutral-800/80`}
-                                            >
-                                                <div className={`${tech.color} mb-4 transition-transform duration-500 group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]`}>
-                                                    {tech.icon}
-                                                </div>
-                                                <span className="text-xs font-bold text-neutral-400 group-hover:text-white uppercase tracking-widest transition-colors">{tech.name}</span>
-                                            </motion.div>
+                                            { layer: 'UI Layer', sub: 'Flutter Widgets', icon: <FiSmartphone size={20}/>, color: 'from-blue-500/20 to-blue-900/10', border: 'border-blue-500/30', text: 'text-blue-400', desc: 'StatelessWidget, StatefulWidget' },
+                                            { layer: 'Presentation', sub: 'BLoC / Cubit', icon: <FiBox size={20}/>, color: 'from-cyan-500/20 to-cyan-900/10', border: 'border-cyan-500/30', text: 'text-cyan-400', desc: 'Events → States via Streams' },
+                                            { layer: 'Domain Layer', sub: 'Use Cases', icon: <FiLayers size={20}/>, color: 'from-amber-500/20 to-amber-900/10', border: 'border-amber-500/30', text: 'text-amber-400', desc: 'Business logic, pure Dart' },
+                                            { layer: 'Data Layer', sub: 'Repositories', icon: <FiDatabase size={20}/>, color: 'from-emerald-500/20 to-emerald-900/10', border: 'border-emerald-500/30', text: 'text-emerald-400', desc: 'API, Firebase, Local Cache' },
+                                            { layer: 'Infra / Backend', sub: 'Node.js / Firebase', icon: <FiServer size={20}/>, color: 'from-purple-500/20 to-purple-900/10', border: 'border-purple-500/30', text: 'text-purple-400', desc: 'Microservices, REST, Triggers' }
+                                        ].map((item, i, arr) => (
+                                            <React.Fragment key={i}>
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: i * 0.1 }}
+                                                    whileHover={{ scale: 1.03, y: -4 }}
+                                                    className={`flex-1 flex flex-col items-center p-6 rounded-2xl bg-gradient-to-b ${item.color} border ${item.border} text-center cursor-default`}
+                                                >
+                                                    <div className={`${item.text} mb-3`}>{item.icon}</div>
+                                                    <p className={`text-xs font-black uppercase tracking-widest ${item.text} mb-1`}>{item.layer}</p>
+                                                    <p className="text-sm font-bold text-white mb-2">{item.sub}</p>
+                                                    <p className="text-[11px] text-neutral-500 font-mono">{item.desc}</p>
+                                                </motion.div>
+                                                {i < arr.length - 1 && (
+                                                    <div className="flex items-center justify-center px-1 text-neutral-600 font-black text-xl select-none">
+                                                        <span className="hidden md:block">→</span>
+                                                        <span className="block md:hidden">↓</span>
+                                                    </div>
+                                                )}
+                                            </React.Fragment>
                                         ))}
                                     </div>
                                 </div>
 
-                                {/* Section 2: Architecture Philosophy */}
-                                <div className="space-y-12">
+                                {/* Section 3: Scalability Metrics Dashboard */}
+                                <div className="space-y-8">
                                     <div className="flex items-center gap-6">
-                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-emerald-500/50" />
-                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">Architecture Philosophy</h2>
-                                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-emerald-500/50" />
+                                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-amber-500/50" />
+                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">System Telemetry</h2>
+                                        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-amber-500/50" />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {[
-                                            {
-                                                title: 'Clean Architecture',
-                                                icon: <FiLayers size={24} />,
-                                                desc: 'Separation of concerns. Ensuring UI, business logic, and data layers are completely decoupled for scalable, testable, and maintainable enterprise codebases.',
-                                                color: 'emerald'
-                                            },
-                                            {
-                                                title: 'BLoC Pattern',
-                                                icon: <FiBox size={24} />,
-                                                desc: 'Reactive state management in Flutter. Utilizing Streams to separate presentation from business logic, guaranteeing predictable and robust app states.',
-                                                color: 'amber'
-                                            },
-                                            {
-                                                title: 'MVC / Modular',
-                                                icon: <FiCode size={24} />,
-                                                desc: 'Structured backend environments. Designing scalable APIs and microservices using Model-View-Controller and feature-based modular folder structures.',
-                                                color: 'blue'
-                                            }
-                                        ].map((pattern, i) => (
+                                            { label: 'Avg. API Latency', value: '42ms', unit: '', icon: <FiZap size={16}/>, color: 'text-cyan-400', pulse: 'bg-cyan-400' },
+                                            { label: 'Crash-Free Rate', value: '99.97', unit: '%', icon: <FiShield size={16}/>, color: 'text-emerald-400', pulse: 'bg-emerald-400' },
+                                            { label: 'UI Frame Rate', value: '60', unit: 'fps', icon: <FiActivity size={16}/>, color: 'text-amber-400', pulse: 'bg-amber-400' },
+                                            { label: 'Concurrent Users', value: '10K+', unit: '', icon: <FiServer size={16}/>, color: 'text-purple-400', pulse: 'bg-purple-400' },
+                                        ].map((metric, i) => (
                                             <motion.div
                                                 key={i}
-                                                whileHover={{ y: -5 }}
-                                                className="relative p-8 rounded-[32px] bg-gradient-to-b from-neutral-900 to-black border border-white/10 group overflow-hidden"
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: i * 0.1 }}
+                                                className="relative bg-neutral-900/60 border border-white/5 rounded-2xl p-6 flex flex-col gap-3 overflow-hidden group hover:border-white/10 transition-all"
                                             >
-                                                <div className={`absolute top-0 right-0 w-32 h-32 bg-${pattern.color}-500/10 blur-[50px] group-hover:bg-${pattern.color}-500/20 transition-colors`} />
-                                                <div className={`w-12 h-12 rounded-2xl bg-${pattern.color}-500/10 border border-${pattern.color}-500/20 flex items-center justify-center text-${pattern.color}-500 mb-6 group-hover:scale-110 transition-transform`}>
-                                                    {pattern.icon}
+                                                <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${metric.pulse} opacity-60`}>
+                                                    <motion.div animate={{ scale: [1, 2], opacity: [0.6, 0] }} transition={{ repeat: Infinity, duration: 1.5 }} className={`absolute inset-0 rounded-full ${metric.pulse}`} />
                                                 </div>
-                                                <h3 className="text-lg font-black text-white uppercase tracking-wider mb-4">{pattern.title}</h3>
-                                                <p className="text-sm font-medium text-neutral-400 leading-relaxed">{pattern.desc}</p>
+                                                <div className={`${metric.color} flex items-center gap-2 text-xs font-black uppercase tracking-widest`}>
+                                                    {metric.icon} {metric.label}
+                                                </div>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-3xl font-black text-white font-mono">{metric.value}</span>
+                                                    <span className={`text-sm font-bold ${metric.color}`}>{metric.unit}</span>
+                                                </div>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -886,39 +913,50 @@ export default function Home() {
 
                                         <div className="space-y-8">
                                             {/* Email */}
-                                            <button 
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText('hknskariyawasamnaveen@gmail.com');
-                                                    alert('Email copied to clipboard!');
-                                                }}
-                                                className="w-full group flex items-center justify-between p-6 bg-neutral-900/50 hover:bg-neutral-800/80 border border-white/5 hover:border-amber-500/30 rounded-2xl transition-all duration-300"
+                                            <a 
+                                                href="mailto:hknskariyawasamnaveen@gmail.com"
+                                                className="w-full relative group flex items-center justify-between p-6 bg-black border border-white/10 rounded-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden"
                                             >
-                                                <div className="flex items-center gap-6">
-                                                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                                                        <FiMail size={24} />
+                                                {/* Animated Glow Behind Button */}
+                                                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/10 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 translate-x-[-100%] group-hover:translate-x-[100%]" />
+                                                <div className="absolute inset-0 border-[2px] border-transparent group-hover:border-amber-500/50 rounded-2xl transition-colors duration-500" />
+                                                
+                                                <div className="relative z-10 flex items-center gap-6">
+                                                    <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.2)] group-hover:shadow-[0_0_50px_rgba(245,158,11,0.6)] transition-all duration-500">
+                                                        <FiMail size={28} />
                                                     </div>
                                                     <div className="text-left">
-                                                        <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-1">Email</p>
-                                                        <p className="text-sm md:text-base font-medium text-white">hknskariyawasamnaveen@gmail.com</p>
+                                                        <p className="text-xs font-bold text-amber-500/80 uppercase tracking-widest mb-1">Direct Email</p>
+                                                        <p className="text-sm md:text-xl font-bold text-white tracking-wide">hknskariyawasamnaveen@gmail.com</p>
                                                     </div>
                                                 </div>
-                                            </button>
+                                                <div className="relative z-10 text-amber-500/50 group-hover:text-amber-400 group-hover:translate-x-2 transition-all duration-300">
+                                                    <FiArrowLeft size={24} className="rotate-180" />
+                                                </div>
+                                            </a>
 
                                             {/* WhatsApp */}
                                             <a 
                                                 href="https://wa.me/94719567269" 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="w-full group flex items-center justify-between p-6 bg-neutral-900/50 hover:bg-neutral-800/80 border border-white/5 hover:border-emerald-500/30 rounded-2xl transition-all duration-300"
+                                                className="w-full relative group flex items-center justify-between p-6 bg-black border border-white/10 rounded-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden"
                                             >
-                                                <div className="flex items-center gap-6">
-                                                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                                                        <SiWhatsapp size={24} />
+                                                {/* Animated Glow Behind Button */}
+                                                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/10 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 translate-x-[-100%] group-hover:translate-x-[100%]" />
+                                                <div className="absolute inset-0 border-[2px] border-transparent group-hover:border-emerald-500/50 rounded-2xl transition-colors duration-500" />
+                                                
+                                                <div className="relative z-10 flex items-center gap-6">
+                                                    <div className="w-14 h-14 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] transition-all duration-500">
+                                                        <SiWhatsapp size={28} />
                                                     </div>
                                                     <div className="text-left">
-                                                        <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-1">WhatsApp</p>
-                                                        <p className="text-sm md:text-base font-medium text-white">+94 71 956 7269</p>
+                                                        <p className="text-xs font-bold text-emerald-500/80 uppercase tracking-widest mb-1">WhatsApp Message</p>
+                                                        <p className="text-sm md:text-xl font-bold text-white tracking-wide">+94 71 956 7269</p>
                                                     </div>
+                                                </div>
+                                                <div className="relative z-10 text-emerald-500/50 group-hover:text-emerald-400 group-hover:translate-x-2 transition-all duration-300">
+                                                    <FiArrowLeft size={24} className="rotate-180" />
                                                 </div>
                                             </a>
 

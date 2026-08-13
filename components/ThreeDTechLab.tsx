@@ -11,7 +11,7 @@ declare module '@react-three/fiber' {
     water: any;
 }
 }
-import { OrbitControls, Float, Html, Grid, Line, MeshDistortMaterial, Environment, useTexture, MeshTransmissionMaterial, SpotLight, Stars, Sparkles } from '@react-three/drei';
+import { OrbitControls, Float, Html, Grid, Line, MeshDistortMaterial, Environment, useTexture, MeshTransmissionMaterial, SpotLight, Stars, Sparkles, Box, Cylinder, Sphere } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi';
@@ -102,7 +102,7 @@ function InterconnectedStruts({ outerGeo, innerGeo, color, lineWidth }: { outerG
     const { vertices: inV } = useWireframeData(innerGeo);
 
     const struts = useMemo(() => {
-        const lines = [];
+        const lines: [THREE.Vector3, THREE.Vector3][] = [];
         // Connect each INNER vertex (Octahedron has 6) to its 2 nearest OUTER vertices (Icosahedron)
         // This dramatically reduces clutter and creates a perfect inner-to-outer web!
         inV.forEach(iv => {
@@ -514,9 +514,7 @@ function Rain() {
             <bufferGeometry>
                 <bufferAttribute 
                     attach="attributes-position" 
-                    count={dropCount} 
-                    array={positions} 
-                    itemSize={3} 
+                    args={[positions, 3]}
                 />
             </bufferGeometry>
             <pointsMaterial 
@@ -531,21 +529,124 @@ function Rain() {
     );
 }
 
+// THE RAFT & SURVIVOR
+function LoneSurvivorOnRaft({ startDrift, hasCompletedIntro }: { startDrift?: boolean, hasCompletedIntro?: boolean }) {
+    const groupRef = useRef<THREE.Group>(null);
+    const startTimeRef = useRef(0);
+    const [driftStarted, setDriftStarted] = useState(false);
+    const driftDuration = 8000;
+    
+    // Position it 5 units in front of the camera
+    const startZ = 295; // Camera is at 300
+    const endZ = 15;   // Camera ends at 20
+
+    // Custom EaseInOutExpo curve for hyper-realistic acceleration and smooth deceleration
+    const easeInOutExpo = (x: number): number => {
+        return x === 0 ? 0 : x === 1 ? 1 : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2;
+    };
+
+    const previousZ = useRef(startZ);
+
+    useEffect(() => {
+        if (hasCompletedIntro) {
+            if (groupRef.current) groupRef.current.position.z = endZ;
+        } else if (startDrift && !driftStarted) {
+            startTimeRef.current = Date.now();
+            setDriftStarted(true);
+            previousZ.current = startZ;
+        }
+    }, [hasCompletedIntro, startDrift, driftStarted]);
+
+    useFrame(({ clock }) => {
+        if (!groupRef.current) return;
+        
+        const time = clock.getElapsedTime();
+        const waveHeight = GlobalOceanState.getWaveHeight(groupRef.current.position.x, groupRef.current.position.z);
+        
+        // Drifting logic & Velocity calculation
+        let velocity = 0;
+        if (driftStarted && !hasCompletedIntro) {
+            const elapsed = Date.now() - startTimeRef.current;
+            if (elapsed < driftDuration) {
+                const progress = elapsed / driftDuration;
+                const ease = easeInOutExpo(progress);
+                const currentZ = startZ - ((startZ - endZ) * ease);
+                
+                velocity = previousZ.current - currentZ; // Distance moved this frame
+                previousZ.current = currentZ;
+                groupRef.current.position.z = currentZ;
+            } else {
+                groupRef.current.position.z = endZ;
+                velocity = 0;
+            }
+        } else if (!hasCompletedIntro && !driftStarted) {
+            groupRef.current.position.z = startZ;
+        }
+
+        // Physics-based Raft Momentum
+        // When velocity is high, nose lifts up. When it drops suddenly, it splashes down.
+        const pitchFromVelocity = velocity * 0.5; // Lift nose proportional to speed
+        const bobbing = Math.sin(time * 1.5) * 0.05; // Normal ocean bobbing
+        
+        groupRef.current.position.y = waveHeight;
+        groupRef.current.rotation.z = Math.sin(time * 1.5) * 0.05;
+        // Combine natural bobbing with physics momentum
+        groupRef.current.rotation.x = bobbing - pitchFromVelocity;
+    });
+
+    return (
+        <group ref={groupRef} position={[0, -2, startZ]}>
+            {/* Raft */}
+            <Box args={[2, 0.2, 3]} position={[0, 0, 0]} receiveShadow castShadow>
+                <meshStandardMaterial color="#1a120e" roughness={0.9} />
+            </Box>
+            {/* Lone Person Silhouette */}
+            <Cylinder args={[0.2, 0.3, 1.0, 16]} position={[0, 0.6, 0]} castShadow>
+                <meshStandardMaterial color="#000000" />
+            </Cylinder>
+            {/* Head */}
+            <Sphere args={[0.2, 16, 16]} position={[0, 1.3, 0.1]} castShadow>
+                <meshStandardMaterial color="#000000" />
+            </Sphere>
+        </group>
+    );
+}
+
+
+
+
+
 // FIRST PERSON CINEMATIC CAMERA (Raft Drift + First Person after)
-function FirstPersonCamera({ isListening, isSpeaking, hasCompletedIntro }: { isListening: boolean; isSpeaking: boolean, hasCompletedIntro?: boolean }) {
-    const { camera } = useThree();
+function FirstPersonCamera({ isListening, isSpeaking, hasCompletedIntro, startDrift, onDriftComplete }: { isListening: boolean; isSpeaking: boolean, hasCompletedIntro?: boolean, startDrift?: boolean, onDriftComplete?: () => void }) {
+    const { camera, scene } = useThree();
     const controlsRef = useRef<any>(null);
     const spotLightRef = useRef<THREE.SpotLight>(null);
     const targetObj = useMemo(() => new THREE.Object3D(), []);
-    const startTimeRef = useRef(Date.now());
+    const startTimeRef = useRef(0);
     const driftDoneRef = useRef(false);
+    const [driftStarted, setDriftStarted] = useState(false);
     
-    // The raft drift: camera starts at Z=150, drifts to Z=20 over 16 seconds.
+    // The raft drift: camera starts at Z=300 (very far away), drifts to Z=20 over 8 seconds.
     // The Red Orb sits at Z=-50. So the camera will end up 70 units away, looking at it.
-    const driftDuration = 16000;
-    const startZ = 150;
+    const driftDuration = 8000;
+    const startZ = 300;
     const endZ = 20;
     const orbLookAt = new THREE.Vector3(0, 8, -50); // The orb center
+
+    // Custom EaseInOutExpo curve for hyper-realistic acceleration and smooth deceleration
+    const easeInOutExpo = (x: number): number => {
+        return x === 0 ? 0 : x === 1 ? 1 : x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2;
+    };
+
+    // Find the ambient light to manipulate
+    const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
+    useEffect(() => {
+        scene.traverse((child) => {
+            if (child instanceof THREE.AmbientLight) {
+                ambientLightRef.current = child;
+            }
+        });
+    }, [scene]);
 
     // Initialize
     useEffect(() => {
@@ -561,8 +662,9 @@ function FirstPersonCamera({ isListening, isSpeaking, hasCompletedIntro }: { isL
             }
             driftDoneRef.current = true;
             startTimeRef.current = Date.now() - driftDuration - 1000; // Force elapsed > driftDuration
-        } else {
+        } else if (startDrift && !driftStarted) {
             startTimeRef.current = Date.now();
+            setDriftStarted(true);
             driftDoneRef.current = false;
             // Start far, looking at orb
             camera.position.set(0, 4, startZ);
@@ -572,36 +674,88 @@ function FirstPersonCamera({ isListening, isSpeaking, hasCompletedIntro }: { isL
                 controlsRef.current.enabled = false;
             }
         }
-    }, [camera, hasCompletedIntro]);
+    }, [camera, hasCompletedIntro, startDrift, driftStarted]);
 
     useFrame(() => {
-        const elapsed = Date.now() - startTimeRef.current;
-        
-        // NO Y bobbing during drift - keep camera level and stable so orb stays in view
-        if (elapsed < driftDuration) {
-            // PHASE 1: Cinematic drift
-            if (controlsRef.current) controlsRef.current.enabled = false;
+        if (driftStarted || hasCompletedIntro) {
+            const elapsed = Date.now() - startTimeRef.current;
             
-            const progress = elapsed / driftDuration;
-            const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-            const currentZ = startZ - ((startZ - endZ) * ease);
-            
-            camera.position.z = currentZ;
-            camera.position.y = 4; // Fixed height, no bobbing
-            // Always look directly at the orb
+            if (elapsed < driftDuration) {
+                // PHASE 1: Cinematic drift
+                if (controlsRef.current) controlsRef.current.enabled = false;
+                
+                const progress = elapsed / driftDuration;
+                // Hyper-smooth acceleration and deceleration
+                const ease = easeInOutExpo(progress);
+                const currentZ = startZ - ((startZ - endZ) * ease);
+                
+                camera.position.z = currentZ;
+                camera.position.y = 4; // Fixed height
+                
+                // Dynamic Atmosphere (Fog & Light)
+                // Far away: dense fog, dark. Near: clear fog, bright red glow.
+                if (scene.fog) {
+                    (scene.fog as THREE.Fog).near = THREE.MathUtils.lerp(50, 20, ease);
+                    (scene.fog as THREE.Fog).far = THREE.MathUtils.lerp(500, 150, ease); // Fog recedes slightly to reveal orb sharply
+                }
+                if (ambientLightRef.current) {
+                    ambientLightRef.current.intensity = THREE.MathUtils.lerp(0.5, 1.5, ease); // Light intensifies
+                }
+
+                // Camera shake & FOV stretch based on current velocity (derivative of position)
+                // Highest velocity is at progress = 0.5 for EaseInOut
+                const speedFactor = progress < 0.5 ? ease * 2 : (1 - ease) * 2;
+                if (speedFactor > 0.05) {
+                    const shake = speedFactor * 0.5;
+                    camera.position.x = (Math.random() - 0.5) * shake;
+                    camera.position.y = 4 + (Math.random() - 0.5) * shake;
+                    (camera as THREE.PerspectiveCamera).fov = 60 + (speedFactor * 40); // Warp speed FOV
+                    camera.updateProjectionMatrix();
+                } else {
+                    // Smoothly restore FOV when speed drops near the end
+                    const currentFov = (camera as THREE.PerspectiveCamera).fov;
+                    (camera as THREE.PerspectiveCamera).fov = THREE.MathUtils.lerp(currentFov, 60, 0.1);
+                    camera.updateProjectionMatrix();
+                }
+
+                // Always look directly at the orb
+                camera.lookAt(orbLookAt);
+            } else {
+                // Smoothly reset FOV to 60
+                const currentFov = (camera as THREE.PerspectiveCamera).fov;
+                if (currentFov > 60.1) {
+                    (camera as THREE.PerspectiveCamera).fov = THREE.MathUtils.lerp(currentFov, 60, 0.1);
+                    camera.updateProjectionMatrix();
+                }
+                
+                // PHASE 2: Hand off to OrbitControls for first-person look-around
+                if (!driftDoneRef.current && controlsRef.current) {
+                    driftDoneRef.current = true;
+                    // CRITICAL: set target 0.01 units AHEAD of camera's current look direction
+                    // This keeps camera at current position instead of teleporting it to the orb
+                    const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+                    const newTarget = camera.position.clone().add(lookDir.multiplyScalar(0.01));
+                    controlsRef.current.target.copy(newTarget);
+                    controlsRef.current.enabled = true;
+                    if (onDriftComplete) onDriftComplete();
+                }
+            }
+        } else if (!hasCompletedIntro && !driftStarted) {
+            // INITIAL STAGING: Before the drift even begins, the camera must be placed perfectly at Z=300
+            // and the dark foggy atmosphere must be set. This ensures that when the LoadingScreen crossfades,
+            // the user sees the dark ocean smoothly, instead of a sudden teleport from Z=0 to Z=300.
+            camera.position.set(0, 4, startZ);
             camera.lookAt(orbLookAt);
-        } else {
-            // PHASE 2: Hand off to OrbitControls for first-person look-around
-            if (!driftDoneRef.current && controlsRef.current) {
-                driftDoneRef.current = true;
-                // CRITICAL: set target 0.01 units AHEAD of camera's current look direction
-                // This keeps camera at current position instead of teleporting it to the orb
-                const lookDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                const newTarget = camera.position.clone().add(lookDir.multiplyScalar(0.01));
-                controlsRef.current.target.copy(newTarget);
-                controlsRef.current.enabled = true;
+            
+            if (scene.fog) {
+                (scene.fog as THREE.Fog).near = 50;
+                (scene.fog as THREE.Fog).far = 500;
+            }
+            if (ambientLightRef.current) {
+                ambientLightRef.current.intensity = 0.5;
             }
         }
+
 
         // Sync lantern to camera
         if (spotLightRef.current) {
@@ -720,7 +874,7 @@ function ProceduralAudioSystem() {
 }
 
 // REALISTIC MIDNIGHT OCEAN
-function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
+function RealisticOcean({ isSpeaking, isListening }: { isSpeaking: boolean, isListening: boolean }) {
     const ref = useRef<any>(null);
     const gl = useThree((state) => state.gl);
     const waterNormals = useTexture('/waternormals.jpg');
@@ -799,7 +953,9 @@ function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) {
 
     useFrame((state, delta) => {
         // Accumulate time continuously based on speed to prevent jumps
-        GlobalOceanState.speed = THREE.MathUtils.lerp(GlobalOceanState.speed, isSpeaking ? 2.5 : 1, 0.05);
+        // If listening (thinking) -> highly turbulent (4.0). If speaking -> focused (2.0). Idle -> calm (1.0).
+        const targetSpeed = isListening ? 4.0 : isSpeaking ? 2.0 : 1.0;
+        GlobalOceanState.speed = THREE.MathUtils.lerp(GlobalOceanState.speed, targetSpeed, 0.05);
         GlobalOceanState.time += delta * GlobalOceanState.speed;
         
         if (ref.current) {
@@ -835,10 +991,12 @@ interface ThreeDTechLabProps {
     isSpeaking: boolean;
     activeZone?: string;
     hasCompletedIntro?: boolean;
+    startDrift?: boolean;
+    onDriftComplete?: () => void;
     onExploreClick: () => void;
 }
 
-export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, hasCompletedIntro, onExploreClick }: ThreeDTechLabProps) {
+export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, hasCompletedIntro, startDrift, onDriftComplete, onExploreClick }: ThreeDTechLabProps) {
     // Only render on client to avoid hydration mismatch with Canvas
     const [mounted, setMounted] = useState(false);
     const [sunRef, setSunRef] = useState<THREE.Mesh | null>(null);
@@ -853,10 +1011,10 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, has
         <div className="fixed inset-0 w-full h-full bg-[#010611] overflow-hidden">
             
             <div className="absolute inset-0 z-0">
-                <Canvas camera={{ position: [0, 4, 150], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
+                <Canvas camera={{ position: [0, 4, 300], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
                     
-                    {/* Fog: thin enough that orb is always visible at ~70 unit distance */}
-                    <fog attach="fog" args={['#010611', 20, 90]} />
+                    {/* Fog: thinner so orb is visible from 350 units distance */}
+                    <fog attach="fog" args={['#010611', 50, 500]} />
                     <color attach="background" args={['#010611']} />
                     
                     {/* The Deep Abyss Floor (Seabed) */}
@@ -865,7 +1023,7 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, has
                         <meshStandardMaterial color="#000511" roughness={1} metalness={0} />
                     </mesh>
 
-                    <ambientLight intensity={0.4} color="#001122" />
+                    <ambientLight intensity={1.5} color="#445566" />
                     <spotLight position={[0, 20, 20]} intensity={50} decay={2} distance={100} color="#004466" penumbra={1} angle={Math.PI / 3} />
 
                     {/* INTERGALACTIC STARRY SKY */}
@@ -882,10 +1040,10 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, has
                     <Lightning />
 
                     <Suspense fallback={null}>
-                        {/* Embedded env map (no file fetch needed) */}
-                        <Environment preset="city" background={false} environmentIntensity={0.3} />
+                        {/* Removed heavy remote HDR environment to drastically improve load time. Relying on explicit lights. */}
                         <FloatingOrb isListening={isListening} isSpeaking={isSpeaking} setSunRef={setSunRef} />
-                        <RealisticOcean isSpeaking={isSpeaking} />
+                        <RealisticOcean isSpeaking={isSpeaking} isListening={isListening} />
+                        <LoneSurvivorOnRaft startDrift={startDrift} hasCompletedIntro={hasCompletedIntro} />
                     </Suspense>
 
                     <Rain />
@@ -897,7 +1055,13 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, has
                         <Noise opacity={0.03} />
                     </EffectComposer>
 
-                    <FirstPersonCamera isListening={isListening} isSpeaking={isSpeaking} hasCompletedIntro={hasCompletedIntro} />
+                    <FirstPersonCamera 
+                        isListening={isListening} 
+                        isSpeaking={isSpeaking} 
+                        hasCompletedIntro={hasCompletedIntro}
+                        startDrift={startDrift}
+                        onDriftComplete={onDriftComplete} 
+                    />
                 </Canvas>
             </div>
 

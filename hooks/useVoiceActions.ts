@@ -12,7 +12,7 @@ export function useVoiceActions() {
   useEffect(() => {
     if (!room) return
 
-    const handleDataMessage = (payload: Uint8Array, participant: any, kind: DataPacket_Kind) => {
+    const handleDataMessage = (payload: Uint8Array, participant: any, kind?: DataPacket_Kind) => {
       const decoder = new TextDecoder()
       const str = decoder.decode(payload)
       

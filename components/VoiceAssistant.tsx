@@ -131,9 +131,9 @@ function AssistantContent() {
   const [volume, setVolume] = useState(0);
 
   useEffect(() => {
-    if (audioTrack?.track) {
+    if ((audioTrack as any)?.track) {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const source = audioContext.createMediaStreamSource(new MediaStream([audioTrack.track.mediaStreamTrack]));
+      const source = audioContext.createMediaStreamSource(new MediaStream([(audioTrack as any).track.mediaStreamTrack]));
       const analyzer = audioContext.createAnalyser();
       source.connect(analyzer);
       const dataArray = new Uint8Array(analyzer.frequencyBinCount);
