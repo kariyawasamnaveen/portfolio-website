@@ -1,7 +1,7 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { PerformanceMonitor, useProgress } from '@react-three/drei';
-import { EffectComposer, Bloom, DepthOfField, ChromaticAberration, Vignette, Glitch } from '@react-three/postprocessing';
+import { PerformanceMonitor, useProgress, Stars, Environment } from '@react-three/drei';
+import { EffectComposer, Bloom, DepthOfField, ChromaticAberration, Vignette, Glitch, Noise } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 
@@ -9,6 +9,7 @@ import RealisticOcean from './RealisticOcean';
 import RedDome from './RedDome';
 import CameraRig from './CameraRig';
 import AudioController from './AudioController';
+import { Lightning, ProceduralAudioSystem, Rain, VoiceAuraLight } from './EnvironmentEffects';
 import { useQualityTier } from '../hooks/useQualityTier';
 
 interface SceneProps {
@@ -26,7 +27,6 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
     const [glitchActive, setGlitchActive] = useState(false);
 
     // Notify parent when assets/shaders are ready so "CLICK TO ENTER" becomes interactable.
-    // Since we use procedural shaders and no GLTFs, useProgress might stay at 0. We use a short timeout to ensure compilation.
     useEffect(() => {
         const timer = setTimeout(() => {
             if (onReady) onReady(true);
@@ -46,11 +46,36 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
     const isWarping = startDrift && !hasCompletedIntro;
 
     return (
-        <Canvas dpr={settings.dpr} gl={{ antialias: false, powerPreference: "high-performance" }} style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <Canvas camera={{ position: [0, 4, 150], fov: 60 }} dpr={settings.dpr} gl={{ antialias: false, powerPreference: "high-performance" }} style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
             <PerformanceMonitor onDecline={() => downgrade()} bounds={[30, 60]}>
                 <Suspense fallback={null}>
-                    {/* Environment */}
-                    <RealisticOcean />
+                    {/* Fog and Background */}
+                    <fog attach="fog" args={['#010611', 20, 90]} />
+                    <color attach="background" args={['#010611']} />
+                    
+                    {/* The Deep Abyss Floor (Seabed) */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -25, 0]}>
+                        <planeGeometry args={[1000, 1000]} />
+                        <meshStandardMaterial color="#000511" roughness={1} metalness={0} />
+                    </mesh>
+
+                    {/* Base Lighting */}
+                    <ambientLight intensity={0.4} color="#001122" />
+                    <spotLight position={[0, 20, 20]} intensity={50} decay={2} distance={100} color="#004466" penumbra={1} angle={Math.PI / 3} />
+                    <pointLight position={[0, -15, -50]} intensity={250} distance={80} decay={1.5} color="#ff0022" />
+
+                    {/* Intergalactic Starry Sky */}
+                    <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={2} />
+
+                    {/* Dynamic Environment Effects */}
+                    <VoiceAuraLight isSpeaking={isSpeaking} />
+                    <Lightning />
+                    <ProceduralAudioSystem />
+                    <Rain />
+
+                    {/* The Core Elements */}
+                    <Environment preset="city" background={false} environmentIntensity={0.3} />
+                    <RealisticOcean isSpeaking={isSpeaking} />
                     <RedDome isSpeaking={isSpeaking} isListening={isListening} />
                     
                     {/* Camera Control & Audio */}
@@ -61,9 +86,9 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     <EffectComposer disableNormalPass multisampling={0}>
                         {settings.bloom && (
                             <Bloom 
-                                intensity={2.5} 
+                                intensity={1.5} 
                                 mipmapBlur 
-                                luminanceThreshold={0.9} 
+                                luminanceThreshold={0.2} 
                                 luminanceSmoothing={0.1} 
                             />
                         )}
@@ -84,7 +109,8 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                             />
                         )}
 
-                        <Vignette eskil={false} offset={0.1} darkness={1.1} />
+                        <Vignette eskil={false} offset={0.1} darkness={1.2} />
+                        <Noise opacity={0.03} />
 
                         {glitchActive && (
                             <Glitch 
