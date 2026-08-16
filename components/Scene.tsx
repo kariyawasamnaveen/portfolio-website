@@ -70,7 +70,7 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     {/* Dynamic Environment Effects */}
                     <VoiceAuraLight isSpeaking={isSpeaking} />
                     <Lightning />
-                    <ProceduralAudioSystem />
+                    <ProceduralAudioSystem isPlaying={hasCompletedIntro} />
                     <Rain />
 
                     {/* The Core Elements */}
@@ -80,7 +80,6 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     
                     {/* Camera Control & Audio */}
                     <CameraRig startDrift={startDrift} hasCompletedIntro={hasCompletedIntro} onDriftComplete={onDriftComplete} />
-                    <AudioController startDrift={startDrift} hasCompletedIntro={hasCompletedIntro} />
                     
                     {/* Post-Processing Stack */}
                     <EffectComposer disableNormalPass multisampling={0}>

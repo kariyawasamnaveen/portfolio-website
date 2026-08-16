@@ -24,10 +24,10 @@ export function Lightning() {
 }
 
 // PROCEDURAL 3D AUDIO SYSTEM (Web Audio API)
-export function ProceduralAudioSystem() {
+export function ProceduralAudioSystem({ isPlaying }: { isPlaying: boolean }) {
     useEffect(() => {
-        // Only run in browser
-        if (typeof window === 'undefined') return;
+        // Only run in browser and when it is allowed to play
+        if (typeof window === 'undefined' || !isPlaying) return;
 
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContextClass) return;
@@ -68,10 +68,14 @@ export function ProceduralAudioSystem() {
         return () => {
             document.removeEventListener('click', resumeAudio);
             document.removeEventListener('touchstart', resumeAudio);
-            windSource.stop();
-            ctx.close();
+            try {
+                windSource.stop();
+                ctx.close();
+            } catch (e) {
+                // Ignore
+            }
         };
-    }, []);
+    }, [isPlaying]);
 
     return null;
 }
