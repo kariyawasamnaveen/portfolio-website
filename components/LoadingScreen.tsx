@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import CodeLogo from './CodeLogo'
 
 // The True Spherical Logo Mesh
 const LogoSphereMesh = () => {
@@ -164,7 +165,7 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
 
                             {/* THE LOGO CORE (Dissolves on the spot) */}
                             <motion.div 
-                                className="relative w-[140px] h-[140px] md:w-[180px] md:h-[180px] z-30"
+                                className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] z-30 flex items-center justify-center"
                                 animate={isClicked ? {
                                     scale: 1.4,       // Expands as it dissipates
                                     opacity: 0,       // Dissolves completely
@@ -175,20 +176,10 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                                 transition={isClicked ? { duration: 1.2, ease: "easeOut" } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
                             >
                                 {/* Neural Energy Core Glow */}
-                                <div className="absolute inset-0 rounded-full bg-red-600/20 blur-[20px] animate-pulse" />
+                                <div className="absolute inset-0 rounded-full bg-red-600/10 blur-[25px] animate-pulse pointer-events-none" />
                                 
-                                <img 
-                                    src="/logo-kariyawasam.jpg" 
-                                    alt="Logo"
-                                    className="relative w-full h-full object-contain rounded-full"
-                                    style={{ 
-                                        mixBlendMode: 'screen', 
-                                        filter: 'drop-shadow(0 0 25px rgba(255,42,42,1))' 
-                                    }}
-                                />
-
-                                {/* Glitch Overlay (Scanlines on the logo) */}
-                                <div className="absolute inset-0 rounded-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] pointer-events-none mix-blend-overlay" />
+                                <CodeLogo />
+                                
                             </motion.div>
 
                         </div>
