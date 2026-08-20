@@ -186,32 +186,9 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                         
                     </motion.div>
 
-                    {/* Masterclass Typography (Swiss Style) */}
-                    <div className={`mt-24 flex flex-col items-center justify-center transition-all duration-1000 ${isClicked ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-                        {/* Active AI Indicator */}
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-[pulse_1.5s_ease-in-out_infinite] shadow-[0_0_8px_#ff2a2a]" />
-                            <p className="text-white/40 font-mono text-[9px] md:text-[10px] tracking-[0.2em] uppercase">
-                                {isReady ? "System Active" : "Initializing..."}
-                            </p>
-                        </div>
-                        
-                        {/* Elegant Interaction Text */}
-                        <motion.p
-                            animate={{ opacity: [0.3, 0.8, 0.3] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="text-white/80 font-sans font-light text-xs md:text-sm tracking-[0.5em] uppercase"
-                        >
-                            Click to Enter
-                        </motion.p>
-                    </div>
+                    {/* Masterclass Typography (Swiss Style) - Removed for 2031 biomimetic interface */}
 
-                    {/* Minimalist Grid Coordinates (Replacing Boot Logs) */}
-                    <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 font-mono text-[8px] md:text-[9px] text-white/20 flex flex-col items-start tracking-[0.3em] uppercase pointer-events-none">
-                        <div>LOC: 43.002.19</div>
-                        <div>SYS: NEURAL_LNK_01</div>
-                        <div>STT: {isReady ? 'AWAITING' : 'SYNCING'}</div>
-                    </div>
+
                 </motion.div>
             )}
         </AnimatePresence>

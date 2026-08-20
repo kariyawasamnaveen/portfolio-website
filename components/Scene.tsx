@@ -47,7 +47,7 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
 
     return (
         <Canvas camera={{ position: [0, 4, 150], fov: 60 }} dpr={settings.dpr} gl={{ antialias: false, powerPreference: "high-performance" }} style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-            <PerformanceMonitor onDecline={() => downgrade()} bounds={[30, 60]}>
+            <PerformanceMonitor onDecline={() => downgrade()}>
                 <Suspense fallback={null}>
                     {/* Fog and Background */}
                     <fog attach="fog" args={['#010611', 20, 90]} />
@@ -74,7 +74,6 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     <Rain />
 
                     {/* The Core Elements */}
-                    <Environment preset="city" background={false} environmentIntensity={0.3} />
                     <RealisticOcean isSpeaking={isSpeaking} />
                     <RedDome isSpeaking={isSpeaking} isListening={isListening} />
                     

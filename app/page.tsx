@@ -236,14 +236,14 @@ export default function Home() {
     });
 
     useEffect(() => {
-        if (isBotActive) {
+        if (isBotActive && hasPoweredUp) {
             console.log("[Voice AI 🔌] Bot Activated: Calling vad.start() (Deep Debug)");
             vad.start();
         } else {
-            console.log("[Voice AI 🔌] Bot Deactivated: Calling vad.pause() (Deep Debug)");
+            console.log("[Voice AI 🔌] Bot Deactivated/Not Ready: Calling vad.pause() (Deep Debug)");
             vad.pause();
         }
-    }, [isBotActive]);
+    }, [isBotActive, hasPoweredUp]);
 
     const [selectedProject, setSelectedProject] = useState<Project | null>(null)
     const [expandedMediaIndex, setExpandedMediaIndex] = useState<number | null>(null)
