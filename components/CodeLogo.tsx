@@ -192,13 +192,12 @@ export default function CodeLogo() {
                         <HackerModel isHovered={isHovered} />
                         
                         {/* 2036 CYBER-GOD POST PROCESSING */}
-                        <EffectComposer disableNormalPass>
+                        <EffectComposer>
                             <Bloom 
                                 luminanceThreshold={0.5} 
                                 mipmapBlur 
                                 intensity={1.5} 
                             />
-                            <Bloom luminanceThreshold={0.5} mipmapBlur intensity={1.5} />
                         </EffectComposer>
                     </Suspense>
                 </Canvas>
