@@ -6,19 +6,20 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 // 1. THE TRUE 3D HACKER MODEL COMPONENT
-function HackerModel({ isHovered }: { isHovered: boolean }) {
+function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking?: boolean }) {
     const { scene } = useGLTF('/avaturn_avatar.glb');
     const groupRef = useRef<THREE.Group>(null);
     const headBoneRef = useRef<THREE.Bone | null>(null);
-    const skinnedMeshRef = useRef<THREE.SkinnedMesh | null>(null);
-    const smileIndexRef = useRef<number>(-1);
-    const talkIndexRef = useRef<number>(-1);
+    const faceMeshesRef = useRef<{mesh: THREE.SkinnedMesh, smile: number, talk: number, blinkL: number, blinkR: number}[]>([]);
 
     // Mathematically perfect scale and Y-offset for the circular portrait
     const fixedScale = 6.2; // Scaled up slightly as requested
     const fixedPositionY = -10.2; // Adjusted for new scale
 
     React.useEffect(() => {
+        // Reset face meshes on mount/scene change
+        faceMeshesRef.current = [];
+        
         scene.traverse((child: any) => {
             // Find Head/Neck Bone for LookAt tracking
             if (child.isBone) {
@@ -28,30 +29,40 @@ function HackerModel({ isHovered }: { isHovered: boolean }) {
                         headBoneRef.current = child;
                     }
                 }
-                // Force Arms down from T-Pose using World Axis (ignores local bone orientation!)
+                // Force Arms down and backwards (tucked behind back) to hide them perfectly!
                 if (name === 'leftarm') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -1.2);
+                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
+                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -1.2); // Down
                 } else if (name === 'rightarm') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 1.2);
+                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
+                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 1.2); // Down
                 } else if (name === 'leftshoulder') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -0.3);
+                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -0.2);
                 } else if (name === 'rightshoulder') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 0.3);
+                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 0.2);
+                }
+                
+                // Straighten forearms so they point straight down instead of bending up
+                if (name === 'leftforearm' || name === 'rightforearm') {
+                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
                 }
             }
             
-            // Find SkinnedMesh with facial blendshapes
+            // Find ALL SkinnedMeshes with facial blendshapes (Head, Teeth, etc)
             if (child.isSkinnedMesh && child.morphTargetDictionary) {
-                skinnedMeshRef.current = child;
                 const dict = child.morphTargetDictionary;
+                let smile = -1, talk = -1, blinkL = -1, blinkR = -1;
                 for (const key in dict) {
                     const k = key.toLowerCase();
-                    if (k.includes('smile') || k.includes('happy') || k.includes('joy')) {
-                        smileIndexRef.current = dict[key];
-                    }
-                    if (k.includes('jaw') || k.includes('mouthopen') || k.includes('talk')) {
-                        talkIndexRef.current = dict[key];
-                    }
+                    // Exact matches to prevent asymmetric distortion (like jawLeft or mouthSmileLeft)
+                    if (k === 'mouthsmile' || k === 'smile') smile = dict[key];
+                    if (k === 'jawopen' || k === 'mouthopen' || k === 'vrc.v_aa') talk = dict[key];
+                    if (k === 'eyeblinkleft' || k === 'eyeblink_l' || k === 'blinkleft') blinkL = dict[key];
+                    if (k === 'eyeblinkright' || k === 'eyeblink_r' || k === 'blinkright') blinkR = dict[key];
+                }
+                // If it has ANY facial expressions, add it to our array!
+                if (smile !== -1 || talk !== -1 || blinkL !== -1 || blinkR !== -1) {
+                    faceMeshesRef.current.push({ mesh: child, smile, talk, blinkL, blinkR });
                 }
             }
 
@@ -103,20 +114,39 @@ function HackerModel({ isHovered }: { isHovered: boolean }) {
             groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.05));
         }
 
-        // Facial Expressions: Smile and Talk on hover!
-        if (skinnedMeshRef.current) {
-            if (smileIndexRef.current !== -1) {
-                const targetSmile = isHovered ? 1.0 : 0.0;
-                const currentSmile = skinnedMeshRef.current.morphTargetInfluences![smileIndexRef.current];
-                skinnedMeshRef.current.morphTargetInfluences![smileIndexRef.current] = THREE.MathUtils.lerp(currentSmile, targetSmile, 0.1);
+        // Facial Expressions: AUTOMATIC DEMO MODE
+        const time = state.clock.elapsedTime;
+        
+        // Force smile: 3 seconds smiling, 3 seconds serious
+        const targetSmile = (time % 6) > 3 ? 1.0 : 0.0;
+        
+        // Force talking: Talk for 2 seconds, stop for 2 seconds
+        const isFakeTalking = (time % 4) > 2;
+        // Combine multiple sine waves for a much more natural, syllable-like lip sync!
+        const naturalTalk = (Math.sin(time * 25) * 0.5 + Math.sin(time * 12) * 0.5) * 0.6 + 0.2;
+        const targetTalk = isFakeTalking ? Math.max(0, naturalTalk) : 0.0;
+        
+        // Blinking Logic
+        const blinkCycle = time % 4; // Blink every ~4 seconds
+        const isBlinking = blinkCycle > 3.8;
+        const blinkValue = isBlinking ? Math.sin((blinkCycle - 3.8) * Math.PI * 5) : 0; // Quick pulse 0->1->0
+
+        faceMeshesRef.current.forEach(({ mesh, smile, talk, blinkL, blinkR }) => {
+            if (smile !== -1) {
+                const currentSmile = mesh.morphTargetInfluences![smile];
+                mesh.morphTargetInfluences![smile] = THREE.MathUtils.lerp(currentSmile, targetSmile, 0.1);
             }
-            
-            if (talkIndexRef.current !== -1) {
-                const targetTalk = isHovered ? (Math.sin(state.clock.elapsedTime * 12) * 0.5 + 0.5) * 0.7 : 0.0;
-                const currentTalk = skinnedMeshRef.current.morphTargetInfluences![talkIndexRef.current];
-                skinnedMeshRef.current.morphTargetInfluences![talkIndexRef.current] = THREE.MathUtils.lerp(currentTalk, targetTalk, 0.2);
+            if (talk !== -1) {
+                const currentTalk = mesh.morphTargetInfluences![talk];
+                mesh.morphTargetInfluences![talk] = THREE.MathUtils.lerp(currentTalk, targetTalk, 0.3);
             }
-        }
+            if (blinkL !== -1) {
+                mesh.morphTargetInfluences![blinkL] = Math.max(0, blinkValue);
+            }
+            if (blinkR !== -1) {
+                mesh.morphTargetInfluences![blinkR] = Math.max(0, blinkValue);
+            }
+        });
 
         // 2036 CYBER-GOD GLITCH & GLOW PHYSICS
         scene.traverse((child: any) => {
@@ -124,7 +154,7 @@ function HackerModel({ isHovered }: { isHovered: boolean }) {
                 if (isHovered) {
                     if (child.material._isGlowMaterial) {
                         child.material.emissive = new THREE.Color(0x00ffff);
-                        const pulse = Math.sin(state.clock.elapsedTime * 15) * 0.5 + 0.5;
+                        const pulse = Math.sin(time * 15) * 0.5 + 0.5;
                         child.material.emissiveIntensity = 5 + (pulse * 5);
                     } else {
                         const isGlitching = Math.random() > 0.98;
@@ -151,7 +181,7 @@ function HackerModel({ isHovered }: { isHovered: boolean }) {
 useGLTF.preload('/avaturn_avatar.glb');
 
 // 2. THE MAIN COMPONENT
-export default function CodeLogo() {
+export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
     const [isHovered, setIsHovered] = useState(false);
     const [boneNames, setBoneNames] = useState<string[]>([]);
 
@@ -189,7 +219,7 @@ export default function CodeLogo() {
                         <pointLight position={[0, 2, 2]} intensity={2} color="#ffffff" distance={5} />
                         
                         {/* The Model */}
-                        <HackerModel isHovered={isHovered} />
+                        <HackerModel isHovered={isHovered} isSpeaking={isSpeaking} />
                         
                         {/* 2036 CYBER-GOD POST PROCESSING */}
                         <EffectComposer>
@@ -214,7 +244,7 @@ export default function CodeLogo() {
                             custom={index}
                             initial="hidden"
                             animate={isHovered ? "hover" : "visible"}
-                            variants={textVariants}
+                            variants={textVariants as any}
                             className={`inline-block ${isHovered ? '' : 'bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500'}`}
                             style={{ 
                                 textShadow: isHovered ? '0 0 15px rgba(0,255,255,0.8)' : 'none'

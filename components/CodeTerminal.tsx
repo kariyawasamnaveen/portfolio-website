@@ -1,159 +1,62 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FiCpu, FiCode, FiTerminal } from 'react-icons/fi';
-import { SiFlutter, SiNodedotjs, SiFirebase, SiGooglecloud } from 'react-icons/si';
+import { SiFirebase, SiGooglecloud } from 'react-icons/si';
+import { CODE_SNIPPETS } from '@/data/terminal-snippets';
+import { type TechId as GlobalTechId } from '@/store/useAppStore';
 
-export type TechId = 'flutter' | 'node' | 'firebase' | 'mlkit' | null;
+export type TechId = 'agentic' | 'edge' | 'healing' | 'zerotrust' | 'web3' | 'cicd' | null;
 
-const CODE_SNIPPETS: Record<string, { title: string; code: string }> = {
-    flutter: {
-        title: 'lib/core/bloc/auth_bloc.dart',
-        code: `class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository _authRepository;
-  final SecureStorage _secureStorage;
-
-  AuthBloc({
-    required AuthRepository authRepository,
-    required SecureStorage secureStorage,
-  })  : _authRepository = authRepository,
-        _secureStorage = secureStorage,
-        super(const AuthInitial()) {
-    on<LoginRequested>(_onLoginRequested);
-  }
-
-  Future<void> _onLoginRequested(
-    LoginRequested event, Emitter<AuthState> emit
-  ) async {
-    emit(const AuthLoading());
-    try {
-      final user = await _authRepository.authenticate(
-        email: event.email, password: event.password
-      );
-      await _secureStorage.write(key: 'token', value: user.token);
-      emit(AuthSuccess(user));
-    } catch (e) {
-      emit(AuthFailure(e.toString()));
-    }
-  }
-}`,
-    },
-    node: {
-        title: 'src/services/MatchmakingEngine.ts',
-        code: `export class MatchmakingEngine {
-  private redisClient: Redis;
-
-  constructor() {
-    this.redisClient = new Redis(process.env.REDIS_URL!);
-  }
-
-  async findMatch(
-    userId: string, prefs: UserPreferences
-  ): Promise<string | null> {
-    const geoRadius = prefs.distance || 50;
-
-    // O(log N) geolocation matching via ZRANGEBYSCORE
-    const potentialMatches = await this.redisClient.georadius(
-      'user_locations',
-      prefs.lon,
-      prefs.lat,
-      geoRadius,
-      'km'
-    );
-
-    return this.filterByMLCompatibility(userId, potentialMatches);
-  }
-}`,
-    },
-    firebase: {
-        title: 'functions/src/triggers/onUserCreate.ts',
-        code: `export const onUserCreate = functions.auth
-  .user()
-  .onCreate(async (user) => {
-    const batch = db.batch();
-
-    const userRef = db.collection('users').doc(user.uid);
-    batch.set(userRef, {
-      email: user.email,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      status: 'pending_verification',
-    });
-
-    const walletRef = db.collection('wallets').doc(user.uid);
-    batch.set(walletRef, { balance: 0, currency: 'USD' });
-
-    // Atomic transaction ensures absolute data integrity
-    await batch.commit();
-    console.log('Initialized architecture for ' + user.uid);
-  });`,
-    },
-    mlkit: {
-        title: 'lib/features/verification/face_detector.dart',
-        code: `class RealTimeFaceVerifier {
-  final FaceDetector _faceDetector = FaceDetector(
-    options: FaceDetectorOptions(
-      enableContours: true,
-      enableClassification: true,
-      performanceMode: FaceDetectorMode.accurate,
-    ),
-  );
-
-  Future<bool> verifyLiveness(InputImage image) async {
-    final faces = await _faceDetector.processImage(image);
-    if (faces.isEmpty) return false;
-
-    final face = faces.first;
-    // Prevent 2D photo spoofing via 3D contour depth analysis
-    final leftEye = face.leftEyeOpenProbability ?? 0;
-    final rightEye = face.rightEyeOpenProbability ?? 0;
-    return leftEye > 0.8 && rightEye > 0.8;
-  }
-}`,
-    },
-};
-
-interface Props {
+interface CodeTerminalProps {
     activeTech: TechId;
     setActiveTech: (tech: TechId) => void;
-    onAnalyze: (tech: TechId) => void;
     isAnalyzing: boolean;
+    onAnalyze?: (tech: TechId) => void;
+    codeHighlight?: string | null;
 }
 
-export function CodeTerminal({ activeTech, setActiveTech, onAnalyze, isAnalyzing }: Props) {
-    const [displayedCode, setDisplayedCode] = useState('');
+
+export function CodeTerminal({ activeTech, setActiveTech, onAnalyze, isAnalyzing, codeHighlight }: CodeTerminalProps) {
+    const [lines, setLines] = useState<string[]>([]);
 
     useEffect(() => {
         if (!activeTech) {
-            setDisplayedCode(
-                ' // SYSTEM IDLE\n // SELECT A TECHNOLOGY TO INITIATE CODE INJECTION...'
-            );
+            setLines(['// SYSTEM IDLE', '// SELECT A TECHNOLOGY TO INITIATE CODE INJECTION...']);
             return;
         }
 
-        const fullCode = CODE_SNIPPETS[activeTech].code;
-        setDisplayedCode('');
+        const fullCode = CODE_SNIPPETS[activeTech as keyof typeof CODE_SNIPPETS].code;
+        const codeLines = fullCode.split('\n');
+        setLines([]);
+        
+        let currentLines: string[] = [];
         let i = 0;
+        
         const interval = setInterval(() => {
-            i += 6;
-            setDisplayedCode(fullCode.slice(0, i));
-            if (i >= fullCode.length) {
-                setDisplayedCode(fullCode);
+            if (i < codeLines.length) {
+                currentLines = [...currentLines, codeLines[i]];
+                setLines(currentLines);
+                i++;
+            } else {
                 clearInterval(interval);
             }
-        }, 12);
+        }, 50);
 
         return () => clearInterval(interval);
     }, [activeTech]);
 
     const techs = [
-        { id: 'flutter' as TechId, name: 'Flutter & BLoC', icon: <SiFlutter size={18} />, activeColor: 'border-[#0175C2] text-[#4ec9fb]', bg: 'hover:border-[#0175C2]/40' },
-        { id: 'node' as TechId, name: 'Node.js Microservices', icon: <SiNodedotjs size={18} />, activeColor: 'border-[#339933] text-[#6dbf6d]', bg: 'hover:border-[#339933]/40' },
-        { id: 'firebase' as TechId, name: 'Firebase NoSQL', icon: <SiFirebase size={18} />, activeColor: 'border-[#FFCA28] text-[#ffd454]', bg: 'hover:border-[#FFCA28]/40' },
-        { id: 'mlkit' as TechId, name: 'Google ML-Kit', icon: <SiGooglecloud size={18} />, activeColor: 'border-[#4285F4] text-[#7baaf7]', bg: 'hover:border-[#4285F4]/40' },
+        { id: 'agentic' as TechId, name: 'Autonomous AI (LLMs)', icon: <FiCpu size={18} />, activeColor: 'border-[#FF007F] text-[#ff4da6]', bg: 'hover:border-[#FF007F]/40' },
+        { id: 'edge' as TechId, name: 'Global Edge Network', icon: <FiTerminal size={18} />, activeColor: 'border-[#339933] text-[#6dbf6d]', bg: 'hover:border-[#339933]/40' },
+        { id: 'healing' as TechId, name: 'Self-Healing Clusters', icon: <SiFirebase size={18} />, activeColor: 'border-[#FFCA28] text-[#ffd454]', bg: 'hover:border-[#FFCA28]/40' },
+        { id: 'zerotrust' as TechId, name: 'Zero-Trust Security', icon: <SiGooglecloud size={18} />, activeColor: 'border-[#4285F4] text-[#7baaf7]', bg: 'hover:border-[#4285F4]/40' },
+        { id: 'web3' as TechId, name: 'Decentralized State (Web3)', icon: <FiCode size={18} />, activeColor: 'border-[#8c52ff] text-[#b388ff]', bg: 'hover:border-[#8c52ff]/40' },
+        { id: 'cicd' as TechId, name: 'Zero-Downtime Pipelines', icon: <FiCpu size={18} />, activeColor: 'border-[#ff5722] text-[#ff8a65]', bg: 'hover:border-[#ff5722]/40' },
     ];
 
     return (
-        <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl mx-auto" style={{ height: '520px' }}>
+        <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl mx-auto lg:h-[520px] min-h-[600px] lg:min-h-0">
             {/* Left: Selector */}
             <div className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-3">
                 <div className="text-[10px] font-black tracking-[0.25em] text-neutral-600 uppercase mb-1 flex items-center gap-2">
@@ -190,35 +93,57 @@ export function CodeTerminal({ activeTech, setActiveTech, onAnalyze, isAnalyzing
                     </div>
                     <span className="text-xs font-mono text-neutral-500 flex items-center gap-1.5">
                         <FiCode size={11} />
-                        {activeTech ? CODE_SNIPPETS[activeTech].title : 'terminal — idle'}
+                        {activeTech ? CODE_SNIPPETS[activeTech as keyof typeof CODE_SNIPPETS].title : 'terminal — idle'}
                     </span>
                     <button
-                        onClick={() => onAnalyze(activeTech)}
+                        onClick={() => onAnalyze && onAnalyze(activeTech)}
                         disabled={!activeTech || isAnalyzing}
                         className={[
-                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all',
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all overflow-hidden relative group',
                             !activeTech || isAnalyzing
                                 ? 'opacity-40 cursor-not-allowed text-neutral-500 bg-neutral-800'
                                 : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 hover:shadow-[0_0_12px_rgba(34,211,238,0.25)]',
                         ].join(' ')}
                     >
-                        <motion.span
-                            animate={isAnalyzing ? { rotate: 360 } : {}}
-                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                        >
-                            <FiCpu size={12} />
-                        </motion.span>
-                        {isAnalyzing ? 'ANALYZING...' : 'RUN AI REVIEW'}
+                            {/* Scanning Animation Background */}
+                            {isAnalyzing && (
+                                <motion.div 
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent w-[200%]"
+                                    animate={{ x: ['-100%', '50%'] }}
+                                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                                />
+                            )}
+                            <motion.span
+                                animate={isAnalyzing ? { rotate: 360 } : {}}
+                                transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                                className="relative z-10"
+                            >
+                                <FiCpu size={12} />
+                            </motion.span>
+                            <span className="relative z-10">{isAnalyzing ? 'SCANNING CODE...' : 'RUN AI REVIEW'}</span>
                     </button>
+
                 </div>
 
-                {/* Code Body */}
-                <div className="flex-1 overflow-y-auto p-5 font-mono text-sm leading-relaxed whitespace-pre">
-                    <span className="text-emerald-400">{displayedCode}</span>
+                <div className="flex-1 overflow-y-auto p-5 font-mono text-sm leading-relaxed whitespace-pre bg-[#0d1117]">
+                    {lines.map((line, i) => {
+                        const isHighlighted = codeHighlight && line.toLowerCase().includes(codeHighlight.toLowerCase());
+                        
+                        return (
+                            <div key={i} className={`flex text-xs md:text-sm font-mono leading-relaxed group transition-colors duration-300 ${isHighlighted ? 'bg-amber-500/20 rounded px-2 -mx-2' : ''}`}>
+                                <span className={`w-8 shrink-0 select-none border-r border-white/5 mr-4 text-right pr-4 ${isHighlighted ? 'text-amber-500 font-bold' : 'text-neutral-600'}`}>
+                                    {i + 1}
+                                </span>
+                                <span className={`whitespace-pre ${isHighlighted ? 'text-amber-300 font-bold' : 'text-emerald-400 group-hover:text-emerald-300'}`}>
+                                    {line || ' '}
+                                </span>
+                            </div>
+                        );
+                    })}
                     <motion.span
                         animate={{ opacity: [1, 0] }}
                         transition={{ repeat: Infinity, duration: 0.75 }}
-                        className="inline-block w-[7px] h-[14px] bg-emerald-400 ml-0.5 translate-y-[3px] rounded-sm"
+                        className="inline-block w-[7px] h-[14px] bg-emerald-400 ml-12 mt-1 rounded-sm"
                     />
                 </div>
             </div>

@@ -28,28 +28,52 @@ export default function AudioController({ startDrift, hasCompletedIntro }: Audio
     }, []);
 
     useEffect(() => {
-        if (startDrift && !hasCompletedIntro) {
-            // Trigger whoosh on click
+        if (startDrift) {
+            // 1. Play Whoosh at max volume for the drop
             if (whooshRef.current) {
-                whooshRef.current.volume = 0.8;
+                whooshRef.current.volume = 1.0; 
                 whooshRef.current.play().catch(e => console.warn("Audio autoplay blocked:", e));
             }
-        }
-    }, [startDrift, hasCompletedIntro]);
-
-    useEffect(() => {
-        if (hasCompletedIntro) {
-            // Start ambient and hum after arrival
+            
+            // 2. Start Ocean Ambient and Bass Hum very quietly
             if (ambientRef.current) {
-                ambientRef.current.volume = 0.3;
+                ambientRef.current.volume = 0.05; 
                 ambientRef.current.play().catch(e => console.warn("Audio autoplay blocked:", e));
             }
             if (humRef.current) {
-                humRef.current.volume = 0.5;
+                humRef.current.volume = 0.1; 
                 humRef.current.play().catch(e => console.warn("Audio autoplay blocked:", e));
             }
+
+            // 3. IMMEDIATELY start a slow, continuous fade-in over 4 seconds so there is NEVER a silent gap
+            let step = 0;
+            const targetAmbient = 0.4;
+            const targetHum = 0.6;
+            const steps = 80; // 80 steps * 50ms = 4000ms (4 seconds)
+            
+            const fadeInterval = setInterval(() => {
+                step++;
+                if (ambientRef.current) {
+                    const currentVol = ambientRef.current.volume;
+                    if (currentVol < targetAmbient) {
+                        ambientRef.current.volume = Math.min(targetAmbient, currentVol + (targetAmbient / steps));
+                    }
+                }
+                if (humRef.current) {
+                    const currentVol = humRef.current.volume;
+                    if (currentVol < targetHum) {
+                        humRef.current.volume = Math.min(targetHum, currentVol + (targetHum / steps));
+                    }
+                }
+                
+                if (step >= steps) {
+                    clearInterval(fadeInterval);
+                }
+            }, 50);
+            
+            return () => clearInterval(fadeInterval);
         }
-    }, [hasCompletedIntro]);
+    }, [startDrift]);
 
     return null; // Purely logical component
 }

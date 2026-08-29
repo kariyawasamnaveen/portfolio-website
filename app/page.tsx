@@ -1,29 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { useMicVAD } from "@ricky0123/vad-react"
-import { utils } from "@ricky0123/vad-web"
-import * as ort from "onnxruntime-web"
-
-if (typeof window !== "undefined") {
-    console.log("[Voice AI ⚙️] Setting ONNX WASM Paths to Cloud CDN to bypass Next.js chunks routing...");
-    ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/";
-    ort.env.wasm.numThreads = 1; // IMPORTANT: Fixes SharedArrayBuffer errors
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useMotionTemplate } from 'framer-motion'
 import CentralPortalNav from '@/components/CentralPortalNav'
 import dynamic from 'next/dynamic'
-import { CodeTerminal, type TechId } from '@/components/CodeTerminal'
+import { CodeTerminal } from '@/components/CodeTerminal'
 const ThreeDTechLab = dynamic(() => import('@/components/ThreeDTechLab'), {
     ssr: false,
     loading: () => <div className="absolute inset-0 bg-[#010611] z-0" />
@@ -42,8 +23,8 @@ import {
 } from 'react-icons/fi'
 import { SiFlutter, SiDart, SiFirebase, SiNodedotjs, SiGooglecloud, SiCplusplus, SiTensorflow, SiWhatsapp } from 'react-icons/si'
 
-type Zone = 'identity' | 'projects' | 'logic' | 'impact' | 'connect'
-
+import VoiceAssistantWidget from '@/components/VoiceAssistantWidget'
+import { useAppStore, type Zone } from '@/store/useAppStore'
 import { Project, PROJECTS_DATA } from '@/data/projects'
 
 // Preload voices immediately on script evaluation
@@ -123,131 +104,46 @@ function ProjectCard({ project, onClick }: { project: any, onClick: () => void }
 }
 
 export default function Home() {
-    const [activeZone, setActiveZone] = useState<Zone>('identity')
     const [lightboxReviewIndex, setLightboxReviewIndex] = useState<number | null>(null)
     const [currentReviewIndex, setCurrentReviewIndex] = useState(1)
     const [currentReelIndex, setCurrentReelIndex] = useState(1)
     const [isReelMuted, setIsReelMuted] = useState(true)
     const [isPoweringUp, setIsPoweringUp] = useState(false)
-    const [isListening, setIsListening] = useState(false)
-    const [isSpeaking, setIsSpeaking] = useState(false)
     const [hasPoweredUp, setHasPoweredUp] = useState(false);
     const [isUiRevealed, setIsUiRevealed] = useState(false);
     const [showLoading, setShowLoading] = useState(true);
     const [isAssetsReady, setIsAssetsReady] = useState(false);
     const [startDrift, setStartDrift] = useState(false);
-    const [isBotActive, setIsBotActive] = useState(true);
     const [isRevealing, setIsRevealing] = useState(true)
-    const [activeTech, setActiveTech] = useState<TechId>(null) // Logic page code terminal
-    const [isAnalyzing, setIsAnalyzing] = useState(false) // AI Code Review state
-    const recognitionRef = useRef<any>(null)
-    const isBotActiveRef = useRef(false)
-    const isSpeakingRef = useRef(false)
+    const [expandedMediaIndex, setExpandedMediaIndex] = useState<number | null>(null)
+    const [showDeepDive, setShowDeepDive] = useState(false)
+    
+    const { 
+        activeZone, setActiveZone, 
+        selectedProject, setSelectedProject,
+        codeHighlight, setCodeHighlight,
+        isBotActive, 
+        isListening, 
+        isSpeaking,
+        showHint,
+        activeTech, setActiveTech,
+        isAnalyzing, setIsAnalyzing,
+        contactForm, setContactForm,
+        globalSpeak
+    } = useAppStore()
+
+    const lastAnalyzeTimeRef = useRef<number>(0);
 
     useEffect(() => {
         // Force browser to load voices into memory as early as possible
         window.speechSynthesis.getVoices();
-        window.speechSynthesis.onvoiceschanged = () => {
-            console.log("[Voice AI ⚙️] Voices loaded into memory.");
-        };
     }, []);
 
     useEffect(() => {
         if (!showLoading) {
-            // As soon as the loading screen vanishes, power up the main UI so the Ocean Scene becomes visible
             setHasPoweredUp(true);
         }
     }, [showLoading]);
-
-    const processAudio = async (base64data: string) => {
-        try {
-            const startTime = performance.now();
-            console.log(`[Voice AI ⏱️] Single API Request started at: ${startTime.toFixed(2)}ms`);
-            
-            const payload = { audioData: base64data, mimeType: 'audio/wav' };
-
-            const response = await fetch('/api/chat/process', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const endTime = performance.now();
-            console.log(`[Voice AI ⏱️] Process API HTTP Status: ${response.status} (Took ${(endTime - startTime).toFixed(2)}ms)`);
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                console.error("[Voice AI ❌] Backend returned Error:", errData);
-                throw new Error(`API returned status ${response.status}: ${errData.details || 'No details'}`);
-            }
-
-            const data = await response.json();
-            
-            if (data.spokenResponse) {
-                speakResponse(data.spokenResponse);
-            }
-            
-            if (data.command === 'NAVIGATE' && data.target) {
-                setActiveZone(data.target as Zone);
-            } else if (data.command === 'OPEN_PROJECT' && data.target) {
-                const proj = PROJECTS_DATA.find(p => p.id === data.target);
-                if (proj) {
-                    console.log("[Voice AI] Opening project:", proj.title);
-                    setSelectedProject(proj);
-                }
-            }
-        } catch (err) {
-            console.error("[Voice AI ❌] Massive failure in Chat API pipeline:", err);
-        }
-    };
-
-    const vad = useMicVAD({
-        startOnLoad: false,
-        model: "v5",
-        baseAssetPath: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.30/dist/",
-        onnxWASMBasePath: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.27.0/dist/",
-        positiveSpeechThreshold: 0.85,
-        minSpeechMs: 50,
-        onSpeechStart: () => {
-            console.log("[Voice AI 🗣️] Speech started! (Deep Debug: Silero VAD detected human voice)");
-            setIsListening(true);
-            setIsUiRevealed(true); // User spoke, reveal the UI!
-            if (window.speechSynthesis.speaking) {
-                console.log("[Voice AI 🛑] BARGE-IN DETECTED! Muting bot (Deep Debug: Cancelling TTS)...");
-                window.speechSynthesis.cancel();
-                setIsSpeaking(false);
-            }
-        },
-        onSpeechEnd: (audio) => {
-            console.log("[Voice AI 🤫] Speech ended (Deep Debug: Silence detected). Audio size: " + audio.length);
-            setIsListening(false);
-            const wavBuffer = utils.encodeWAV(audio);
-            const base64String = arrayBufferToBase64(wavBuffer);
-            processAudio(base64String);
-        },
-        onVADMisfire: () => {
-            console.log("[Voice AI 🗑️] VAD misfire (Deep Debug: Too short or false positive). Ignored.");
-            setIsListening(false);
-        },
-        onFrameProcessed: (probabilities) => {
-            // Uncomment below if you want extreme frame-by-frame debug, but it will flood the console
-            // console.log(`[Voice AI 🕵️] Frame processed. Speech Prob: ${probabilities.isSpeech}`);
-        }
-    });
-
-    useEffect(() => {
-        if (isBotActive && hasPoweredUp) {
-            console.log("[Voice AI 🔌] Bot Activated: Calling vad.start() (Deep Debug)");
-            vad.start();
-        } else {
-            console.log("[Voice AI 🔌] Bot Deactivated/Not Ready: Calling vad.pause() (Deep Debug)");
-            vad.pause();
-        }
-    }, [isBotActive, hasPoweredUp]);
-
-    const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-    const [expandedMediaIndex, setExpandedMediaIndex] = useState<number | null>(null)
-    const [showDeepDive, setShowDeepDive] = useState(false)
 
     // Compute all media for the selected project
     const allProjectMedia = useMemo(() => {
@@ -303,176 +199,6 @@ export default function Home() {
         return () => window.removeEventListener('keydown', handleLightboxKeyDown)
     }, [lightboxReviewIndex])
 
-    useEffect(() => {
-        isBotActiveRef.current = isBotActive
-    }, [isBotActive])
-
-    useEffect(() => {
-        isSpeakingRef.current = isSpeaking
-    }, [isSpeaking])
-
-    // Proactive AI Tour Guide
-    const visitedZonesRef = useRef<Set<Zone>>(new Set(['identity']))
-
-    useEffect(() => {
-        if (!isBotActive) return;
-        if (visitedZonesRef.current.has(activeZone)) return;
-
-        visitedZonesRef.current.add(activeZone);
-
-        const synth = window.speechSynthesis;
-        
-        // Let the tab transition happen first
-        setTimeout(() => {
-            let greeting = "";
-            if (activeZone === 'projects') {
-                greeting = "Welcome to the showcase. I highly recommend looking at Shemet Dating. Shall I open it for you?";
-            } else if (activeZone === 'logic') {
-                greeting = "Naveen is very strict about his architecture. Ask me how he structures scalable systems.";
-            } else if (activeZone === 'impact') {
-                greeting = "Here is real client feedback. Feel free to ask me about his global reputation.";
-            }
-
-            if (greeting) {
-                // Cancel any ongoing speech so the AI immediately reacts to the new tab
-                if (synth.speaking) synth.cancel();
-                
-                // We must use getPreferredMaleVoice directly inside here or wait until it's defined
-                // Since getPreferredMaleVoice is defined below, we'll fetch voices directly here for simplicity
-                const voice = getPreferredVoice(synth);
-
-                const utterance = new SpeechSynthesisUtterance(greeting);
-                if (voice) utterance.voice = voice;
-                utterance.pitch = 0.8; // Friendly, warm, natural male voice
-                utterance.rate = 0.95; // Energetic and conversational speed
-                utterance.volume = 1.0;
-                utterance.onstart = () => setIsSpeaking(true);
-                utterance.onend = () => setIsSpeaking(false);
-                synth.speak(utterance);
-            }
-        }, 800);
-    }, [activeZone, isBotActive]);
-
-    const getPreferredVoice = useCallback((synth: SpeechSynthesis) => {
-        const voices = synth.getVoices();
-        if (!voices || voices.length === 0) return null;
-
-        // Strict male voices list to prevent accidental female fallback
-        const strictMaleVoice = voices.find(v => v.name === 'Google UK English Male')
-            || voices.find(v => v.name === 'Daniel') // macOS British Male
-            || voices.find(v => v.name === 'Alex') // macOS American Male
-            || voices.find(v => v.name === 'Arthur') // macOS British Male
-            || voices.find(v => v.name === 'Oliver') // macOS British Male
-            || voices.find(v => v.name === 'Fred') // macOS Male
-            || voices.find(v => v.name.includes('David')) // Windows Male
-            || voices.find(v => v.name.includes('Mark')) // Windows Male
-            || voices.find(v => v.name.toLowerCase().includes('male'))
-            || voices.find(v => v.name.toLowerCase().includes('boy'));
-
-        if (strictMaleVoice) return strictMaleVoice;
-
-        // If ABSOLUTELY no explicitly male voice is found, we filter OUT known female names
-        const knownFemale = ['samantha', 'karen', 'victoria', 'moira', 'tessa', 'veena', 'fiona', 'luciana', 'female', 'woman', 'girl', 'zira', 'hazel', 'siri', 'catherine', 'martha'];
-        const safeFallback = voices.find(v => !knownFemale.some(f => v.name.toLowerCase().includes(f)) && v.lang.includes('en'));
-
-        return safeFallback || voices[0];
-    }, []);
-
-    // Context-Aware Interruption (Project Focus)
-    const visitedProjectsRef = useRef<Set<string>>(new Set())
-
-    useEffect(() => {
-        if (!isBotActive || !selectedProject) return;
-        if (visitedProjectsRef.current.has(selectedProject.id)) return;
-
-        visitedProjectsRef.current.add(selectedProject.id);
-
-        const synth = window.speechSynthesis;
-        
-        // Wait a short moment after the modal opens
-        setTimeout(() => {
-            let comment = "";
-            if (selectedProject.id === 'shemet') {
-                comment = "Oh, I absolutely love Shemet! This was a really fun project for Naveen. He wanted to solve the huge problem of fake profiles in modern dating apps. So, he built a super secure system using Google ML-Kit for real-time face verification. He also added Agora and DeepAR to make the video dates incredibly immersive and fun. It's a really great example of secure, real-time engineering!";
-            } else if (selectedProject.id === 'habit-flow') {
-                comment = "Ah, Habit Flow! This is a beautiful example of clean architecture. Naveen built this using Flutter and the BLoC pattern, which makes the app feel incredibly smooth and stable. It’s highly modular, so it's super easy to scale. Honestly, looking at this code is a joy for any tech lead.";
-            } else if (selectedProject.id === 'recapai') {
-                comment = "Recap AI is amazing! Naveen built this entire artificial intelligence engine in just three weeks. By orchestrating a robust backend pipeline, he managed to handle massive amounts of text processing so quickly! The way he structured the asynchronous tasks here is exactly why you want him on your team.";
-            } else if (selectedProject.id === 'bizlangai') {
-                comment = "Bizlang AI is such a clever piece of engineering. Naveen used advanced natural language processing to translate casual slang into highly professional corporate language. The context-awareness he built into it is elegant and really highly optimized. It's so cool!";
-            } else if (selectedProject.id === 'heartsync') {
-                comment = "Heart Sync is fantastic! Naveen built it with absolute security in mind, implementing strict end-to-end encryption for all communications. He didn't just build a chat app; he built a fortress. The real-time synchronization is flawless and so smooth to use.";
-            } else {
-                comment = `Oh, ${selectedProject.title}! That's a great piece of engineering. If you look closely at the technologies used here, you'll see Naveen's signature clean architecture. He really knows how to build things the right way!`;
-            }
-
-            if (comment) {
-                if (synth.speaking) synth.cancel();
-                
-                const voice = getPreferredVoice(synth);
-
-                const utterance = new SpeechSynthesisUtterance(comment);
-                if (voice) utterance.voice = voice;
-                utterance.pitch = 0.8; // Friendly, warm, natural male voice
-                utterance.rate = 0.95; // Energetic and conversational speed
-                utterance.volume = 1.0;
-                utterance.onstart = () => setIsSpeaking(true);
-                utterance.onend = () => setIsSpeaking(false);
-                synth.speak(utterance);
-            }
-        }, 1500);
-    }, [selectedProject, isBotActive]);
-
-    const speakResponse = useCallback((text: string) => {
-        console.log(`[Voice AI ⚙️] speakResponse called with text: "${text}"`);
-        setIsSpeaking(true);
-        try { 
-            recognitionRef.current?.stop(); 
-            console.log("[Voice AI ⚙️] Temporarily stopped listening for TTS.");
-        } catch(e){
-            console.error("[Voice AI ⚙️] Error stopping recognition:", e);
-        }
-
-        const synth = window.speechSynthesis;
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        const preferredVoice = getPreferredVoice(synth);
-        if (preferredVoice) {
-            console.log(`[Voice AI ⚙️] Selected Voice: ${preferredVoice.name} (${preferredVoice.lang})`);
-            utterance.voice = preferredVoice;
-        } else {
-            console.warn("[Voice AI ⚙️] No preferred female voice found, using default.");
-        }
-        
-        utterance.rate = 0.95; // Energetic and conversational speed
-        utterance.pitch = 0.8; // Friendly, warm, natural male voice
-        utterance.volume = 1.0; // Max volume
-        
-        utterance.onstart = () => console.log("[Voice AI ⚙️] 🔊 TTS Audio started playing...");
-        
-        utterance.onend = () => {
-            console.log("[Voice AI ⚙️] 🔇 TTS Audio finished playing.");
-            setIsSpeaking(false);
-            if (isBotActiveRef.current) {
-                setTimeout(() => {
-                    console.log("[Voice AI ⚙️] Restarting recognition after TTS...");
-                    try { recognitionRef.current?.start(); } catch(e){
-                        console.error("[Voice AI ⚙️] Error restarting recognition:", e);
-                    }
-                }, 500);
-            }
-        };
-
-        utterance.onerror = (e) => {
-            console.error("[Voice AI ⚙️] ❌ TTS Error:", e);
-            setIsSpeaking(false);
-        };
-
-        console.log("[Voice AI ⚙️] Invoking synth.speak()...");
-        synth.speak(utterance);
-    }, [getPreferredVoice]);
-
-    // Legacy manual logic completely removed, using Silero VAD above
 
     return (
         <>
@@ -482,6 +208,7 @@ export default function Home() {
                             onDriftStart={() => setStartDrift(true)}
                             onLoadingComplete={() => setShowLoading(false)} 
                             isReady={isAssetsReady}
+                            isSpeaking={isSpeaking}
                         />
                     )}
                 </AnimatePresence>
@@ -512,7 +239,7 @@ export default function Home() {
                                 initial={{ y: -80, opacity: 0, filter: "blur(10px)" }}
                                 animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
                                 transition={{ type: "spring", damping: 22, stiffness: 120, delay: 0.1 }}
-                                className="fixed top-0 left-0 w-full p-8 z-[100] flex justify-between items-center pointer-events-none"
+                                className="fixed top-0 left-0 w-full p-4 md:p-8 z-[100] flex justify-between items-center pointer-events-none"
                             >
                                 <div className="flex items-center gap-5 pointer-events-auto">
                                     <motion.div 
@@ -528,35 +255,13 @@ export default function Home() {
                                         <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
                                     </div>
 
-                                    {/* The Voice AI Persistent Visualizer (Hidden on Identity page) */}
-                                    {activeZone !== 'identity' && (
-                                        <div className="ml-6 pl-6 border-l border-white/10 flex items-center">
-                                            <div 
-                                                className={`relative w-6 h-6 rounded-full transition-all duration-700 
-                                                    ${isSpeaking ? 'bg-red-500 shadow-[0_0_25px_8px_rgba(239,68,68,0.8)] scale-125' : 
-                                                      isListening ? 'bg-red-600 shadow-[0_0_20px_5px_rgba(220,38,38,0.7)] animate-pulse' : 
-                                                      'bg-red-950 shadow-[0_0_10px_2px_rgba(153,27,27,0.5)]'}`}
-                                                style={{
-                                                    background: 'radial-gradient(circle at 30% 30%, #ef4444, #991b1b, #450a0a)'
-                                                }}
-                                            >
-                                                {/* Glossy top highlight for 3D sphere look */}
-                                                <div className="absolute top-[15%] left-[20%] w-[50%] h-[35%] rounded-full bg-white/40 blur-[1px] -rotate-12" />
-                                                
-                                                {/* Core glow */}
-                                                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-red-300 blur-[2px] transition-all duration-700 ${isSpeaking ? 'opacity-100' : isListening ? 'opacity-60' : 'opacity-0'}`} />
-                                                
-                                                {/* Ripple effect */}
-                                                {(isSpeaking || isListening) && <div className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-50 duration-1000" />}
-                                            </div>
-                                        </div>
-                                    )}
+
                                 </div>
                             </motion.header>
 
                             {/* Top Right 'For Hire' Badge */}
                             <motion.div 
-                                className="fixed top-10 right-10 z-[100] flex items-center gap-3"
+                                className="fixed top-20 right-4 md:top-10 md:right-10 z-[100] flex items-center gap-3"
                                 initial={{ x: 40, opacity: 0, scale: 0.8 }}
                                 animate={{ x: 0, opacity: 1, scale: 1 }}
                                 transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.5 }}
@@ -570,6 +275,15 @@ export default function Home() {
                         </>
                     )}
                 </AnimatePresence>
+
+                <VoiceAssistantWidget 
+                    isUiRevealed={isUiRevealed}
+                    hasPoweredUp={hasPoweredUp}
+                    startDrift={startDrift}
+                    setIsUiRevealed={setIsUiRevealed}
+                    setIsAssetsReady={setIsAssetsReady}
+                />
+
                 {/* Central Bottom Navigation - macOS Dock style spring pop */}
                 <AnimatePresence>
                     {isUiRevealed && (
@@ -585,7 +299,7 @@ export default function Home() {
                 </AnimatePresence>
 
 
-                <div className={`z-10 w-full max-w-7xl mx-auto px-10 flex ${['impact', 'projects'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto pointer-events-none' : 'relative items-center h-screen pointer-events-none'}`}>
+                <div className={`z-10 w-full max-w-7xl mx-auto px-4 md:px-10 flex [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] ${['impact', 'projects', 'logic', 'connect'].includes(activeZone) ? 'absolute top-[120px] bottom-[90px] left-0 right-0 items-start overflow-y-auto pointer-events-none' : 'relative items-center h-screen pointer-events-none'}`}>
                     <AnimatePresence mode="wait">
                         {activeZone === 'projects' && (
                             <motion.div 
@@ -596,7 +310,7 @@ export default function Home() {
                                 className="fixed inset-0 z-10 pointer-events-auto overflow-hidden flex items-center justify-center bg-[#010611]/60 backdrop-blur-xl"
                             >
                                 {/* Adjusted max-width to make cards slightly smaller */}
-                                <div className="w-full max-w-[1100px] mx-auto px-10">
+                                <div className="w-full max-w-[1100px] mx-auto px-4 md:px-10">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                                     {PROJECTS_DATA.map((project) => (
                                         <ProjectCard 
@@ -616,7 +330,7 @@ export default function Home() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="w-full max-w-6xl mx-auto px-6 space-y-20 pb-32 pt-4"
+                                className="w-full max-w-6xl mx-auto px-6 space-y-20 pb-32 pt-4 pointer-events-auto"
                             >
                                 {/* Section 1: Live Code Terminal */}
                                 <div className="space-y-8">
@@ -629,20 +343,41 @@ export default function Home() {
                                         <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-cyan-500/50" />
                                     </div>
                                     <CodeTerminal
-                                        activeTech={activeTech}
+                                        activeTech={activeTech as any}
                                         setActiveTech={setActiveTech}
                                         isAnalyzing={isAnalyzing}
-                                        onAnalyze={(tech) => {
+                                        codeHighlight={codeHighlight}
+                                        onAnalyze={async (tech) => {
                                             if (!tech || !isBotActive) return;
+                                            
+                                            const now = Date.now();
+                                            if (now - lastAnalyzeTimeRef.current < 5000) {
+                                                globalSpeak("Please wait a moment before requesting another analysis.");
+                                                return;
+                                            }
+                                            lastAnalyzeTimeRef.current = now;
+                                            
                                             setIsAnalyzing(true);
-                                            const reviews: Record<string, string> = {
-                                                flutter: "Look at this BLoC implementation. Notice how Naveen completely decouples the AuthBloc from the UI layer. By injecting the AuthRepository as a dependency, this code is 100% unit-testable. Any CTO who reviews this immediately knows they're dealing with an engineer who thinks in systems, not just features.",
-                                                node: "This is elegant. Look at the Matchmaking Engine using Redis GEORADIUS. That's an O(log N) geolocation query, meaning even with a million users online, the response time stays well under 50 milliseconds. Naveen didn't just build a feature here; he built a scalable infrastructure.",
-                                                firebase: "The Firestore batch operation here is critical. By using a batch commit for user creation and wallet initialization, Naveen guarantees atomic data integrity. If the wallet creation fails, the user creation rolls back too. Zero risk of orphaned records. This is production-grade database engineering.",
-                                                mlkit: "This liveness detection algorithm is brilliant. Naveen uses 3D facial contour analysis, not just a face photo check. By requiring both eye-open probabilities to exceed 80%, he prevents 2D photo spoofing attacks. This is why Shemet has zero fake profile penetrations."
-                                            };
-                                            speakResponse(reviews[tech] || "Let me analyze this architecture for you.");
-                                            setTimeout(() => setIsAnalyzing(false), 3000);
+                                            try {
+                                                const res = await fetch('/api/analyze-code', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ tech })
+                                                });
+                                                if (res.ok) {
+                                                    const data = await res.json();
+                                                    if (data.review) {
+                                                        globalSpeak(data.review);
+                                                    }
+                                                } else {
+                                                    globalSpeak("I'm unable to analyze the code right now.");
+                                                }
+                                            } catch (error) {
+                                                console.error(error);
+                                                globalSpeak("There was an error connecting to my neural network.");
+                                            } finally {
+                                                setTimeout(() => setIsAnalyzing(false), 500); // Give a bit of buffer
+                                            }
                                         }}
                                     />
                                 </div>
@@ -651,16 +386,16 @@ export default function Home() {
                                 <div className="space-y-8">
                                     <div className="flex items-center gap-6">
                                         <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-emerald-500/50" />
-                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">Clean Architecture Stack</h2>
+                                        <h2 className="text-2xl font-black uppercase tracking-[0.2em] text-white">2036 Future-Proof Architecture</h2>
                                         <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-emerald-500/50" />
                                     </div>
                                     <div className="flex flex-col md:flex-row items-stretch justify-center gap-0">
                                         {[
-                                            { layer: 'UI Layer', sub: 'Flutter Widgets', icon: <FiSmartphone size={20}/>, color: 'from-blue-500/20 to-blue-900/10', border: 'border-blue-500/30', text: 'text-blue-400', desc: 'StatelessWidget, StatefulWidget' },
-                                            { layer: 'Presentation', sub: 'BLoC / Cubit', icon: <FiBox size={20}/>, color: 'from-cyan-500/20 to-cyan-900/10', border: 'border-cyan-500/30', text: 'text-cyan-400', desc: 'Events → States via Streams' },
-                                            { layer: 'Domain Layer', sub: 'Use Cases', icon: <FiLayers size={20}/>, color: 'from-amber-500/20 to-amber-900/10', border: 'border-amber-500/30', text: 'text-amber-400', desc: 'Business logic, pure Dart' },
-                                            { layer: 'Data Layer', sub: 'Repositories', icon: <FiDatabase size={20}/>, color: 'from-emerald-500/20 to-emerald-900/10', border: 'border-emerald-500/30', text: 'text-emerald-400', desc: 'API, Firebase, Local Cache' },
-                                            { layer: 'Infra / Backend', sub: 'Node.js / Firebase', icon: <FiServer size={20}/>, color: 'from-purple-500/20 to-purple-900/10', border: 'border-purple-500/30', text: 'text-purple-400', desc: 'Microservices, REST, Triggers' }
+                                            { layer: 'Client Layer', sub: 'Zero-Latency UI', icon: <FiSmartphone size={20}/>, color: 'from-blue-500/20 to-blue-900/10', border: 'border-blue-500/30', text: 'text-blue-400', desc: 'WebAssembly, Flutter' },
+                                            { layer: 'Gateway', sub: 'Global Edge Router', icon: <FiBox size={20}/>, color: 'from-cyan-500/20 to-cyan-900/10', border: 'border-cyan-500/30', text: 'text-cyan-400', desc: '0ms Routing, Rust' },
+                                            { layer: 'Cognitive Brain', sub: 'LLM Orchestrator', icon: <FiCpu size={20}/>, color: 'from-amber-500/20 to-amber-900/10', border: 'border-amber-500/30', text: 'text-amber-400', desc: 'Agents, RAG Pipelines' },
+                                            { layer: 'Memory', sub: 'Decentralized Cache', icon: <FiLayers size={20}/>, color: 'from-emerald-500/20 to-emerald-900/10', border: 'border-emerald-500/30', text: 'text-emerald-400', desc: 'CRDTs, Redis' },
+                                            { layer: 'Storage', sub: 'Immutable Data Lake', icon: <FiShield size={20}/>, color: 'from-purple-500/20 to-purple-900/10', border: 'border-purple-500/30', text: 'text-purple-400', desc: 'Quantum-Safe, Zero-Trust' }
                                         ].map((item, i, arr) => (
                                             <React.Fragment key={i}>
                                                 <motion.div
@@ -695,10 +430,10 @@ export default function Home() {
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {[
-                                            { label: 'Avg. API Latency', value: '42ms', unit: '', icon: <FiZap size={16}/>, color: 'text-cyan-400', pulse: 'bg-cyan-400' },
-                                            { label: 'Crash-Free Rate', value: '99.97', unit: '%', icon: <FiShield size={16}/>, color: 'text-emerald-400', pulse: 'bg-emerald-400' },
-                                            { label: 'UI Frame Rate', value: '60', unit: 'fps', icon: <FiActivity size={16}/>, color: 'text-amber-400', pulse: 'bg-amber-400' },
-                                            { label: 'Concurrent Users', value: '10K+', unit: '', icon: <FiServer size={16}/>, color: 'text-purple-400', pulse: 'bg-purple-400' },
+                                            { label: 'Global Edge Latency', value: '8ms', unit: '', icon: <FiZap size={16}/>, color: 'text-cyan-400', pulse: 'bg-cyan-400' },
+                                            { label: 'Auto-Recovery Time', value: '120ms', unit: '', icon: <FiActivity size={16}/>, color: 'text-emerald-400', pulse: 'bg-emerald-400' },
+                                            { label: 'Compute ROI Cost', value: '$0.02', unit: '/10k req', icon: <FiServer size={16}/>, color: 'text-amber-400', pulse: 'bg-amber-400' },
+                                            { label: 'Threat Prevention', value: '100%', unit: ' Secured', icon: <FiShield size={16}/>, color: 'text-purple-400', pulse: 'bg-purple-400' },
                                         ].map((metric, i) => (
                                             <motion.div
                                                 key={i}
@@ -730,7 +465,7 @@ export default function Home() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="w-full max-w-7xl mx-auto px-6 md:px-10 pb-10"
+                                className="w-full max-w-7xl mx-auto px-6 md:px-10 pb-10 pointer-events-auto"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                                     {/* Left Side: Fiverr Reviews Masonry Grid */}
@@ -896,7 +631,7 @@ export default function Home() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
-                                className="w-full max-w-6xl mx-auto px-6 md:px-10 pb-32"
+                                className="w-full max-w-4xl mx-auto px-6 pb-20 pointer-events-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                             >
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
                                     {/* Left Column: Contact Info & Socials */}
@@ -1046,8 +781,10 @@ export default function Home() {
                                                         type="email" 
                                                         name="email"
                                                         required
+                                                        value={contactForm.email}
+                                                        onChange={e => setContactForm(prev => ({ ...prev, email: e.target.value }))}
                                                         placeholder="john@example.com"
-                                                        className="w-full bg-black/50 border border-white/10 focus:border-amber-500 rounded-2xl px-6 py-4 text-white placeholder-neutral-700 outline-none transition-colors"
+                                                        className={`w-full bg-black/50 border border-white/10 focus:border-amber-500 rounded-2xl px-6 py-4 text-white placeholder-neutral-700 outline-none transition-all duration-500 ${contactForm.email ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
                                                     />
                                                 </div>
                                                 
@@ -1056,9 +793,11 @@ export default function Home() {
                                                     <textarea 
                                                         name="message"
                                                         required
+                                                        value={contactForm.message}
+                                                        onChange={e => setContactForm(prev => ({ ...prev, message: e.target.value }))}
                                                         placeholder="How can I help you?"
                                                         rows={4}
-                                                        className="w-full bg-black/50 border border-white/10 focus:border-amber-500 rounded-2xl px-6 py-4 text-white placeholder-neutral-700 outline-none transition-colors resize-none"
+                                                        className={`w-full bg-black/50 border border-white/10 focus:border-amber-500 rounded-2xl px-6 py-4 text-white placeholder-neutral-700 outline-none transition-all duration-500 resize-none ${contactForm.message ? 'border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]' : ''}`}
                                                     />
                                                 </div>
 

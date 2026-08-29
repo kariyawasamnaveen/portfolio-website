@@ -34,7 +34,8 @@ export default function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) 
     const gl = useThree((state) => state.gl);
     const waterNormals = useTexture('/waternormals.jpg');
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
-    const geom = useMemo(() => new THREE.PlaneGeometry(2000, 2000, 250, 250), []);
+    const segs = typeof window !== 'undefined' && window.innerWidth < 768 ? 64 : 250;
+    const geom = useMemo(() => new THREE.PlaneGeometry(2000, 2000, segs, segs), [segs]);
     
     const config = useMemo(
         () => ({

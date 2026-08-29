@@ -24,43 +24,24 @@ export function Lightning() {
 }
 
 // PROCEDURAL 3D AUDIO SYSTEM (Web Audio API)
-export function ProceduralAudioSystem({ isPlaying }: { isPlaying: boolean }) {
-    useEffect(() => {
-        // Only run in browser and when it is allowed to play
-        if (typeof window === 'undefined' || !isPlaying) return;
+export function ProceduralAudioSystem({ isPlaying, startDrift }: { isPlaying: boolean, startDrift?: boolean }) {
+    const ctxRef = useRef<any>(null);
+    const hasDropped = useRef(false);
+    const oceanGainRef = useRef<any>(null);
+    const oceanSourceRef = useRef<any>(null);
 
+    // Initialize AudioContext
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContextClass) return;
 
-        const ctx = new AudioContextClass();
-
-        // 1. Wind Noise (Pink/Brown noise filter)
-        const bufferSize = ctx.sampleRate * 2; // 2 seconds
-        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
+        if (!ctxRef.current) {
+            ctxRef.current = new AudioContextClass();
         }
 
-        const windSource = ctx.createBufferSource();
-        windSource.buffer = noiseBuffer;
-        windSource.loop = true;
-
-        const windFilter = ctx.createBiquadFilter();
-        windFilter.type = 'lowpass';
-        windFilter.frequency.value = 400; // Low rumble
-
-        const windGain = ctx.createGain();
-        windGain.gain.value = 0.5;
-
-        windSource.connect(windFilter);
-        windFilter.connect(windGain);
-        windGain.connect(ctx.destination);
-        windSource.start();
-
-        // Must resume context on interaction
         const resumeAudio = () => {
-            if (ctx.state === 'suspended') ctx.resume();
+            if (ctxRef.current && ctxRef.current.state === 'suspended') ctxRef.current.resume();
         };
         document.addEventListener('click', resumeAudio);
         document.addEventListener('touchstart', resumeAudio);
@@ -68,13 +49,97 @@ export function ProceduralAudioSystem({ isPlaying }: { isPlaying: boolean }) {
         return () => {
             document.removeEventListener('click', resumeAudio);
             document.removeEventListener('touchstart', resumeAudio);
-            try {
-                windSource.stop();
-                ctx.close();
-            } catch (e) {
-                // Ignore
+            if (oceanSourceRef.current) {
+                try { oceanSourceRef.current.stop(); } catch (e) {}
             }
         };
+    }, []);
+
+    // Helper to start or adjust ocean noise
+    const startOrUpdateOcean = (ctx: any, targetVolume: number) => {
+        if (!oceanGainRef.current) {
+            const bufferSize = ctx.sampleRate * 2;
+            const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+            oceanSourceRef.current = ctx.createBufferSource();
+            oceanSourceRef.current.buffer = noiseBuffer;
+            oceanSourceRef.current.loop = true;
+            
+            const windFilter = ctx.createBiquadFilter();
+            windFilter.type = 'lowpass';
+            windFilter.frequency.value = 400; // Deep ocean rumble
+            
+            oceanGainRef.current = ctx.createGain();
+            oceanGainRef.current.gain.value = 0; // Start silent, ramp up
+            oceanGainRef.current.gain.linearRampToValueAtTime(targetVolume, ctx.currentTime + 1);
+            
+            oceanSourceRef.current.connect(windFilter);
+            windFilter.connect(oceanGainRef.current);
+            oceanGainRef.current.connect(ctx.destination);
+            oceanSourceRef.current.start();
+        } else {
+            // Smoothly ramp to new volume over 2 seconds
+            oceanGainRef.current.gain.linearRampToValueAtTime(targetVolume, ctx.currentTime + 2);
+        }
+    };
+
+    // Trigger Cinematic Drop when falling starts!
+    useEffect(() => {
+        if (startDrift && ctxRef.current && !hasDropped.current) {
+            hasDropped.current = true;
+            const ctx = ctxRef.current;
+            if (ctx.state === 'suspended') ctx.resume();
+
+            // Generate a HIGHLY REALISTIC Sci-Fi Warp / Re-entry Sound using Filtered White Noise!
+            // 1. Create 8 seconds of pure White Noise
+            const bufferSize = ctx.sampleRate * 8;
+            const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                // White noise ranges from -1 to 1
+                output[i] = Math.random() * 2 - 1; 
+            }
+            const noiseSource = ctx.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+
+            // 2. Use a Lowpass Filter to shape the noise into "Wind" or a "Jet Engine"
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.Q.value = 3; // Adds a slight whistling/jet resonance to the wind
+
+            // 3. Animate the Filter Frequency to simulate SPEED (starts low, peaks in middle, ends low)
+            filter.frequency.setValueAtTime(50, ctx.currentTime); // Deep rumble at start
+            filter.frequency.exponentialRampToValueAtTime(4000, ctx.currentTime + 4); // Rushing wind at peak speed
+            filter.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 8); // Deep rumble upon arrival
+
+            // 4. Animate the Volume (Fade in, hold, fade out)
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(1.2, ctx.currentTime + 2);
+            gain.gain.setValueAtTime(1.2, ctx.currentTime + 6);
+            gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 8);
+
+            // Connect everything
+            noiseSource.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            // Start the massive 8-second cinematic warp sound!
+            noiseSource.start();
+
+            // Start ocean very quietly during the fall (building suspense)
+            startOrUpdateOcean(ctx, 0.05);
+        }
+    }, [startDrift]);
+
+    // Maximize Ocean when landed
+    useEffect(() => {
+        if (isPlaying && ctxRef.current) {
+            startOrUpdateOcean(ctxRef.current, 0.4);
+        }
     }, [isPlaying]);
 
     return null;
@@ -103,7 +168,8 @@ function useRaindropTexture() {
 // CINEMATIC RAIN (REALISTIC DROPLETS)
 export function Rain() {
     const rainRef = useRef<THREE.Points>(null);
-    const dropCount = 6000;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const dropCount = isMobile ? 1000 : 6000;
     const dropTexture = useRaindropTexture();
     
     const [positions, velocities] = useMemo(() => {

@@ -42,12 +42,13 @@ interface LoadingScreenProps {
     onLoadingComplete: () => void;
     onDriftStart: () => void;
     isReady?: boolean;
+    isSpeaking?: boolean;
 }
 
 // Masterclass Custom Easing Curve (Dramatic slow start, snappy finish)
 const exquisiteEase = [0.76, 0, 0.24, 1];
 
-export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady = true }: LoadingScreenProps) {
+export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady = true, isSpeaking }: LoadingScreenProps) {
     const [isClicked, setIsClicked] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [isHovered, setIsHovered] = useState(false)
@@ -56,12 +57,12 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
         if (!isReady || isClicked) return;
         setIsClicked(true)
         
-        // Let the logo dissolve completely over 3 seconds with our new physics
+        // Let the logo dissolve extremely fast
         setTimeout(() => {
             setIsVisible(false)
             onDriftStart() 
             onLoadingComplete() 
-        }, 3000)
+        }, 500) // Reduced from 3000ms to 500ms
     }
 
     return (
@@ -77,8 +78,8 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                         opacity: isClicked ? 0 : 1
                     }}
                     transition={{ 
-                        duration: 3, 
-                        ease: exquisiteEase,
+                        duration: isClicked ? 0.5 : 3, 
+                        ease: exquisiteEase as any,
                     }}
                     className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center overflow-hidden group ${isReady ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'}`}
                     onClick={handleClick}
@@ -102,7 +103,7 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                         onMouseLeave={() => setIsHovered(false)}
                         onClick={handleClick}
                         animate={isClicked ? { scale: 1.1, opacity: 0 } : { scale: 1, opacity: 1 }}
-                        transition={isClicked ? { duration: 2.5, ease: exquisiteEase } : {}}
+                        transition={isClicked ? { duration: 0.5, ease: exquisiteEase as any } : {}}
                     >
                         
                         {/* 10 YEARS FUTURE: THE QUANTUM NEURAL CORE */}
@@ -178,7 +179,7 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                                 {/* Neural Energy Core Glow */}
                                 <div className="absolute inset-0 rounded-full bg-red-600/10 blur-[25px] animate-pulse pointer-events-none" />
                                 
-                                <CodeLogo />
+                                <CodeLogo isSpeaking={isSpeaking} />
                                 
                             </motion.div>
 

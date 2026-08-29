@@ -26,7 +26,7 @@ const TIER_CONFIG: Record<QualityTier, TierSettings> = {
         dpr: 1.5,
         waveCount: 2, // Gerstner waves enabled but limited
         particleCount: 50,
-        bloom: true,
+        bloom: false, // Too heavy for mid-tier
         dof: false, // Still too heavy for mid-tier mobile
         chromaticAberration: true, // Cheap enough for warp speed
         shadows: false // Fake shadows instead
@@ -59,10 +59,7 @@ export function useQualityTier() {
         const memory = (navigator as any).deviceMemory || 4;
 
         if (isMobile) {
-            detectedTier = 'MED';
-            if (cores <= 4 || memory < 4) {
-                detectedTier = 'LOW';
-            }
+            detectedTier = 'LOW'; // Force LOW on mobile for performance
         } else {
             if (cores < 4 || memory < 4) {
                 detectedTier = 'MED';

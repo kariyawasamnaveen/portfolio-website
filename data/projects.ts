@@ -15,6 +15,9 @@ export interface Project {
         story: string;
         architecture: string;
         features: string[];
+        businessValue?: string;
+        architectureDetails?: string;
+        biggestChallenge?: string;
     };
 }
 
@@ -120,7 +123,10 @@ export const PROJECTS_DATA: Project[] = [
                 'End-to-End Encrypted Audio & Text Messaging',
                 'Advanced Geolocator Matchmaking Algorithm',
                 'Serverless Backend Architecture via Firebase Cloud Functions'
-            ]
+            ],
+            businessValue: 'Shemet radically reduces customer churn caused by catfishing and scams. By integrating real-time ML face-verification at the core registration level, user trust metrics improved significantly. The client observed a massive ROI in user engagement because users felt secure entering AR video calls immediately rather than doubting profile authenticity.',
+            architectureDetails: 'The entire application is built on a heavily decoupled BLoC architecture in Flutter, ensuring the UI remains ultra-responsive even during heavy WebRTC data streaming. The backend is serverless, relying on Firebase Cloud Functions to securely broker tokens for Agora video calls, preventing direct peer-to-peer IP exposure. Data storage uses Firestore with strict security rules enforcing E2E encryption keys.',
+            biggestChallenge: 'The biggest challenge was maintaining low latency (under 200ms) for AR facial masks (DeepAR) over the WebRTC video stream (Agora) while simultaneously running ML-Kit verification checks in the background. I solved this by offloading the ML-Kit processing to isolated Dart Isolates, ensuring the main UI thread never dropped below 60 FPS, providing a buttery smooth video dating experience.'
         }
     },
     {

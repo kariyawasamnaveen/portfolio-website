@@ -70,7 +70,7 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     {/* Dynamic Environment Effects */}
                     <VoiceAuraLight isSpeaking={isSpeaking} />
                     <Lightning />
-                    <ProceduralAudioSystem isPlaying={hasCompletedIntro} />
+                    <ProceduralAudioSystem isPlaying={hasCompletedIntro} startDrift={startDrift} />
                     <Rain />
 
                     {/* The Core Elements */}
@@ -81,7 +81,7 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                     <CameraRig startDrift={startDrift} hasCompletedIntro={hasCompletedIntro} onDriftComplete={onDriftComplete} />
                     
                     {/* Post-Processing Stack */}
-                    <EffectComposer disableNormalPass multisampling={0}>
+                    <EffectComposer multisampling={0}>
                         {settings.bloom && (
                             <Bloom 
                                 intensity={1.5} 
@@ -103,7 +103,6 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
                         {settings.chromaticAberration && isWarping && (
                             <ChromaticAberration 
                                 offset={new THREE.Vector2(0.005, 0.005)} 
-                                blendFunction={BlendFunction.NORMAL} 
                             />
                         )}
 

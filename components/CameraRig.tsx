@@ -29,7 +29,7 @@ export default function CameraRig({ startDrift, hasCompletedIntro, onDriftComple
     
     // Animation constants
     const startZ = 300;
-    const endZ = 50; // Stop slightly further back from dome center (20)
+    const endZ = 80; // Stop further back from dome center
     const driftDuration = 8;
     const [driftStartTime, setDriftStartTime] = useState<number | null>(null);
 

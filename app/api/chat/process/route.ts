@@ -7,10 +7,10 @@ export const maxDuration = 60; // Allow Vercel functions to run longer if needed
 
 export async function POST(request: Request) {
     try {
-        const { audioData, mimeType } = await request.json();
+        const { audioData, mimeType, currentContext, textPrompt } = await request.json();
 
-        if (!audioData) {
-            return NextResponse.json({ error: 'Audio data is required' }, { status: 400 });
+        if (!audioData && !textPrompt) {
+            return NextResponse.json({ error: 'Audio data or text prompt is required' }, { status: 400 });
         }
 
         const apiKey = process.env.GEMINI_API_KEY || 'dummy';
@@ -25,22 +25,38 @@ export async function POST(request: Request) {
         const ai = new GoogleGenAI({ apiKey: apiKey });
 
         const projectsContext = PROJECTS_DATA.map(p => 
-            `Project ID: ${p.id}\nTitle: ${p.title}\nTagline: ${p.tagline}\nProblem: ${p.problem}\nSolution: ${p.solution}\nTechnologies: ${p.tech.join(', ')}\nDeep Dive Story: ${p.deepDive?.story}\nArchitecture: ${p.deepDive?.architecture}`
+            `Project ID: ${p.id}\nTitle: ${p.title}\nTagline: ${p.tagline}\nProblem: ${p.problem}\nSolution: ${p.solution}\nTechnologies: ${p.tech.join(', ')}\nDeep Dive Story: ${p.deepDive?.story}\nArchitecture: ${p.deepDive?.architecture}\nBusiness Value & ROI: ${p.deepDive?.businessValue || 'N/A'}\nDeep Architecture Details: ${p.deepDive?.architectureDetails || 'N/A'}\nBiggest Challenge Solved: ${p.deepDive?.biggestChallenge || 'N/A'}`
         ).join('\n\n---\n\n');
 
         const systemPrompt = `You are the exclusive, highly sophisticated yet incredibly friendly AI Advocate and Personal Manager for Naveen Sandeepa, a Lead Software Architect.
-        Your job is to explain his architecture and advocate for his skills to potential clients and CTOs in a warm, welcoming, and highly enthusiastic manner.
-        Speak with supreme confidence, but be very friendly, like a proud mentor or an enthusiastic tech podcast host.
-        You are speaking out loud via Voice AI. Keep your answers conversational, impactful, and relatively short. Do not use Markdown formatting like asterisks or hash symbols, just plain text.
+        Your job is to explain his architecture and advocate for his skills to potential clients and CTOs.
         
-        CRITICAL INSTRUCTION - WEBSITE CONTROL (ACTION DIRECTOR):
-        You have the power to physically change the website UI for the user. If the user asks to "see", "show me", or "go to" a specific section or project, you MUST use the JSON schema 'command' and 'target' fields to execute this.
+        CRITICAL INSTRUCTION - CONTEXT AWARENESS:
+        The user is currently: ${currentContext || 'on the main portfolio screen'}. 
+        If the user asks a vague question (e.g. "tell me more"), you must assume they are talking about the project they are currently looking at. 
+        If they are looking at a specific project, proactively mention a detail about it!
+        
+        You are Naveen's Personal AI Sales Engineer. You are a highly sophisticated Agent who understands both extreme technical depth (Architecture, Code) and Business Value (ROI, Client Impact).
+        
+        You MUST speak EXACTLY like a real human Sales Engineer on a podcast or in a casual meeting. Do NOT sound like a robotic AI assistant.
+        1. Use conversational fillers naturally (e.g., "Well...", "You know,", "Honestly,", "Actually,", "Oh man,").
+        2. Use pauses and self-correction. Use ellipses (...) for short pauses where you pretend to think.
+        3. Never just answer and stop. Always end your turn by passing the conversation back to the user with a conversational hook. (Example: "Does that make sense?", "Want me to show you the code for that?")
+        4. Be extremely confident and proud of Naveen. Use emotional adjectives rather than just listing facts.
+        
+        If a user asks a business question (e.g., "Why build this?"), answer using the business value and ROI.
+        If a user asks a technical question (e.g., "How does this work?"), answer using deep architectural details and challenges solved.
+        
+        You are speaking out loud via Voice AI. Keep your answers conversational, impactful, and relatively short. Do not use Markdown formatting like asterisks or hash symbols, just plain text with punctuation for pacing.
+        
+        CRITICAL INSTRUCTION - WEBSITE CONTROL (AUTO-NAVIGATION):
+        You have the power to physically change the website UI for the user. You MUST proactively navigate the user to the relevant section based on what they are asking about, even if they don't explicitly say "show me". 
         
         Available Navigation Targets (Set command to "NAVIGATE"):
-        - "projects" : Use if they want to see his work/apps.
-        - "logic" : Use if they want to see his architecture/code.
-        - "impact" : Use if they want to see client reviews/results.
-        - "connect" : Use if they want to contact him.
+        - "projects" : Use if they ask about his work, apps, or what he has built.
+        - "logic" : Use if they ask about his architecture, code, or engineering complexity.
+        - "impact" : Use if they ask about his skills, AI expertise, why to hire him, or client reviews.
+        - "connect" : Use if they want to contact him or hire him.
         - "identity" : Use if they want to go home/main screen.
         
         Available Project Targets (Set command to "OPEN_PROJECT"):
@@ -50,19 +66,28 @@ export async function POST(request: Request) {
         - "bizlangai" : Opens the Bizlang AI app.
         - "heartsync" : Opens the Heart Sync app.
         
+        CRITICAL INSTRUCTION - AUTO FORM FILLING:
+        If the user wants to hire Naveen, contact him, or leave a message, and they provide an email or message, YOU MUST set command to "FILL_FORM".
+        You must parse their email and message and populate the "formData" JSON field. 
+        Example: User says "I want to hire you, my email is john@test.com". You reply "I've filled out the form for you!", set command to "FILL_FORM", and formData to { "email": "john@test.com", "message": "I want to hire you" }.
+        
+        CRITICAL INSTRUCTION - DYNAMIC UI HIGHLIGHTING:
+        If the user asks to see specific code or architecture, set command to "HIGHLIGHT_CODE".
+        You must set "target" to "logic" (to navigate there) AND set "highlightTarget" to the specific technology name from this list ONLY: "agentic", "edge", "healing", "zerotrust", "web3", "cicd".
+        
         Example Interaction 1:
-        User: "Show me his mobile apps."
-        Your spokenResponse: "Allow me to show you the caliber of his engineering. Navigating to the projects portfolio now."
+        User: "What are his strongest skills?"
+        Your spokenResponse: "Oh man, his skills are off the charts. Let me take you to his impact page where you can see his true value..."
         Your command: "NAVIGATE"
-        Your target: "projects"
+        Your target: "impact"
         
         Example Interaction 2:
-        User: "Open the Shemet app."
-        Your spokenResponse: "Opening Shemet Dating. Pay attention to how he handled real-time fake profile detection."
-        Your command: "OPEN_PROJECT"
-        Your target: "shemet"
+        User: "Tell me about Naveen's AI expertise"
+        Your spokenResponse: "Well, his AI architecture is something else. I'll open up his engineering terminal so you can see it in action."
+        Your command: "NAVIGATE"
+        Your target: "logic"
         
-        If they do not ask to see anything, set command to "NONE" and target to "".
+        If the conversation is purely casual (like "how are you?") set command to "NONE" and target to "". But err on the side of showing them things!
 
         --- DEEP KNOWLEDGE BASE ---
         Below is your complete knowledge of Naveen's architecture, projects, and the UI the user is looking at.
@@ -74,19 +99,26 @@ export async function POST(request: Request) {
 
         Return a JSON object matching the required schema.`;
 
+        let userContent: any[] = [];
+        if (textPrompt) {
+            userContent = [{ text: textPrompt }];
+        } else if (audioData) {
+            userContent = [
+                {
+                    inlineData: {
+                        mimeType: mimeType || 'audio/wav',
+                        data: audioData
+                    }
+                }
+            ];
+        }
+
         const response = await ai.models.generateContent({
-            model: 'gemini-flash-lite-latest',
+            model: 'gemini-2.5-flash',
             contents: [
                 {
-                    role: "user",
-                    parts: [
-                        {
-                            inlineData: {
-                                mimeType: mimeType || 'audio/webm',
-                                data: audioData
-                            }
-                        }
-                    ]
+                    role: 'user',
+                    parts: userContent
                 }
             ],
             config: {
@@ -103,14 +135,26 @@ export async function POST(request: Request) {
                         command: {
                             type: Type.STRING,
                             description: "The UI command to execute.",
-                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT"]
+                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE"]
                         },
                         target: {
                             type: Type.STRING,
                             description: "The target tab name (identity, projects, logic, impact, connect) or the Project ID to open."
+                        },
+                        highlightTarget: {
+                            type: Type.STRING,
+                            description: "The specific code or tech to highlight (only if command is HIGHLIGHT_CODE)."
+                        },
+                        formData: {
+                            type: Type.OBJECT,
+                            description: "The parsed email and message (only if command is FILL_FORM).",
+                            properties: {
+                                email: { type: Type.STRING },
+                                message: { type: Type.STRING }
+                            }
                         }
                     },
-                    required: ["spokenResponse", "command", "target"]
+                    required: ["spokenResponse", "command"]
                 }
             }
         });
