@@ -8,10 +8,11 @@ import { usePathname } from "next/navigation"
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const isHome = pathname === "/";
+    const isResume = pathname === "/resume";
 
     return (
         <>
-            {!isHome && <Navbar />}
+            {(!isHome && !isResume) && <Navbar />}
             <main>
                 {children}
             </main>
