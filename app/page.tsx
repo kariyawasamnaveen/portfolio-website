@@ -30,6 +30,11 @@ import { Project, PROJECTS_DATA } from '@/data/projects'
 // Preload voices immediately on script evaluation
 if (typeof window !== 'undefined') {
     window.speechSynthesis.getVoices();
+    
+    // Preload the heavy 3D avatar immediately in the background to prevent stutter later
+    import('@react-three/drei').then(({ useGLTF }) => {
+        useGLTF.preload('/avaturn_avatar.glb');
+    }).catch(() => {});
 }
 
 function ProjectCard({ project, onClick }: { project: any, onClick: () => void }) {

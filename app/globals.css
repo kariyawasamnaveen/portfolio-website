@@ -109,3 +109,27 @@ body {
 .animate-color-cycle {
   animation: colorCycle 4s linear infinite;
 }
+
+/* Hardware-Accelerated CSS Animations for Loading Rings */
+@keyframes spinDyson0 { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(360deg) rotateY(180deg) rotateZ(360deg); } }
+@keyframes spinDyson1 { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(-360deg) rotateY(360deg) rotateZ(180deg); } }
+@keyframes spinDyson2 { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(180deg) rotateY(-360deg) rotateZ(-360deg); } }
+@keyframes spinDyson3 { 0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(-180deg) rotateY(-180deg) rotateZ(360deg); } }
+
+.animate-dyson-0 { animation: spinDyson0 12s linear infinite; transform-style: preserve-3d; }
+.animate-dyson-1 { animation: spinDyson1 15s linear infinite; transform-style: preserve-3d; }
+.animate-dyson-2 { animation: spinDyson2 18s linear infinite; transform-style: preserve-3d; }
+.animate-dyson-3 { animation: spinDyson3 20s linear infinite; transform-style: preserve-3d; }
+
+@keyframes spinAccel0 { 0% { transform: rotateZ(0deg); } 100% { transform: rotateZ(360deg); } }
+@keyframes spinAccel1 { 0% { transform: rotateZ(0deg); } 100% { transform: rotateZ(-360deg); } }
+
+.animate-accel-0 { animation: spinAccel0 2s linear infinite; }
+.animate-accel-1 { animation: spinAccel1 3s linear infinite; }
+
+@keyframes pulseCrosshair { 
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+.animate-crosshair { animation: pulseCrosshair 1.5s ease-in-out infinite; }

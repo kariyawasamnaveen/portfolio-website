@@ -209,7 +209,12 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* 3. TRUE 3D CANVAS LAYER - PREMIUM ROUND FRAME */}
-            <div className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 backdrop-blur-xl`}>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 backdrop-blur-xl`}
+            >
                 <Canvas 
                     camera={{ position: [0, 0, 5], fov: 45 }} 
                     dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
@@ -237,7 +242,7 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
                         )}
                     </Suspense>
                 </Canvas>
-            </div>
+            </motion.div>
 
             {/* 4. PREMIUM TYPOGRAPHY */}
             <div className={`mt-8 text-center flex flex-col items-center transition-all duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}>

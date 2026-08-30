@@ -133,44 +133,17 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                                 transition={{ duration: 2, ease: "easeOut" }}
                             >
                                 {/* Outer Dyson Data Rings (Erratic, Complex Orbit) */}
-                                {[
-                                    { rx: 360, ry: 180, rz: 360, dur: 12 },
-                                    { rx: -360, ry: 360, rz: 180, dur: 15 },
-                                    { rx: 180, ry: -360, rz: -360, dur: 18 },
-                                    { rx: -180, ry: -180, rz: 360, dur: 20 },
-                                ].map((ring, i) => (
-                                    <motion.div
-                                        key={`dyson-${i}`}
-                                        className={`absolute inset-0 rounded-full border border-white/5 ${i % 2 === 0 ? 'border-t-red-500/50' : 'border-b-white/30'}`}
-                                        style={{ transformStyle: 'preserve-3d' }}
-                                        animate={{ 
-                                            rotateX: [0, ring.rx], 
-                                            rotateY: [0, ring.ry], 
-                                            rotateZ: [0, ring.rz] 
-                                        }}
-                                        transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                                    />
-                                ))}
+                                <div className="absolute inset-0 rounded-full border border-white/5 border-t-red-500/50 animate-dyson-0" />
+                                <div className="absolute inset-0 rounded-full border border-white/5 border-b-white/30 animate-dyson-1" />
+                                <div className="absolute inset-0 rounded-full border border-white/5 border-t-red-500/50 animate-dyson-2" />
+                                <div className="absolute inset-0 rounded-full border border-white/5 border-b-white/30 animate-dyson-3" />
 
                                 {/* Inner High-Speed Accelerator Rings */}
-                                {[
-                                    { rz: 360, border: 'border-l-red-500/80', dur: 2 },
-                                    { rz: -360, border: 'border-r-white/80', dur: 3 },
-                                ].map((ring, i) => (
-                                    <motion.div
-                                        key={`accel-${i}`}
-                                        className={`absolute w-[170px] h-[170px] md:w-[210px] md:h-[210px] rounded-full border-[2px] border-transparent ${ring.border}`}
-                                        animate={{ rotateZ: [0, ring.rz] }}
-                                        transition={{ duration: ring.dur, repeat: Infinity, ease: "linear" }}
-                                    />
-                                ))}
+                                <div className="absolute w-[170px] h-[170px] md:w-[210px] md:h-[210px] rounded-full border-[2px] border-transparent border-l-red-500/80 animate-accel-0" />
+                                <div className="absolute w-[170px] h-[170px] md:w-[210px] md:h-[210px] rounded-full border-[2px] border-transparent border-r-white/80 animate-accel-1" />
 
                                 {/* Quantum Targeting Crosshair */}
-                                <motion.div 
-                                    className="absolute w-[40px] h-[40px] border border-red-500/40 rounded-full"
-                                    animate={{ scale: [1, 2.5, 1], opacity: [0.8, 0, 0.8] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                                />
+                                <div className="absolute w-[40px] h-[40px] border border-red-500/40 rounded-full animate-crosshair" />
                             </motion.div>
 
                             {/* THE LOGO CORE (Dissolves on the spot) */}
