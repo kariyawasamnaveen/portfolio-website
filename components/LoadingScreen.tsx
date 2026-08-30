@@ -60,9 +60,10 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
         
         // Unlock speech synthesis on mobile (iOS/Android requirement)
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            const unlockUtterance = new SpeechSynthesisUtterance('');
-            unlockUtterance.volume = 0;
+            const unlockUtterance = new SpeechSynthesisUtterance(' ');
+            unlockUtterance.volume = 0.01;
             window.speechSynthesis.speak(unlockUtterance);
+            window.speechSynthesis.resume();
         }
         
         // Let the logo dissolve extremely fast
