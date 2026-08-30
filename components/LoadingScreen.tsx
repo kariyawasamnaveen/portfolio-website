@@ -53,6 +53,14 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
     const [isClicked, setIsClicked] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
     const [isHovered, setIsHovered] = useState(false)
+    const [loadTime, setLoadTime] = useState<number | null>(null)
+    const mountTimeRef = useRef<number>(Date.now())
+
+    useEffect(() => {
+        if (isReady && loadTime === null) {
+            setLoadTime((Date.now() - mountTimeRef.current) / 1000)
+        }
+    }, [isReady, loadTime])
 
     const handleClick = () => {
         if (!isReady || isClicked) return;
@@ -98,8 +106,8 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                         {/* The Matte Glass layer that blurs the 3D scene underneath */}
                         <div className="absolute inset-0 bg-[#020305]/80 md:bg-[#020305]/60 md:backdrop-blur-[40px] saturate-150" />
                         
-                        {/* Premium Grain/Noise Texture for that tactile matte finish */}
-                        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
+                        {/* Premium Grain/Noise Texture for that tactile matte finish (DESKTOP ONLY - Kills Mobile GPU) */}
+                        <div className="hidden md:block absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} />
                         
                         {/* Single central subtle crimson glow */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-red-900/10 blur-[120px] rounded-full mix-blend-screen" />
@@ -163,6 +171,12 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                                 
                                 <CodeLogo isSpeaking={isSpeaking} />
                                 
+                                {/* DEBUG TELEMETRY */}
+                                {loadTime !== null && (
+                                    <div className="absolute -bottom-16 w-max bg-black/80 border border-amber-500/50 text-amber-500 text-[10px] font-mono px-3 py-1 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)] pointer-events-none">
+                                        RENDER_TIME: {loadTime.toFixed(2)}s
+                                    </div>
+                                )}
                             </motion.div>
 
                         </div>
