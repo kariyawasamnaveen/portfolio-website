@@ -57,6 +57,13 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
         if (!isReady || isClicked) return;
         setIsClicked(true)
         
+        // Unlock speech synthesis on mobile (iOS/Android requirement)
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            const unlockUtterance = new SpeechSynthesisUtterance('');
+            unlockUtterance.volume = 0;
+            window.speechSynthesis.speak(unlockUtterance);
+        }
+        
         // Let the logo dissolve extremely fast
         setTimeout(() => {
             setIsVisible(false)
