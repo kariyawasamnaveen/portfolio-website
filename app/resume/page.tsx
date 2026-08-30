@@ -80,7 +80,7 @@ export default function ResumePage() {
                 <div 
                     className="absolute inset-0 opacity-40 transition-opacity duration-300"
                     style={{
-                        background: \`radial-gradient(circle 800px at \${mousePosition.x}px \${mousePosition.y}px, rgba(0,255,255,0.06), transparent 40%)\`
+                        background: `radial-gradient(circle 800px at ${mousePosition.x}px ${mousePosition.y}px, rgba(0,255,255,0.06), transparent 40%)`
                     }}
                 />
                 {/* Subtle tech grid */}
@@ -199,7 +199,7 @@ export default function ResumePage() {
                                 ].map((job, index) => (
                                     <div 
                                         key={index}
-                                        className={\`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group \${hoveredExp !== null && hoveredExp !== index ? 'opacity-30' : 'opacity-100'} transition-opacity duration-300\`}
+                                        className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${hoveredExp !== null && hoveredExp !== index ? 'opacity-30' : 'opacity-100'} transition-opacity duration-300`}
                                         onMouseEnter={() => setHoveredExp(index)}
                                         onMouseLeave={() => setHoveredExp(null)}
                                     >
@@ -299,8 +299,7 @@ export default function ResumePage() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            
-            <style jsx global>{\`
+            <style jsx global>{`
                 @keyframes scan {
                     0% { top: 0; opacity: 0; }
                     10% { opacity: 0.3; }
@@ -310,7 +309,7 @@ export default function ResumePage() {
                 .animate-scan {
                     animation: scan 4s linear infinite;
                 }
-            \`}</style>
+            `}</style>
         </div>
     );
 }
