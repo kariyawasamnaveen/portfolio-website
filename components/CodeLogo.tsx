@@ -149,25 +149,28 @@ function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking
             }
         });
 
-        // 2036 CYBER-GOD GLITCH & GLOW PHYSICS
-        scene.traverse((child: any) => {
-            if (child.isMesh && child.material && !child.material.name?.toLowerCase().includes('glass')) {
-                if (isHovered) {
-                    if (child.material._isGlowMaterial) {
-                        child.material.emissive = new THREE.Color(0x00ffff);
-                        const pulse = Math.sin(time * 15) * 0.5 + 0.5;
-                        child.material.emissiveIntensity = 5 + (pulse * 5);
+        // 2036 CYBER-GOD GLITCH & GLOW PHYSICS (DESKTOP ONLY to save mobile CPU)
+        if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            scene.traverse((child: any) => {
+                if (child.isMesh && child.material && !child.material.name?.toLowerCase().includes('glass')) {
+                    if (isHovered) {
+                        if (child.material._isGlowMaterial) {
+                            child.material.emissive = new THREE.Color(0x00ffff);
+                            const pulse = Math.sin(time * 15) * 0.5 + 0.5;
+                            child.material.emissiveIntensity = 5 + (pulse * 5);
+                        } else {
+                            const isGlitching = Math.random() > 0.98;
+                            child.material.wireframe = isGlitching;
+                        }
                     } else {
-                        const isGlitching = Math.random() > 0.98;
-                        child.material.wireframe = isGlitching;
+                        child.material.wireframe = child.material._originalWireframe;
+                        if (child.material._isGlowMaterial) {
+                            child.material.emissiveIntensity = 0;
+                        }
                     }
-                } else {
-                    child.material.wireframe = child.material._originalWireframe;
-                    child.material.emissive = child.material._originalEmissive;
-                    child.material.emissiveIntensity = child.material._originalEmissiveIntensity;
                 }
-            }
-        });
+            });
+        }
     });
 
     return (
@@ -214,7 +217,7 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
-                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 backdrop-blur-xl`}
+                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 md:backdrop-blur-xl`}
             >
                 <Canvas 
                     camera={{ position: [0, 0, 5], fov: 45 }} 
