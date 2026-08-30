@@ -185,9 +185,16 @@ function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking
 useGLTF.preload('/avaturn_avatar.glb');
 
 // 2. THE MAIN COMPONENT
-export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
+export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: boolean, onReportTime?: (name: string, time: number) => void }) {
     const [isHovered, setIsHovered] = useState(false);
     const [boneNames, setBoneNames] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (onReportTime) {
+            onReportTime('3D Avatar Model', Date.now());
+            onReportTime('Creative Coder Text', Date.now() + 1000); // Because it has a 1s CSS delay
+        }
+    }, [onReportTime]);
 
     const textVariants = {
         hidden: { opacity: 0, y: 15, filter: 'blur(8px)' },
@@ -264,6 +271,7 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
                             style={{ 
                                 textShadow: isHovered ? '0 0 15px rgba(0,255,255,0.8)' : 'none'
                             }}
+                            onAnimationComplete={index === nameText.length - 1 ? () => onReportTime && onReportTime('Kariyawasam Title', Date.now()) : undefined}
                         >
                             {char === " " ? "\u00A0" : char}
                         </motion.span>

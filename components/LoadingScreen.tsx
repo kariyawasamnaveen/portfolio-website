@@ -54,7 +54,19 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
     const [isVisible, setIsVisible] = useState(true)
     const [isHovered, setIsHovered] = useState(false)
     const [loadTime, setLoadTime] = useState<number | null>(null)
+    const [elementTimes, setElementTimes] = useState<Record<string, number>>({})
     const mountTimeRef = useRef<number>(Date.now())
+
+    useEffect(() => {
+        // Record rings mount time (since they are CSS-driven and mount immediately)
+        const now = (Date.now() - mountTimeRef.current) / 1000;
+        setElementTimes(prev => ({
+            ...prev,
+            'Outer Rings': now,
+            'Inner Rings': now,
+            'Crosshair': now
+        }));
+    }, []);
 
     useEffect(() => {
         if (isReady && loadTime === null) {
@@ -169,14 +181,28 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                                 {/* Neural Energy Core Glow */}
                                 <div className="absolute inset-0 rounded-full bg-red-600/10 blur-[25px] animate-pulse pointer-events-none" />
                                 
-                                <CodeLogo isSpeaking={isSpeaking} />
+                                <CodeLogo 
+                                    isSpeaking={isSpeaking} 
+                                    onReportTime={(name, time) => {
+                                        setElementTimes(prev => ({ ...prev, [name]: (time - mountTimeRef.current) / 1000 }))
+                                    }}
+                                />
                                 
                                 {/* DEBUG TELEMETRY */}
-                                {loadTime !== null && (
-                                    <div className="absolute -bottom-16 w-max bg-black/80 border border-amber-500/50 text-amber-500 text-[10px] font-mono px-3 py-1 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)] pointer-events-none">
-                                        RENDER_TIME: {loadTime.toFixed(2)}s
+                                <div className="absolute -bottom-24 w-max flex gap-2 pointer-events-none z-50">
+                                    <div className="bg-black/90 border border-amber-500/50 text-amber-500 text-[9px] font-mono p-2 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+                                        <div className="font-bold border-b border-amber-500/30 mb-1 pb-1">TOTAL_LOAD_TIME</div>
+                                        <div>{loadTime !== null ? `${loadTime.toFixed(2)}s` : 'WAITING...'}</div>
                                     </div>
-                                )}
+                                    <div className="bg-black/90 border border-cyan-500/50 text-cyan-400 text-[9px] font-mono p-2 rounded shadow-[0_0_10px_rgba(0,255,255,0.2)]">
+                                        <div className="font-bold border-b border-cyan-500/30 mb-1 pb-1">WIDGET_MOUNT_TIMES</div>
+                                        {Object.entries(elementTimes).map(([key, val]) => (
+                                            <div key={key} className="flex justify-between gap-4">
+                                                <span>{key}:</span><span>{val.toFixed(2)}s</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </motion.div>
 
                         </div>
