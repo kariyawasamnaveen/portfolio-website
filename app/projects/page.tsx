@@ -4,10 +4,11 @@ import { motion } from 'framer-motion'
 import ProjectCard from '@/components/ProjectCard'
 import SmartRecommend from '@/components/SmartRecommend'
 import AiSearch from '@/components/AiSearch'
+import { PROJECTS_DATA } from '@/data/projects'
 
 export default function ProjectsPage() {
   const [filter, setFilter] = useState('All')
-  const [projects, setProjects] = useState([])
+  const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const categories = ['All', 'AI/ML', 'Flutter', 'Web']
@@ -28,9 +29,15 @@ export default function ProjectsPage() {
     try {
       const res = await fetch('/api/projects')
       const data = await res.json()
-      setProjects(data)
+      if (Array.isArray(data)) {
+        setProjects(data.length > 0 ? data : PROJECTS_DATA)
+      } else {
+        console.error('API returned non-array data:', data)
+        setProjects(PROJECTS_DATA)
+      }
     } catch (error) {
       console.error('Error fetching projects:', error)
+      setProjects(PROJECTS_DATA)
     } finally {
       setLoading(false)
     }
