@@ -261,7 +261,7 @@ export default function Home() {
 
                             {/* Top Right 'For Hire' Badge */}
                             <motion.div 
-                                className="fixed top-20 right-4 md:top-10 md:right-10 z-[100] flex items-center gap-3"
+                                className="fixed top-6 right-4 md:top-10 md:right-10 z-[100] flex items-center gap-3"
                                 initial={{ x: 40, opacity: 0, scale: 0.8 }}
                                 animate={{ x: 0, opacity: 1, scale: 1 }}
                                 transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.5 }}

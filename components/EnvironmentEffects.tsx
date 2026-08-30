@@ -201,6 +201,8 @@ export function Rain() {
         }
     });
 
+    if (isMobile) return null;
+
     return (
         <points ref={rainRef}>
             <bufferGeometry>

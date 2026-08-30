@@ -23,7 +23,7 @@ export default function CentralPortalNav({ activeZone, onZoneChange }: CentralPo
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center gap-4">
             
             {/* Social Icons Integrated into Dock Area */}
-            <div className="flex justify-center gap-6 text-neutral-500 mb-1">
+            <div className="flex justify-center gap-6 text-neutral-500 mb-3 md:mb-1">
                 <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noopener noreferrer" 
                    className="hover:text-white transition-colors duration-300">
                     <FiGithub size={14} />
@@ -41,15 +41,15 @@ export default function CentralPortalNav({ activeZone, onZoneChange }: CentralPo
             </div>
 
             {/* Deep Sea Glassmorphism Nav Dock */}
-            <div className="flex items-center bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/5 pl-2 pr-1 py-1.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+            <div className="flex items-center justify-center bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/5 px-2 md:pl-2 md:pr-1 py-1.5 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.8)] w-[95vw] md:w-auto overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {zones.map((zone) => (
                     <button
                         key={zone.id}
                         onClick={() => onZoneChange(zone.id)}
-                        className="relative px-6 py-2 group flex items-center justify-center"
+                        className="relative px-3 md:px-6 py-2 group flex items-center justify-center min-w-max"
                     >
                         <span className={`
-                            text-[9px] font-bold tracking-[0.25em] transition-all duration-300 z-10
+                            text-[8px] md:text-[9px] font-bold tracking-[0.15em] md:tracking-[0.25em] transition-all duration-300 z-10
                             ${activeZone === zone.id 
                                 ? 'text-[#00FF9D] drop-shadow-[0_0_8px_rgba(0,255,157,0.6)]' 
                                 : 'text-neutral-500 group-hover:text-neutral-300'}
