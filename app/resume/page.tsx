@@ -72,7 +72,7 @@ export default function ResumePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020305] text-neutral-300 font-sans selection:bg-cyan-500/30 overflow-x-hidden relative pb-32 pt-24 md:pt-32">
+        <div className="h-screen bg-[#020305] text-neutral-300 font-sans selection:bg-cyan-500/30 overflow-y-auto overflow-x-hidden relative flex flex-col items-center justify-center p-4 md:p-8">
             
             {/* Ambient Lighting Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
@@ -92,15 +92,15 @@ export default function ResumePage() {
                 <a 
                     href="/resume.pdf" 
                     download
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(0,255,255,0.5)] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-[10px] uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(0,255,255,0.5)] transition-all"
                 >
-                    <FiDownload size={16} /> PDF
+                    <FiDownload size={14} /> PDF
                 </a>
                 <button 
                     onClick={handleDownloadJson}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-widest hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold text-[10px] uppercase tracking-widest hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
                 >
-                    <BsFiletypeJson size={16} /> JSON
+                    <BsFiletypeJson size={14} /> JSON
                 </button>
             </div>
 
@@ -111,7 +111,7 @@ export default function ResumePage() {
                         variants={documentVariants}
                         initial="hidden"
                         animate="visible"
-                        className="relative z-10 max-w-[850px] mx-auto w-[95%] min-h-[1100px] bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-8 md:p-16 lg:p-20 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
+                        className="relative z-10 max-w-[900px] w-full bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-6 md:p-10 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] my-auto"
                     >
                         {/* Scanning Line Animation */}
                         <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
@@ -145,152 +145,142 @@ export default function ResumePage() {
                             </div>
                         </header>
 
-                        {/* --- SUMMARY --- */}
-                        <section className="mb-12">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                                <FiTerminal className="text-cyan-500" /> Executive Summary
-                            </h3>
-                            <p className="text-neutral-400 leading-relaxed text-sm text-justify">
-                                <TypewriterText 
-                                    text="Visionary Creative Coder and AI/ML Engineer with a relentless passion for architecting futuristic digital experiences. Specializing in bridging the gap between breathtaking aesthetics and high-performance engineering. Proven ability to lead full-stack development life cycles, design quantum-inspired UI/UX, and deploy robust backend infrastructures. Seeking to leverage deep technical expertise to build the next generation of intelligent, highly interactive web applications." 
-                                    delay={1.5} 
-                                />
-                            </p>
-                        </section>
-
-                        {/* --- EXPERIENCE --- */}
-                        <section className="mb-12">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-                                <FiBriefcase className="text-cyan-500" /> Professional Experience
-                            </h3>
+                        {/* 2-COLUMN LAYOUT FOR SINGLE-SCREEN FIT */}
+                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
                             
-                            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
-                                
-                                {[
-                                    {
-                                        role: "Senior AI/ML Engineer",
-                                        company: "Tech Nova Systems",
-                                        date: "2023 — Present",
-                                        points: [
-                                            "Architected and deployed predictive neural networks reducing operational latency by 45%.",
-                                            "Led a team of 4 developers to build a real-time data inference pipeline using Python and TensorFlow.",
-                                            "Integrated advanced LLMs into the core product, generating $2M+ in new annual recurring revenue."
-                                        ]
-                                    },
-                                    {
-                                        role: "Full Stack Developer",
-                                        company: "Quantum Web Solutions",
-                                        date: "2021 — 2023",
-                                        points: [
-                                            "Designed and implemented highly scalable microservices using Node.js and Next.js.",
-                                            "Pioneered the 'Biomimetic UI' design system, standardizing components across 5 enterprise applications.",
-                                            "Optimized database queries in PostgreSQL, improving dashboard load times by over 60%."
-                                        ]
-                                    },
-                                    {
-                                        role: "Frontend Engineer (Freelance)",
-                                        company: "Global Clients",
-                                        date: "2019 — 2021",
-                                        points: [
-                                            "Developed custom, high-performance web applications using React, TailwindCSS, and Framer Motion.",
-                                            "Delivered 20+ projects with perfect 5-star client satisfaction, focusing on seamless animations and UX."
-                                        ]
-                                    }
-                                ].map((job, index) => (
-                                    <div 
-                                        key={index}
-                                        className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group ${hoveredExp !== null && hoveredExp !== index ? 'opacity-30' : 'opacity-100'} transition-opacity duration-300`}
-                                        onMouseEnter={() => setHoveredExp(index)}
-                                        onMouseLeave={() => setHoveredExp(null)}
-                                    >
-                                        {/* Icon */}
-                                        <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.6)] shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10" />
-                                        
-                                        {/* Content Card */}
-                                        <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.5rem)] p-5 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors">
-                                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
-                                                <h4 className="font-bold text-white text-base">{job.role}</h4>
-                                                <span className="text-[10px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-2 py-0.5 rounded-sm bg-cyan-500/10 shrink-0">
-                                                    {job.date}
-                                                </span>
+                            {/* LEFT COLUMN: Summary, Skills, Edu */}
+                            <div className="lg:w-[40%] flex flex-col gap-8">
+                                {/* --- SUMMARY --- */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                        <FiTerminal className="text-cyan-500" /> Summary
+                                    </h3>
+                                    <p className="text-neutral-400 leading-relaxed text-xs text-justify">
+                                        <TypewriterText 
+                                            text="Visionary AI/ML Engineer and Creative Coder. I bridge the gap between breathtaking aesthetics and high-performance engineering. Seeking to leverage deep technical expertise to build the next generation of intelligent, highly interactive web applications." 
+                                            delay={1.5} 
+                                        />
+                                    </p>
+                                </section>
+
+                                {/* --- SKILLS MATRIX --- */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <FiCode className="text-cyan-500" /> Skills
+                                    </h3>
+                                    
+                                    <div className="flex flex-col gap-4">
+                                        {[
+                                            {
+                                                category: "Core",
+                                                skills: ["TS/JS", "Python", "React", "Next.js", "Flutter"]
+                                            },
+                                            {
+                                                category: "AI & Data",
+                                                skills: ["TensorFlow", "LangChain", "Pandas"]
+                                            },
+                                            {
+                                                category: "Design",
+                                                skills: ["Framer Motion", "Tailwind", "Three.js"]
+                                            }
+                                        ].map((group, index) => (
+                                            <div key={index}>
+                                                <h4 className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5">{group.category}</h4>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {group.skills.map((skill, i) => (
+                                                        <span key={i} className="text-[10px] font-mono text-neutral-300 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded cursor-default">
+                                                            {skill}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="text-xs font-mono text-neutral-400 uppercase tracking-widest mb-3">{job.company}</div>
-                                            <ul className="space-y-2">
-                                                {job.points.map((point, i) => (
-                                                    <li key={i} className="text-sm text-neutral-400 leading-relaxed pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50 before:transition-colors">
-                                                        {point}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        </section>
+                                </section>
 
-                        {/* --- SKILLS MATRIX --- */}
-                        <section className="mb-12">
-                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-                                <FiCode className="text-cyan-500" /> Core Competencies
-                            </h3>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {[
-                                    {
-                                        category: "Languages & Frameworks",
-                                        skills: ["JavaScript (ES6+)", "TypeScript", "Python", "React", "Next.js", "Node.js", "Flutter", "Dart"]
-                                    },
-                                    {
-                                        category: "AI & Data Engineering",
-                                        skills: ["TensorFlow", "PyTorch", "OpenAI API", "LangChain", "Pandas", "Scikit-Learn"]
-                                    },
-                                    {
-                                        category: "Database & Cloud",
-                                        skills: ["PostgreSQL", "MongoDB", "Firebase", "Google Cloud", "AWS", "Vercel"]
-                                    },
-                                    {
-                                        category: "Design & Tools",
-                                        skills: ["Figma", "Framer Motion", "TailwindCSS", "Three.js", "Git / GitHub", "Docker"]
-                                    }
-                                ].map((group, index) => (
-                                    <div key={index} className="space-y-3">
-                                        <h4 className="text-xs font-mono text-neutral-500 uppercase tracking-widest">{group.category}</h4>
-                                        <div className="flex flex-wrap gap-2">
-                                            {group.skills.map((skill, i) => (
-                                                <span 
-                                                    key={i} 
-                                                    className="text-xs font-mono text-neutral-300 bg-white/5 border border-white/10 px-2 py-1 rounded hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all cursor-default"
-                                                >
-                                                    <span className="text-cyan-500/50 mr-1 opacity-0 hover:opacity-100 transition-opacity">$&gt;</span>
-                                                    {skill}
-                                                </span>
-                                            ))}
-                                        </div>
+                                {/* --- EDUCATION --- */}
+                                <section>
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                        <FiBook className="text-cyan-500" /> Education
+                                    </h3>
+                                    <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
+                                        <h4 className="font-bold text-white text-xs mb-1">BSc (Hons) Computer Science</h4>
+                                        <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Univ. of Colombo (2018-2022)</div>
                                     </div>
-                                ))}
+                                </section>
                             </div>
-                        </section>
 
-                        {/* --- EDUCATION --- */}
-                        <section>
-                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
-                                <FiBook className="text-cyan-500" /> Education
-                            </h3>
-                            
-                            <div className="p-5 rounded-lg border border-white/5 bg-white/[0.01]">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
-                                    <h4 className="font-bold text-white text-base">BSc (Hons) in Computer Science</h4>
-                                    <span className="text-[10px] font-mono text-neutral-500 tracking-widest uppercase">
-                                        2018 — 2022
-                                    </span>
-                                </div>
-                                <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest mb-2">University of Colombo</div>
-                                <p className="text-sm text-neutral-400 leading-relaxed">
-                                    Graduated with First Class Honors. Specialized in Artificial Intelligence and Human-Computer Interaction. 
-                                    Awarded the "Innovative Project of the Year" for developing a neural-net based sign language translator.
-                                </p>
+                            {/* RIGHT COLUMN: Experience */}
+                            <div className="lg:w-[60%]">
+                                <section>
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+                                        <FiBriefcase className="text-cyan-500" /> Experience
+                                    </h3>
+                                    
+                                    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
+                                        {[
+                                            {
+                                                role: "Senior AI/ML Engineer",
+                                                company: "Tech Nova Systems",
+                                                date: "2023 — Present",
+                                                points: [
+                                                    "Architected predictive neural networks reducing latency by 45%.",
+                                                    "Led real-time data inference pipeline using Python & TensorFlow.",
+                                                    "Integrated advanced LLMs generating $2M+ in new ARR."
+                                                ]
+                                            },
+                                            {
+                                                role: "Full Stack Developer",
+                                                company: "Quantum Web Solutions",
+                                                date: "2021 — 2023",
+                                                points: [
+                                                    "Designed scalable microservices using Node.js and Next.js.",
+                                                    "Pioneered 'Biomimetic UI', standardizing 5 enterprise apps.",
+                                                    "Optimized PostgreSQL queries, improving load times by 60%."
+                                                ]
+                                            },
+                                            {
+                                                role: "Frontend Engineer",
+                                                company: "Freelance",
+                                                date: "2019 — 2021",
+                                                points: [
+                                                    "Developed high-performance apps using React and TailwindCSS.",
+                                                    "Delivered 20+ projects focusing on seamless UX animations."
+                                                ]
+                                            }
+                                        ].map((job, index) => (
+                                            <div 
+                                                key={index}
+                                                className={`relative flex items-start gap-4 group ${hoveredExp !== null && hoveredExp !== index ? 'opacity-30' : 'opacity-100'} transition-opacity duration-300`}
+                                                onMouseEnter={() => setHoveredExp(index)}
+                                                onMouseLeave={() => setHoveredExp(null)}
+                                            >
+                                                {/* Node */}
+                                                <div className="mt-1 flex items-center justify-center w-4 h-4 rounded-full border border-black bg-cyan-500 shadow-[0_0_10px_rgba(0,255,255,0.6)] shrink-0 z-10" />
+                                                
+                                                {/* Content */}
+                                                <div className="flex-1 p-3 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <h4 className="font-bold text-white text-sm">{job.role}</h4>
+                                                        <span className="text-[9px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-1.5 py-0.5 rounded-sm bg-cyan-500/10">
+                                                            {job.date}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mb-2">{job.company}</div>
+                                                    <ul className="space-y-1.5">
+                                                        {job.points.map((point, i) => (
+                                                            <li key={i} className="text-xs text-neutral-400 leading-relaxed pl-3 relative before:absolute before:left-0 before:top-1.5 before:w-1 before:h-1 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
+                                                                {point}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
                             </div>
-                        </section>
+                        </div>
 
                         {/* Bottom decorative brackets */}
                         <div className="absolute -bottom-4 -left-4 w-4 h-4 border-b border-l border-cyan-500/50" />
