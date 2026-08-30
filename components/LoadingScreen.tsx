@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import CodeLogo from './CodeLogo'
+import dynamic from 'next/dynamic'
+const CodeLogo = dynamic(() => import('./CodeLogo'), { ssr: false, loading: () => <div className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full bg-cyan-900/20 animate-pulse border border-cyan-500/30 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-t-2 border-cyan-400 animate-spin" /></div> })
 
 // The True Spherical Logo Mesh
 const LogoSphereMesh = () => {
