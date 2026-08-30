@@ -210,7 +210,7 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
         >
             {/* 3. TRUE 3D CANVAS LAYER - PREMIUM ROUND FRAME */}
             <div className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 backdrop-blur-xl`}>
-                <Canvas camera={{ position: [0, 0, 5], fov: 45 }} dpr={[1, 2]}>
+                <Canvas camera={{ position: [0, 0, 5], fov: 45 }} dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : [1, 2]}>
                     <Suspense fallback={null}>
                         {/* Cinematic PBR Lighting */}
                         <ambientLight intensity={0.6} />
@@ -221,14 +221,16 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
                         {/* The Model */}
                         <HackerModel isHovered={isHovered} isSpeaking={isSpeaking} />
                         
-                        {/* 2036 CYBER-GOD POST PROCESSING */}
-                        <EffectComposer>
-                            <Bloom 
-                                luminanceThreshold={0.5} 
-                                mipmapBlur 
-                                intensity={1.5} 
-                            />
-                        </EffectComposer>
+                        {/* 2036 CYBER-GOD POST PROCESSING - DISABLED ON MOBILE FOR MAX PERFORMANCE */}
+                        {typeof window !== 'undefined' && window.innerWidth >= 768 && (
+                            <EffectComposer>
+                                <Bloom 
+                                    luminanceThreshold={0.5} 
+                                    mipmapBlur 
+                                    intensity={1.5} 
+                                />
+                            </EffectComposer>
+                        )}
                     </Suspense>
                 </Canvas>
             </div>
