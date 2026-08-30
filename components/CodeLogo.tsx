@@ -7,7 +7,8 @@ import * as THREE from 'three';
 
 // 1. THE TRUE 3D HACKER MODEL COMPONENT
 function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking?: boolean }) {
-    const { scene } = useGLTF('/avaturn_avatar.glb');
+    const modelPath = typeof window !== 'undefined' && window.innerWidth < 768 ? '/avaturn_avatar_mobile.glb' : '/avaturn_avatar.glb';
+    const { scene } = useGLTF(modelPath);
     const groupRef = useRef<THREE.Group>(null);
     const headBoneRef = useRef<THREE.Bone | null>(null);
     const faceMeshesRef = useRef<{mesh: THREE.SkinnedMesh, smile: number, talk: number, blinkL: number, blinkR: number}[]>([]);

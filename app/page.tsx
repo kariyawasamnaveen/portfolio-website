@@ -33,7 +33,8 @@ if (typeof window !== 'undefined') {
     
     // Preload the heavy 3D avatar immediately in the background to prevent stutter later
     import('@react-three/drei').then(({ useGLTF }) => {
-        useGLTF.preload('/avaturn_avatar.glb');
+        const modelPath = window.innerWidth < 768 ? '/avaturn_avatar_mobile.glb' : '/avaturn_avatar.glb';
+        useGLTF.preload(modelPath);
     }).catch(() => {});
 }
 
