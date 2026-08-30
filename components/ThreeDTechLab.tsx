@@ -1013,7 +1013,11 @@ export default function ThreeDTechLab({ isSpeaking, isListening, activeZone, has
         <div className="fixed inset-0 w-full h-full bg-[#010611] overflow-hidden">
             
             <div className="absolute inset-0 z-0">
-                <Canvas camera={{ position: [0, 4, 300], fov: 60 }} dpr={[1, 1.5]} gl={{ antialias: false }}>
+                <Canvas 
+                    camera={{ position: [0, 4, 300], fov: 60 }} 
+                    dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)} 
+                    gl={{ antialias: false }}
+                >
                     
                     {/* Fog: thinner so orb is visible from 350 units distance */}
                     <fog attach="fog" args={['#010611', 50, 500]} />

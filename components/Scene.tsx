@@ -46,7 +46,12 @@ export default function Scene({ isListening, isSpeaking, hasCompletedIntro, star
     const isWarping = startDrift && !hasCompletedIntro;
 
     return (
-        <Canvas camera={{ position: [0, 4, 150], fov: 60 }} dpr={settings.dpr} gl={{ antialias: false, powerPreference: "high-performance" }} style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+        <Canvas 
+            camera={{ position: [0, 4, 150], fov: 60 }} 
+            dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : Math.min(settings.dpr as number || 1.5, 1.5)} 
+            gl={{ antialias: false, powerPreference: "high-performance" }} 
+            style={{ position: 'absolute', inset: 0, zIndex: 0 }}
+        >
             <PerformanceMonitor onDecline={() => downgrade()}>
                 <Suspense fallback={null}>
                     {/* Fog and Background */}

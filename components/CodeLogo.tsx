@@ -210,7 +210,11 @@ export default function CodeLogo({ isSpeaking }: { isSpeaking?: boolean }) {
         >
             {/* 3. TRUE 3D CANVAS LAYER - PREMIUM ROUND FRAME */}
             <div className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 backdrop-blur-xl`}>
-                <Canvas camera={{ position: [0, 0, 5], fov: 45 }} dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : [1, 2]}>
+                <Canvas 
+                    camera={{ position: [0, 0, 5], fov: 45 }} 
+                    dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
+                    gl={{ alpha: true, antialias: false }}
+                >
                     <Suspense fallback={null}>
                         {/* Cinematic PBR Lighting */}
                         <ambientLight intensity={0.6} />

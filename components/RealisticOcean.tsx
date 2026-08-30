@@ -113,19 +113,10 @@ export default function RealisticOcean({ isSpeaking }: { isSpeaking: boolean }) 
         if (ref.current) {
             ref.current.material.uniforms.time.value += delta * GlobalOceanState.speed * 0.5;
         }
-
-        const positions = geom.attributes.position;
-        for (let i = 0; i < positions.count; i++) {
-            const x = positions.getX(i);
-            const y = positions.getY(i);
-            
-            // Reuse the global wave math to modify the vertex Z (which becomes World Y)
-            // We pass (x, -y) because local Y is World -Z
-            const height = GlobalOceanState.getWaveHeight(x, -y);
-            positions.setZ(i, height); 
-        }
-        positions.needsUpdate = true;
-        geom.computeVertexNormals();
+        
+        // Massive Performance Fix: Removed the JS geometry iteration and computeVertexNormals().
+        // The THREE.Water shader normal map handles the visual rippling perfectly on the GPU.
+        // We only retain the time uniform update to drive the shader.
     });
 
     return <water ref={ref} args={[geom, config]} rotation={[-Math.PI / 2, 0, 0]} />;
