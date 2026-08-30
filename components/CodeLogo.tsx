@@ -189,8 +189,10 @@ export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: bo
     const [isHovered, setIsHovered] = useState(false);
     const [boneNames, setBoneNames] = useState<string[]>([]);
 
+    const hasReported = useRef(false);
     useEffect(() => {
-        if (onReportTime) {
+        if (onReportTime && !hasReported.current) {
+            hasReported.current = true;
             onReportTime('3D Avatar Model', Date.now());
             onReportTime('Creative Coder Text', Date.now() + 1000); // Because it has a 1s CSS delay
         }
