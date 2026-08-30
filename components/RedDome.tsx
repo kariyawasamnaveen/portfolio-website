@@ -181,14 +181,16 @@ export default function RedDome({ isSpeaking, isListening }: RedDomeProps) {
             </group>
             
             {/* Neural Spark Swarm */}
-            <Sparkles 
-                count={isSpeaking ? 800 : 200} 
-                scale={12} 
-                size={isSpeaking ? 15 : 6} 
-                speed={isSpeaking ? 8 : 1} 
-                opacity={0.8} 
-                color={isSpeaking ? "#00ffcc" : "#ff0044"} 
-            />
+            {typeof window !== 'undefined' && window.innerWidth >= 768 && (
+                <Sparkles 
+                    count={isSpeaking ? 800 : 200} 
+                    scale={12} 
+                    size={isSpeaking ? 15 : 6} 
+                    speed={isSpeaking ? 8 : 1} 
+                    opacity={0.8} 
+                    color={isSpeaking ? "#00ffcc" : "#ff0044"} 
+                />
+            )}
             
             {/* Audio Shockwave Ring */}
             <mesh ref={shockwaveRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -12, 0]}>
