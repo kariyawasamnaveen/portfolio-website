@@ -1,14 +1,16 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiDownload, FiCode, FiTerminal, FiDatabase, FiCpu, FiLayout, FiGithub, FiExternalLink, FiFileText } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode } from 'react-icons/fi';
 import { BsFiletypeJson } from 'react-icons/bs';
 
 export default function ResumePage() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [hoveredBox, setHoveredBox] = useState<number | null>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [hoveredExp, setHoveredExp] = useState<number | null>(null);
 
     useEffect(() => {
+        setIsLoaded(true);
         const handleMouseMove = (e: MouseEvent) => {
             setMousePosition({ x: e.clientX, y: e.clientY });
         };
@@ -29,268 +31,286 @@ export default function ResumePage() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "naveen_resume_ai_readable.json");
+        downloadAnchorNode.setAttribute("download", "naveen_resume.json");
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     };
 
-    // Staggered animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const boxVariants = {
-        hidden: { opacity: 0, y: 20, filter: 'blur(10px)' },
-        visible: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.6, ease: "easeOut" } }
-    };
-
-    const BentoBox = ({ 
-        children, 
-        className = "", 
-        index,
-        glowColor = "rgba(0, 255, 255, 0.15)"
-    }: { 
-        children: React.ReactNode, 
-        className?: string, 
-        index: number,
-        glowColor?: string 
-    }) => {
-        const isHovered = hoveredBox === index;
+    const TypewriterText = ({ text, delay = 0 }: { text: string, delay?: number }) => {
         return (
-            <motion.div
-                variants={boxVariants as any}
-                onMouseEnter={() => setHoveredBox(index)}
-                onMouseLeave={() => setHoveredBox(null)}
-                className={`relative rounded-[24px] overflow-hidden border transition-all duration-500 ${isHovered ? 'border-cyan-400/50 bg-black/60' : 'border-white/10 bg-black/40'} backdrop-blur-2xl ${className}`}
-                style={{
-                    boxShadow: isHovered ? `0 0 40px ${glowColor}` : '0 0 0px transparent'
-                }}
+            <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay }}
+                className="inline-block"
             >
-                {/* Internal gradient sweep on hover */}
-                <div 
-                    className={`absolute inset-0 bg-gradient-to-br from-white/5 to-transparent transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} 
-                />
-                <div className="relative z-10 w-full h-full p-6 md:p-8 flex flex-col">
-                    {children}
-                </div>
-            </motion.div>
+                {text.split('').map((char, i) => (
+                    <motion.span
+                        key={i}
+                        initial={{ opacity: 0, filter: 'blur(10px)' }}
+                        animate={{ opacity: 1, filter: 'blur(0px)' }}
+                        transition={{ delay: delay + i * 0.02, duration: 0.1 }}
+                    >
+                        {char}
+                    </motion.span>
+                ))}
+            </motion.span>
         );
     };
 
+    // Glitch animation for the main document
+    const documentVariants = {
+        hidden: { opacity: 0, scale: 0.98, y: 20, filter: 'blur(20px) hue-rotate(90deg)' },
+        visible: { 
+            opacity: 1, 
+            scale: 1, 
+            y: 0,
+            filter: 'blur(0px) hue-rotate(0deg)',
+            transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-[#020305] text-white overflow-x-hidden selection:bg-cyan-900/30 font-sans pb-24">
-            {/* Ambient Background */}
+        <div className="min-h-screen bg-[#020305] text-neutral-300 font-sans selection:bg-cyan-500/30 overflow-x-hidden relative pb-32 pt-24 md:pt-32">
+            
+            {/* Ambient Lighting Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.03)_0%,transparent_70%)]" />
                 <div 
-                    className="absolute inset-0 opacity-30 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-40 transition-opacity duration-300"
                     style={{
-                        background: `radial-gradient(circle 800px at ${mousePosition.x}px ${mousePosition.y}px, rgba(0,255,255,0.08), transparent 40%)`
+                        background: \`radial-gradient(circle 800px at \${mousePosition.x}px \${mousePosition.y}px, rgba(0,255,255,0.06), transparent 40%)\`
                     }}
                 />
+                {/* Subtle tech grid */}
+                <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02] bg-[length:32px_32px]" />
             </div>
 
-            {/* Main Content */}
-            <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8 pt-32">
-                
-                {/* Header Section */}
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6"
+            {/* Sticky Actions Bar */}
+            <div className="fixed top-6 right-6 md:top-8 md:right-12 z-50 flex gap-4">
+                <a 
+                    href="/resume.pdf" 
+                    download
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(0,255,255,0.5)] transition-all"
                 >
-                    <div>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                            <span className="text-cyan-500 text-[10px] uppercase tracking-[0.3em] font-mono font-bold">System Online • 2027 Standards</span>
-                        </div>
-                        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
-                            Interactive<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">Resume</span>
-                        </h1>
-                    </div>
-                </motion.div>
+                    <FiDownload size={16} /> PDF
+                </a>
+                <button 
+                    onClick={handleDownloadJson}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-widest hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
+                >
+                    <BsFiletypeJson size={16} /> JSON
+                </button>
+            </div>
 
-                {/* The Bento Grid */}
-                <motion.div 
-                    variants={containerVariants as any}
-                    initial="hidden"
-                    animate="visible"
-                    className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[160px]"
-                >
-                    {/* 1. Identity Core (Span 2x2) */}
-                    <BentoBox index={1} className="md:col-span-2 md:row-span-2">
-                        <div className="flex-1 flex flex-col justify-center">
-                            <h2 className="text-3xl md:text-4xl font-bold mb-2">Naveen Kariyawasam</h2>
-                            <p className="text-cyan-400 font-mono text-sm tracking-widest uppercase mb-6">Creative Coder & Developer</p>
-                            <p className="text-neutral-400 text-sm leading-relaxed mb-8 max-w-md">
-                                Architecting futuristic digital experiences and robust AI-driven systems. Specializing in bridging the gap between breathtaking aesthetics and high-performance engineering.
+            {/* The Holographic Document (A4 Proportion) */}
+            <AnimatePresence>
+                {isLoaded && (
+                    <motion.div
+                        variants={documentVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="relative z-10 max-w-[850px] mx-auto w-[95%] min-h-[1100px] bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-8 md:p-16 lg:p-20 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
+                    >
+                        {/* Scanning Line Animation */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
+
+                        {/* --- HEADER --- */}
+                        <header className="border-b border-white/10 pb-8 mb-10 relative">
+                            {/* Decorative corner brackets */}
+                            <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
+                            <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
+                            
+                            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 font-mono">
+                                <TypewriterText text="Naveen Kariyawasam" delay={0.2} />
+                            </h1>
+                            <h2 className="text-lg md:text-xl text-cyan-400 font-mono tracking-widest uppercase mb-6">
+                                <TypewriterText text="Creative Coder & Developer" delay={0.8} />
+                            </h2>
+                            
+                            <div className="flex flex-wrap gap-4 text-xs font-mono text-neutral-400">
+                                <a href="mailto:contact@example.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
+                                    <FiMail /> contact@example.com
+                                </a>
+                                <span className="flex items-center gap-2">
+                                    <FiMapPin /> Colombo, Sri Lanka (Remote)
+                                </span>
+                                <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
+                                    <FiGithub /> github.com/kariyawasamnaveen
+                                </a>
+                                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
+                                    <FiLinkedin /> linkedin.com/in/naveen
+                                </a>
+                            </div>
+                        </header>
+
+                        {/* --- SUMMARY --- */}
+                        <section className="mb-12">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                                <FiTerminal className="text-cyan-500" /> Executive Summary
+                            </h3>
+                            <p className="text-neutral-400 leading-relaxed text-sm text-justify">
+                                <TypewriterText 
+                                    text="Visionary Creative Coder and AI/ML Engineer with a relentless passion for architecting futuristic digital experiences. Specializing in bridging the gap between breathtaking aesthetics and high-performance engineering. Proven ability to lead full-stack development life cycles, design quantum-inspired UI/UX, and deploy robust backend infrastructures. Seeking to leverage deep technical expertise to build the next generation of intelligent, highly interactive web applications." 
+                                    delay={1.5} 
+                                />
                             </p>
-                            <div className="flex gap-4 mt-auto">
-                                <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-cyan-400/50 transition-all text-neutral-400 hover:text-cyan-400 z-20">
-                                    <FiGithub size={18} />
-                                </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-blue-500/50 transition-all text-neutral-400 hover:text-blue-500 z-20">
-                                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                                </a>
-                            </div>
-                        </div>
-                    </BentoBox>
+                        </section>
 
-                    {/* 2. Download Actions (Span 2x1) */}
-                    <BentoBox index={2} className="md:col-span-2 md:row-span-1" glowColor="rgba(245, 158, 11, 0.15)">
-                        <div className="flex flex-col md:flex-row gap-4 w-full h-full relative z-20">
-                            <a 
-                                href="/resume.pdf" 
-                                download
-                                className="flex-1 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/50 transition-all flex flex-col items-center justify-center p-4 group"
-                            >
-                                <FiFileText className="text-amber-500 mb-2 group-hover:scale-110 transition-transform" size={24} />
-                                <span className="text-amber-500 font-bold text-sm">Classic PDF CV</span>
-                                <span className="text-amber-500/50 text-[10px] uppercase tracking-widest mt-1">Human Readable</span>
-                            </a>
-                            <button 
-                                onClick={handleDownloadJson}
-                                className="flex-1 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/50 transition-all flex flex-col items-center justify-center p-4 group"
-                            >
-                                <BsFiletypeJson className="text-blue-400 mb-2 group-hover:scale-110 transition-transform" size={24} />
-                                <span className="text-blue-400 font-bold text-sm">JSON Format CV</span>
-                                <span className="text-blue-400/50 text-[10px] uppercase tracking-widest mt-1">AI / ATS Readable</span>
-                            </button>
-                        </div>
-                    </BentoBox>
-
-                    {/* 3. Metrics / Live Data (Span 2x1) */}
-                    <BentoBox index={3} className="md:col-span-2 md:row-span-1">
-                        <div className="flex items-center justify-between w-full h-full">
-                            <div className="flex-1 flex flex-col items-center justify-center border-r border-white/10">
-                                <span className="text-3xl font-black text-white">42+</span>
-                                <span className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1 text-center">Projects</span>
-                            </div>
-                            <div className="flex-1 flex flex-col items-center justify-center border-r border-white/10">
-                                <span className="text-3xl font-black text-white">1.2k</span>
-                                <span className="text-[10px] text-neutral-500 uppercase tracking-widest mt-1 text-center">Commits</span>
-                            </div>
-                            <div className="flex-1 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-black text-cyan-400">99%</span>
-                                <span className="text-[10px] text-cyan-400/50 uppercase tracking-widest mt-1 text-center">Uptime</span>
-                            </div>
-                        </div>
-                    </BentoBox>
-
-                    {/* 4. Tech Constellation (Span 2x3) */}
-                    <BentoBox index={4} className="md:col-span-2 md:row-span-3">
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-3">
-                            <FiTerminal className="text-cyan-500" /> Technology Stack
-                        </h3>
-                        
-                        <div className="grid grid-cols-2 gap-6 w-full h-full">
-                            {/* AI / Backend */}
-                            <div className="space-y-4">
-                                <div className="text-xs uppercase tracking-widest text-neutral-500 mb-2 font-mono">Engine & Core</div>
+                        {/* --- EXPERIENCE --- */}
+                        <section className="mb-12">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                                <FiBriefcase className="text-cyan-500" /> Professional Experience
+                            </h3>
+                            
+                            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
+                                
                                 {[
-                                    { name: 'Python', icon: <FiCode /> },
-                                    { name: 'TensorFlow', icon: <FiCpu /> },
-                                    { name: 'Node.js', icon: <FiDatabase /> }
-                                ].map((tech, i) => (
-                                    <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/5 p-3 rounded-xl hover:bg-white/10 hover:border-cyan-500/30 transition-colors">
-                                        <div className="text-cyan-500">{tech.icon}</div>
-                                        <span className="text-sm font-medium">{tech.name}</span>
+                                    {
+                                        role: "Senior AI/ML Engineer",
+                                        company: "Tech Nova Systems",
+                                        date: "2023 — Present",
+                                        points: [
+                                            "Architected and deployed predictive neural networks reducing operational latency by 45%.",
+                                            "Led a team of 4 developers to build a real-time data inference pipeline using Python and TensorFlow.",
+                                            "Integrated advanced LLMs into the core product, generating $2M+ in new annual recurring revenue."
+                                        ]
+                                    },
+                                    {
+                                        role: "Full Stack Developer",
+                                        company: "Quantum Web Solutions",
+                                        date: "2021 — 2023",
+                                        points: [
+                                            "Designed and implemented highly scalable microservices using Node.js and Next.js.",
+                                            "Pioneered the 'Biomimetic UI' design system, standardizing components across 5 enterprise applications.",
+                                            "Optimized database queries in PostgreSQL, improving dashboard load times by over 60%."
+                                        ]
+                                    },
+                                    {
+                                        role: "Frontend Engineer (Freelance)",
+                                        company: "Global Clients",
+                                        date: "2019 — 2021",
+                                        points: [
+                                            "Developed custom, high-performance web applications using React, TailwindCSS, and Framer Motion.",
+                                            "Delivered 20+ projects with perfect 5-star client satisfaction, focusing on seamless animations and UX."
+                                        ]
+                                    }
+                                ].map((job, index) => (
+                                    <div 
+                                        key={index}
+                                        className={\`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group \${hoveredExp !== null && hoveredExp !== index ? 'opacity-30' : 'opacity-100'} transition-opacity duration-300\`}
+                                        onMouseEnter={() => setHoveredExp(index)}
+                                        onMouseLeave={() => setHoveredExp(null)}
+                                    >
+                                        {/* Icon */}
+                                        <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.6)] shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10" />
+                                        
+                                        {/* Content Card */}
+                                        <div className="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.5rem)] p-5 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors">
+                                            <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+                                                <h4 className="font-bold text-white text-base">{job.role}</h4>
+                                                <span className="text-[10px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-2 py-0.5 rounded-sm bg-cyan-500/10 shrink-0">
+                                                    {job.date}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs font-mono text-neutral-400 uppercase tracking-widest mb-3">{job.company}</div>
+                                            <ul className="space-y-2">
+                                                {job.points.map((point, i) => (
+                                                    <li key={i} className="text-sm text-neutral-400 leading-relaxed pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50 before:transition-colors">
+                                                        {point}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
+                        </section>
+
+                        {/* --- SKILLS MATRIX --- */}
+                        <section className="mb-12">
+                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                                <FiCode className="text-cyan-500" /> Core Competencies
+                            </h3>
                             
-                            {/* Frontend */}
-                            <div className="space-y-4">
-                                <div className="text-xs uppercase tracking-widest text-neutral-500 mb-2 font-mono">Interface</div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {[
-                                    { name: 'React', icon: <FiLayout /> },
-                                    { name: 'Next.js', icon: <FiLayout /> },
-                                    { name: 'TailwindCSS', icon: <FiLayout /> }
-                                ].map((tech, i) => (
-                                    <div key={i} className="flex items-center gap-3 bg-white/5 border border-white/5 p-3 rounded-xl hover:bg-white/10 hover:border-cyan-500/30 transition-colors">
-                                        <div className="text-cyan-500">{tech.icon}</div>
-                                        <span className="text-sm font-medium">{tech.name}</span>
+                                    {
+                                        category: "Languages & Frameworks",
+                                        skills: ["JavaScript (ES6+)", "TypeScript", "Python", "React", "Next.js", "Node.js", "Flutter", "Dart"]
+                                    },
+                                    {
+                                        category: "AI & Data Engineering",
+                                        skills: ["TensorFlow", "PyTorch", "OpenAI API", "LangChain", "Pandas", "Scikit-Learn"]
+                                    },
+                                    {
+                                        category: "Database & Cloud",
+                                        skills: ["PostgreSQL", "MongoDB", "Firebase", "Google Cloud", "AWS", "Vercel"]
+                                    },
+                                    {
+                                        category: "Design & Tools",
+                                        skills: ["Figma", "Framer Motion", "TailwindCSS", "Three.js", "Git / GitHub", "Docker"]
+                                    }
+                                ].map((group, index) => (
+                                    <div key={index} className="space-y-3">
+                                        <h4 className="text-xs font-mono text-neutral-500 uppercase tracking-widest">{group.category}</h4>
+                                        <div className="flex flex-wrap gap-2">
+                                            {group.skills.map((skill, i) => (
+                                                <span 
+                                                    key={i} 
+                                                    className="text-xs font-mono text-neutral-300 bg-white/5 border border-white/10 px-2 py-1 rounded hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:text-cyan-400 transition-all cursor-default"
+                                                >
+                                                    <span className="text-cyan-500/50 mr-1 opacity-0 hover:opacity-100 transition-opacity">$&gt;</span>
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    </BentoBox>
+                        </section>
 
-                    {/* 5. Chronology / Experience (Span 2x3) */}
-                    <BentoBox index={5} className="md:col-span-2 md:row-span-3">
-                        <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mb-6 flex items-center gap-3">
-                            <FiCpu className="text-cyan-500" /> Professional Timeline
-                        </h3>
-                        
-                        <div className="relative pl-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar pr-4">
-                            {/* Vertical Line */}
-                            <div className="absolute top-2 bottom-2 left-2 w-[1px] bg-gradient-to-b from-cyan-500/50 via-white/10 to-transparent" />
+                        {/* --- EDUCATION --- */}
+                        <section>
+                            <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                                <FiBook className="text-cyan-500" /> Education
+                            </h3>
                             
-                            {[
-                                {
-                                    role: "AI/ML Engineer",
-                                    company: "Tech Nova Systems",
-                                    period: "2023 - Present",
-                                    description: "Architecting predictive models and neural networks. Optimizing backend data pipelines for real-time inference.",
-                                    current: true
-                                },
-                                {
-                                    role: "Full Stack Developer",
-                                    company: "Quantum Web Solutions",
-                                    period: "2021 - 2023",
-                                    description: "Built scalable web architectures using Next.js and Node. Designed highly interactive UI/UX experiences.",
-                                    current: false
-                                },
-                                {
-                                    role: "Frontend Freelancer",
-                                    company: "Global Clients",
-                                    period: "2019 - 2021",
-                                    description: "Developed custom web applications and e-commerce platforms with React and modern CSS frameworks.",
-                                    current: false
-                                }
-                            ].map((job, i) => (
-                                <div key={i} className="relative">
-                                    {/* Timeline Node */}
-                                    <div className={`absolute -left-[29px] top-1.5 w-3 h-3 rounded-full border-2 ${job.current ? 'bg-cyan-500 border-black shadow-[0_0_10px_rgba(0,255,255,0.8)]' : 'bg-black border-white/20'}`} />
-                                    
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] text-cyan-500 font-mono tracking-widest uppercase mb-1">{job.period}</span>
-                                        <h4 className="text-lg font-bold text-white mb-0.5">{job.role}</h4>
-                                        <span className="text-sm text-neutral-400 mb-3">{job.company}</span>
-                                        <p className="text-sm text-neutral-500 leading-relaxed">
-                                            {job.description}
-                                        </p>
-                                    </div>
+                            <div className="p-5 rounded-lg border border-white/5 bg-white/[0.01]">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-2">
+                                    <h4 className="font-bold text-white text-base">BSc (Hons) in Computer Science</h4>
+                                    <span className="text-[10px] font-mono text-neutral-500 tracking-widest uppercase">
+                                        2018 — 2022
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                    </BentoBox>
+                                <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest mb-2">University of Colombo</div>
+                                <p className="text-sm text-neutral-400 leading-relaxed">
+                                    Graduated with First Class Honors. Specialized in Artificial Intelligence and Human-Computer Interaction. 
+                                    Awarded the "Innovative Project of the Year" for developing a neural-net based sign language translator.
+                                </p>
+                            </div>
+                        </section>
 
-                </motion.div>
-            </div>
+                        {/* Bottom decorative brackets */}
+                        <div className="absolute -bottom-4 -left-4 w-4 h-4 border-b border-l border-cyan-500/50" />
+                        <div className="absolute -bottom-4 -right-4 w-4 h-4 border-b border-r border-cyan-500/50" />
+                        
+                    </motion.div>
+                )}
+            </AnimatePresence>
             
-            <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
+            <style jsx global>{\`
+                @keyframes scan {
+                    0% { top: 0; opacity: 0; }
+                    10% { opacity: 0.3; }
+                    90% { opacity: 0.3; }
+                    100% { top: 100%; opacity: 0; }
                 }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(255, 255, 255, 0.02);
-                    border-radius: 10px;
+                .animate-scan {
+                    animation: scan 4s linear infinite;
                 }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(0, 255, 255, 0.2);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: rgba(0, 255, 255, 0.5);
-                }
-            `}</style>
+            \`}</style>
         </div>
     );
 }
