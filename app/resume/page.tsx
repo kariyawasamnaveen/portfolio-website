@@ -423,7 +423,7 @@ export default function ResumePage() {
                                         <FiLayers className="text-cyan-500" /> Notable Projects
                                     </h3>
                                     <div className="grid grid-cols-1 gap-2">
-                                        {PROJECTS_DATA.slice(0, 3).map((project, i) => (
+                                        {PROJECTS_DATA.filter(p => !['fitness-tracker', 'bizlangai', 'shemet', 'estate-core'].includes(p.id)).slice(0, 3).map((project, i) => (
                                             <div key={i} className={`p-2 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors hover-magnify ${activeHighlight === project.id ? 'active-highlight' : ''}`}>
                                                 <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-1 gap-1">
                                                     <h4 className="font-bold text-white text-[11px]">{project.title}</h4>
