@@ -123,7 +123,7 @@ export default function ResumePage() {
             let heightLeft = imgHeight - pdfHeight;
             let position = yOffset - pdfHeight;
             
-            while (heightLeft > 0) {
+            while (heightLeft > 5) {
                 pdf.addPage();
                 pdf.setFillColor('#050914');
                 pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
