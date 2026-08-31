@@ -204,13 +204,13 @@ export default function ResumePage() {
                             variants={documentVariants}
                             initial="hidden"
                             animate="visible"
-                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
+                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-6 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
                         >
                         {/* Scanning Line Animation (hidden in PDF) */}
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
                         {/* --- HEADER --- */}
-                        <header className="border-b border-white/10 pb-4 mb-6 relative">
+                        <header className="border-b border-white/10 pb-3 mb-4 relative">
                             {/* Decorative corner brackets */}
                             <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
@@ -418,7 +418,7 @@ export default function ResumePage() {
                                 </section>
 
                                 {/* --- NOTABLE PROJECTS --- */}
-                                <section className="mt-4">
+                                <section className="mt-2">
                                     <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiLayers className="text-cyan-500" /> Notable Projects
                                     </h3>
