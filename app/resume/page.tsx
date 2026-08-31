@@ -25,7 +25,7 @@ export default function ResumePage() {
             skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
                 { role: "Full-Stack & AI Solutions Contractor", company: "HelpA Global Service", year: "2024-Present" },
-                { role: "Mobile & Full-Stack Developer", company: "Freelance / Remote Contractor", year: "2023-2024" }
+                { role: "Mobile & Full-Stack Developer", company: "Freelance / Remote Contractor", year: "2023-2026" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -221,7 +221,7 @@ export default function ResumePage() {
                                             {
                                                 role: "Mobile & Full-Stack Developer",
                                                 company: "Freelance / Remote Contractor",
-                                                date: "2023 — 2024",
+                                                date: "2023 — 2026",
                                                 points: [
                                                     "Developed cross-platform production mobile apps in Flutter with clean state management.",
                                                     "Built voice-driven automated scheduling PWAs (Next.js, NextAuth, Groq LLM pipelines).",
