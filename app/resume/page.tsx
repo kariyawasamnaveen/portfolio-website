@@ -214,7 +214,7 @@ export default function ResumePage() {
                                         {[
                                             {
                                                 role: "Full Stack Mobile Developer",
-                                                company: "Fitness Tracker Pro (Freelance / Fiverr)",
+                                                company: "Fitness Tracker Pro (Client Sprint)",
                                                 date: "2026",
                                                 points: [
                                                     "Published a cross-platform health aggregation app directly on the Google Play Store.",
@@ -234,7 +234,7 @@ export default function ResumePage() {
                                             },
                                             {
                                                 role: "Lead Mobile & Backend Developer",
-                                                company: "Shemet Dating & Live (Freelance / Fiverr)",
+                                                company: "Shemet Dating & Live (Client Sprint)",
                                                 date: "2025",
                                                 points: [
                                                     "Architected a real-time ecosystem using Flutter and Firebase Cloud Functions.",
@@ -244,7 +244,7 @@ export default function ResumePage() {
                                             },
                                             {
                                                 role: "Lead Full Stack Engineer",
-                                                company: "EstateCore (Freelance / Fiverr)",
+                                                company: "EstateCore (Client Sprint)",
                                                 date: "2023 — 2024",
                                                 points: [
                                                     "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
