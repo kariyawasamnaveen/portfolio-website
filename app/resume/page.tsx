@@ -130,8 +130,8 @@ export default function ResumePage() {
                             </h2>
                             
                             <div className="flex flex-wrap gap-3 text-[10px] font-mono text-neutral-400">
-                                <a href="mailto:contact@example.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
-                                    <FiMail /> contact@example.com
+                                <a href="mailto:hknskariyawasamnaveen@gmail.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
+                                    <FiMail /> hknskariyawasamnaveen@gmail.com
                                 </a>
                                 <span className="flex items-center gap-2">
                                     <FiMapPin /> Colombo, Sri Lanka (Remote)
