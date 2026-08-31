@@ -20,12 +20,12 @@ export default function ResumePage() {
 
     const handleDownloadJson = () => {
         const resumeData = {
-            name: "Naveen Kariyawasam",
-            title: "Creative Coder & Developer",
-            skills: ["Python", "React", "Next.js", "AI/ML", "Flutter"],
+            name: "NAVEEN KARIYAWASAM",
+            title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
+            skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
-                { role: "Senior Developer", company: "Tech Nova", year: "2024-Present" },
-                { role: "Full Stack Engineer", company: "Quantum Web", year: "2021-2024" }
+                { role: "Full-Stack & AI Solutions Contractor", company: "HelpA Global Service", year: "2024-Present" },
+                { role: "Mobile & Full-Stack Developer", company: "Freelance / Remote Contractor", year: "2023-2024" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -123,10 +123,10 @@ export default function ResumePage() {
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
                             
                             <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 font-mono">
-                                <TypewriterText text="Naveen Kariyawasam" delay={0.2} />
+                                <TypewriterText text="NAVEEN KARIYAWASAM" delay={0.2} />
                             </h1>
                             <h2 className="text-lg md:text-xl text-cyan-400 font-mono tracking-widest uppercase mb-6">
-                                <TypewriterText text="Creative Coder & Developer" delay={0.8} />
+                                <TypewriterText text="FULL-STACK & AI SOLUTIONS DEVELOPER" delay={0.8} />
                             </h2>
                             
                             <div className="flex flex-wrap gap-4 text-xs font-mono text-neutral-400">
@@ -139,8 +139,8 @@ export default function ResumePage() {
                                 <a href="https://github.com/kariyawasamnaveen" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
                                     <FiGithub /> github.com/kariyawasamnaveen
                                 </a>
-                                <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
-                                    <FiLinkedin /> linkedin.com/in/naveen
+                                <a href="https://linkedin.com/in/naveen-kariyawasam" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
+                                    <FiLinkedin /> linkedin.com/in/naveen-kariyawasam
                                 </a>
                             </div>
                         </header>
@@ -157,7 +157,7 @@ export default function ResumePage() {
                                     </h3>
                                     <p className="text-neutral-400 leading-relaxed text-xs text-justify">
                                         <TypewriterText 
-                                            text="Visionary AI/ML Engineer and Creative Coder. I bridge the gap between breathtaking aesthetics and high-performance engineering. Seeking to leverage deep technical expertise to build the next generation of intelligent, highly interactive web applications." 
+                                            text="Agile Full-Stack & AI Solutions Remote Contractor. I bridge the gap between high-velocity product execution and scalable cloud engineering. Leveraging deep hands-on expertise in mobile architecture, modern backend services, and autonomous agent orchestration to ship production-ready systems on tight turnaround sprints." 
                                             delay={1.5} 
                                         />
                                     </p>
@@ -173,15 +173,15 @@ export default function ResumePage() {
                                         {[
                                             {
                                                 category: "Core",
-                                                skills: ["TS/JS", "Python", "React", "Next.js", "Flutter"]
+                                                skills: ["Flutter", "Dart", "Python", "FastAPI", "Next.js", "TypeScript", "WebRTC", "PostgreSQL"]
                                             },
                                             {
                                                 category: "AI & Data",
-                                                skills: ["TensorFlow", "LangChain", "Pandas"]
+                                                skills: ["LangChain", "Pinecone (RAG)", "OpenAI GPT", "Google Gemini", "Pandas", "Scikit-Learn"]
                                             },
                                             {
-                                                category: "Design",
-                                                skills: ["Framer Motion", "Tailwind", "Three.js"]
+                                                category: "Integrations",
+                                                skills: ["Telegram Bot API", "Google Calendar API", "n8n", "Make.com", "Docker", "Git"]
                                             }
                                         ].map((group, index) => (
                                             <div key={index}>
@@ -198,14 +198,21 @@ export default function ResumePage() {
                                     </div>
                                 </section>
 
-                                {/* --- EDUCATION --- */}
+                                {/* --- EDUCATION & CERTS --- */}
                                 <section>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                                        <FiBook className="text-cyan-500" /> Education
+                                        <FiBook className="text-cyan-500" /> Education & Certs
                                     </h3>
-                                    <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
-                                        <h4 className="font-bold text-white text-xs mb-1">BSc (Hons) Computer Science</h4>
-                                        <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Univ. of Colombo (2018-2022)</div>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-xs mb-1">BSc (Hons) Computer Science</h4>
+                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1.5">Univ. of Kelaniya (2023-2027)</div>
+                                            <p className="text-[9px] text-neutral-500 leading-relaxed">Specialized in Artificial Intelligence.</p>
+                                        </div>
+                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-xs mb-1">Software Engineering Internship</h4>
+                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
+                                        </div>
                                     </div>
                                 </section>
                             </div>
@@ -220,32 +227,23 @@ export default function ResumePage() {
                                     <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
-                                                role: "Senior AI/ML Engineer",
-                                                company: "Tech Nova Systems",
-                                                date: "2023 — Present",
+                                                role: "Full-Stack & AI Solutions Contractor",
+                                                company: "HelpA Global Service",
+                                                date: "2024 — Present",
                                                 points: [
-                                                    "Architected predictive neural networks reducing latency by 45%.",
-                                                    "Led real-time data inference pipeline using Python & TensorFlow.",
-                                                    "Integrated advanced LLMs generating $2M+ in new ARR."
+                                                    "Architected an enterprise RAG knowledge engine using FastAPI, Pinecone, and LangChain.",
+                                                    "Engineered a multi-device low-latency WebRTC live-streaming app with on-device ML.",
+                                                    "Built automated lead booking engine syncing calendar webhooks with real-time Telegram/email alerts."
                                                 ]
                                             },
                                             {
-                                                role: "Full Stack Developer",
-                                                company: "Quantum Web Solutions",
-                                                date: "2021 — 2023",
+                                                role: "Mobile & Full-Stack Developer",
+                                                company: "Freelance / Remote Contractor",
+                                                date: "2023 — 2024",
                                                 points: [
-                                                    "Designed scalable microservices using Node.js and Next.js.",
-                                                    "Pioneered 'Biomimetic UI', standardizing 5 enterprise apps.",
-                                                    "Optimized PostgreSQL queries, improving load times by 60%."
-                                                ]
-                                            },
-                                            {
-                                                role: "Frontend Engineer",
-                                                company: "Freelance",
-                                                date: "2019 — 2021",
-                                                points: [
-                                                    "Developed high-performance apps using React and TailwindCSS.",
-                                                    "Delivered 20+ projects focusing on seamless UX animations."
+                                                    "Developed cross-platform production mobile apps in Flutter with clean state management.",
+                                                    "Built voice-driven automated scheduling PWAs (Next.js, NextAuth, Groq LLM pipelines).",
+                                                    "Designed RESTful backend services, db schemas (SQLAlchemy, PostgreSQL), and event workflows."
                                                 ]
                                             }
                                         ].map((job, index) => (
