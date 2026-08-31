@@ -6,7 +6,7 @@ import { BsFiletypeJson } from 'react-icons/bs';
 import Link from 'next/link';
 import { RESUME_DATA } from '@/data/resume';
 import { useCvVoiceAssistant } from '@/hooks/useCvVoiceAssistant';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import jsPDF from 'jspdf';
 
 export default function ResumePage() {
@@ -39,22 +39,22 @@ export default function ResumePage() {
     const handleDownloadPdf = async () => {
         if (!resumeRef.current) return;
         setIsGeneratingPdf(true);
+        let originalTransform = '';
         try {
             // Temporarily disable the animation properties that might mess up the canvas capture
-            const originalTransform = resumeRef.current.style.transform;
+            originalTransform = resumeRef.current.style.transform;
             resumeRef.current.style.transform = 'none';
 
-            const canvas = await html2canvas(resumeRef.current, {
-                scale: 2, // High resolution
-                useCORS: true,
-                backgroundColor: '#050914', // Match the CV dark background
-                logging: false
+            // html-to-image uses SVG foreignObject which bypasses html2canvas's manual CSS parsing
+            // This prevents the "Attempting to parse an unsupported color function 'oklab'" error caused by Tailwind v4
+            const imgData = await toJpeg(resumeRef.current, {
+                quality: 1.0,
+                pixelRatio: 2,
+                backgroundColor: '#050914',
+                style: {
+                    transform: 'none', // Ensure animations don't clip
+                }
             });
-
-            // Restore styles
-            resumeRef.current.style.transform = originalTransform;
-
-            const imgData = canvas.toDataURL('image/jpeg', 1.0);
             
             // A4 dimensions in mm
             const pdfWidth = 210;
@@ -82,6 +82,9 @@ export default function ResumePage() {
         } catch (error) {
             console.error('Failed to generate PDF', error);
         } finally {
+            if (resumeRef.current) {
+                resumeRef.current.style.transform = originalTransform;
+            }
             setIsGeneratingPdf(false);
         }
     };
