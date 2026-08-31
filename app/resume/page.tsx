@@ -182,7 +182,7 @@ export default function ResumePage() {
                                 FULL-STACK & AI SOLUTIONS DEVELOPER
                             </h2>
                             
-                            <div className="flex flex-wrap gap-3 text-[10px] font-mono text-neutral-400">
+                            <div className="flex flex-wrap gap-4 text-xs font-mono text-neutral-300">
                                 <a href="mailto:hknskariyawasamnaveen@gmail.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
                                     <FiMail /> hknskariyawasamnaveen@gmail.com
                                 </a>
@@ -229,14 +229,14 @@ export default function ResumePage() {
                             <div className="lg:w-[35%] flex flex-col gap-5">
                                 {/* --- SUMMARY --- */}
                                 <section>
-                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiTerminal className="text-cyan-500" /> Summary
                                     </h3>
                                     <motion.p 
                                         initial={{ opacity: 0 }} 
                                         animate={{ opacity: 1 }} 
                                         transition={{ delay: 1.5, duration: 1 }}
-                                        className="text-neutral-400 leading-relaxed text-[11px] text-justify"
+                                        className="text-neutral-300 leading-relaxed text-[13px] text-justify"
                                     >
                                         Agile Full-Stack & AI Solutions Remote Contractor. I bridge the gap between high-velocity product execution and scalable cloud engineering. Leveraging deep hands-on expertise in mobile architecture, modern backend services, and autonomous agent orchestration to ship production-ready systems on tight turnaround sprints.
                                     </motion.p>
@@ -244,7 +244,7 @@ export default function ResumePage() {
 
                                 {/* --- SKILLS MATRIX --- */}
                                 <section>
-                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                         <FiCode className="text-cyan-500" /> Skills
                                     </h3>
                                     
@@ -264,10 +264,10 @@ export default function ResumePage() {
                                             }
                                         ].map((group, index) => (
                                             <div key={index}>
-                                                <h4 className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest mb-1.5">{group.category}</h4>
-                                                <div className="flex flex-wrap gap-1.5">
+                                                <h4 className="text-[11px] font-mono text-neutral-400 uppercase tracking-widest mb-2">{group.category}</h4>
+                                                <div className="flex flex-wrap gap-2">
                                                     {group.skills.map((skill, i) => (
-                                                        <span key={i} className="text-[10px] font-mono text-neutral-300 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded cursor-default">
+                                                        <span key={i} className="text-[11px] font-mono text-neutral-200 bg-white/[0.05] border border-white/10 px-2 py-1 rounded cursor-default">
                                                             {skill}
                                                         </span>
                                                     ))}
@@ -279,18 +279,18 @@ export default function ResumePage() {
 
                                 {/* --- EDUCATION & CERTS --- */}
                                 <section>
-                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                         <FiBook className="text-cyan-500" /> Education & Certs
                                     </h3>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="p-2 rounded-lg border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-[11px] mb-1">BSc (Hons) Computer Science</h4>
-                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1">Univ. of Kelaniya (2023-2027)</div>
-                                            <p className="text-[9px] text-neutral-500 leading-relaxed">Specialized in Artificial Intelligence.</p>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02]">
+                                            <h4 className="font-bold text-white text-[13px] mb-1">BSc (Hons) Computer Science</h4>
+                                            <div className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest mb-1.5">Univ. of Kelaniya (2023-2027)</div>
+                                            <p className="text-[11px] text-neutral-400 leading-relaxed">Specialized in Artificial Intelligence.</p>
                                         </div>
-                                        <div className="p-2 rounded-lg border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-[11px] mb-1">Software Engineering Internship</h4>
-                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
+                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02]">
+                                            <h4 className="font-bold text-white text-[13px] mb-1">Software Engineering Internship</h4>
+                                            <div className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
                                         </div>
                                     </div>
                                 </section>
@@ -299,7 +299,7 @@ export default function ResumePage() {
                             {/* RIGHT COLUMN: Experience */}
                             <div className="lg:w-[65%]">
                                 <section>
-                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                                         <FiBriefcase className="text-cyan-500" /> Experience
                                     </h3>
                                     
@@ -353,20 +353,20 @@ export default function ResumePage() {
                                                 onMouseLeave={() => setHoveredExp(null)}
                                             >
                                                 {/* Node */}
-                                                <div className="mt-1 flex items-center justify-center w-4 h-4 rounded-full border border-black bg-cyan-500 shadow-[0_0_10px_rgba(0,255,255,0.6)] shrink-0 z-10" />
+                                                <div className="mt-1.5 flex items-center justify-center w-5 h-5 rounded-full border-[1.5px] border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.8)] shrink-0 z-10" />
                                                 
                                                 {/* Content */}
-                                                <div className="flex-1 p-2.5 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <h4 className="font-bold text-white text-[13px]">{job.role}</h4>
-                                                        <span className="text-[8px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-1 py-0.5 rounded-sm bg-cyan-500/10">
+                                                <div className="flex-1 p-3 rounded-xl border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.03] transition-colors -mt-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2">
+                                                        <h4 className="font-bold text-white text-[15px]">{job.role}</h4>
+                                                        <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase border border-cyan-500/30 px-2 py-1 rounded bg-cyan-500/10">
                                                             {job.date}
                                                         </span>
                                                     </div>
-                                                    <div className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mb-1.5">{job.company}</div>
-                                                    <ul className="space-y-1">
+                                                    <div className="text-[11px] font-mono text-neutral-300 uppercase tracking-widest mb-3">{job.company}</div>
+                                                    <ul className="space-y-2">
                                                         {job.points.map((point, i) => (
-                                                            <li key={i} className="text-[11px] text-neutral-400 leading-relaxed pl-3 relative before:absolute before:left-0 before:top-1.5 before:w-1 before:h-1 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
+                                                            <li key={i} className="text-[13px] text-neutral-300 leading-relaxed pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-white/30 before:rounded-full group-hover:before:bg-cyan-500/80">
                                                                 {point}
                                                             </li>
                                                         ))}
@@ -378,23 +378,23 @@ export default function ResumePage() {
                                 </section>
 
                                 {/* --- NOTABLE PROJECTS --- */}
-                                <section className="mt-8">
-                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <section className="mt-10">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                                         <FiLayers className="text-cyan-500" /> Notable Projects
                                     </h3>
-                                    <div className="grid grid-cols-1 gap-3">
+                                    <div className="grid grid-cols-1 gap-4">
                                         {PROJECTS_DATA.slice(0, 3).map((project, i) => (
-                                            <div key={i} className="p-3 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h4 className="font-bold text-white text-[12px]">{project.title}</h4>
-                                                    <span className="text-[8px] font-mono text-cyan-500 tracking-widest uppercase">{project.role}</span>
+                                            <div key={i} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                                                <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-2 gap-2">
+                                                    <h4 className="font-bold text-white text-[14px]">{project.title}</h4>
+                                                    <span className="text-[9px] font-mono font-bold text-cyan-400 tracking-widest uppercase">{project.role}</span>
                                                 </div>
-                                                <p className="text-[10px] text-neutral-400 leading-relaxed mb-2 line-clamp-2">
+                                                <p className="text-[12px] text-neutral-300 leading-relaxed mb-4 line-clamp-2">
                                                     {project.tagline}
                                                 </p>
-                                                <div className="flex flex-wrap gap-1.5">
+                                                <div className="flex flex-wrap gap-2">
                                                     {project.tech.slice(0, 5).map((tech, j) => (
-                                                        <span key={j} className="text-[8px] font-mono text-neutral-500 bg-black/50 border border-white/5 px-1.5 py-0.5 rounded">
+                                                        <span key={j} className="text-[10px] font-mono text-neutral-200 bg-black/50 border border-white/10 px-2 py-1 rounded">
                                                             {tech}
                                                         </span>
                                                     ))}
