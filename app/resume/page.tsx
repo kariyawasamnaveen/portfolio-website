@@ -37,27 +37,7 @@ export default function ResumePage() {
         downloadAnchorNode.remove();
     };
 
-    const TypewriterText = ({ text, delay = 0 }: { text: string, delay?: number }) => {
-        return (
-            <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay }}
-                className="inline-block"
-            >
-                {text.split('').map((char, i) => (
-                    <motion.span
-                        key={i}
-                        initial={{ opacity: 0, filter: 'blur(10px)' }}
-                        animate={{ opacity: 1, filter: 'blur(0px)' }}
-                        transition={{ delay: delay + i * 0.02, duration: 0.1 }}
-                    >
-                        {char}
-                    </motion.span>
-                ))}
-            </motion.span>
-        );
-    };
+
 
     // Glitch animation for the main document
     const documentVariants = {
@@ -122,11 +102,11 @@ export default function ResumePage() {
                             <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
                             
-                            <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1 font-mono">
-                                <TypewriterText text="NAVEEN KARIYAWASAM" delay={0.2} />
+                            <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1 font-mono hover:opacity-50 transition-opacity cursor-default">
+                                NAVEEN KARIYAWASAM
                             </h1>
-                            <h2 className="text-xs md:text-sm text-cyan-400 font-mono tracking-widest uppercase mb-4">
-                                <TypewriterText text="FULL-STACK & AI SOLUTIONS DEVELOPER" delay={0.8} />
+                            <h2 className="text-xs md:text-sm text-cyan-400 font-mono tracking-widest uppercase mb-4 hover:opacity-50 transition-opacity cursor-default">
+                                FULL-STACK & AI SOLUTIONS DEVELOPER
                             </h2>
                             
                             <div className="flex flex-wrap gap-3 text-[10px] font-mono text-neutral-400">
