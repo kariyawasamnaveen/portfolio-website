@@ -1,17 +1,21 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode } from 'react-icons/fi';
 import { BsFiletypeJson } from 'react-icons/bs';
 import Link from 'next/link';
 import { RESUME_DATA } from '@/data/resume';
 import { useCvVoiceAssistant } from '@/hooks/useCvVoiceAssistant';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function ResumePage() {
     const { isActive, setIsActive, isListening, isSpeaking } = useCvVoiceAssistant();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const [isLoaded, setIsLoaded] = useState(false);
     const [hoveredExp, setHoveredExp] = useState<number | null>(null);
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const resumeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setIsLoaded(true);
@@ -30,6 +34,56 @@ export default function ResumePage() {
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
+    };
+
+    const handleDownloadPdf = async () => {
+        if (!resumeRef.current) return;
+        setIsGeneratingPdf(true);
+        try {
+            // Temporarily disable the animation properties that might mess up the canvas capture
+            const originalTransform = resumeRef.current.style.transform;
+            resumeRef.current.style.transform = 'none';
+
+            const canvas = await html2canvas(resumeRef.current, {
+                scale: 2, // High resolution
+                useCORS: true,
+                backgroundColor: '#050914', // Match the CV dark background
+                logging: false
+            });
+
+            // Restore styles
+            resumeRef.current.style.transform = originalTransform;
+
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            
+            // A4 dimensions in mm
+            const pdfWidth = 210;
+            const pdfHeight = 297;
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            
+            // Calculate image dimensions to fit A4 width
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+            
+            // If the CV is taller than one A4 page, add new pages
+            let heightLeft = imgHeight - pdfHeight;
+            let position = 0;
+            
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+            
+            pdf.save('Naveen_Kariyawasam_Resume.pdf');
+        } catch (error) {
+            console.error('Failed to generate PDF', error);
+        } finally {
+            setIsGeneratingPdf(false);
+        }
     };
 
 
@@ -64,13 +118,14 @@ export default function ResumePage() {
 
             {/* Sticky Actions Bar */}
             <div className="fixed top-6 right-6 md:top-8 md:right-12 z-50 flex gap-4">
-                <a 
-                    href="/resume.pdf" 
-                    download
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-[10px] uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(0,255,255,0.5)] transition-all"
+                <button 
+                    onClick={handleDownloadPdf}
+                    disabled={isGeneratingPdf}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-[10px] uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:shadow-[0_0_20px_rgba(0,255,255,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    <FiDownload size={14} /> PDF
-                </a>
+                    {isGeneratingPdf ? <div className="w-3 h-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" /> : <FiDownload size={14} />}
+                    {isGeneratingPdf ? 'GENERATING...' : 'PDF'}
+                </button>
                 <button 
                     onClick={handleDownloadJson}
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold text-[10px] uppercase tracking-widest hover:bg-blue-500 hover:text-white hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all"
@@ -83,10 +138,11 @@ export default function ResumePage() {
             <AnimatePresence>
                 {isLoaded && (
                     <motion.div
+                        ref={resumeRef}
                         variants={documentVariants}
                         initial="hidden"
                         animate="visible"
-                        className="relative z-10 max-w-[1000px] w-full bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-5 md:p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
+                        className="relative z-10 max-w-[1000px] w-full bg-[#050914] border border-white/5 rounded-sm p-5 md:p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
                     >
                         {/* Scanning Line Animation */}
                         <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
