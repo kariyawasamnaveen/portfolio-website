@@ -72,7 +72,7 @@ export default function ResumePage() {
     };
 
     return (
-        <div className="h-screen bg-[#020305] text-neutral-300 font-sans selection:bg-cyan-500/30 overflow-y-auto overflow-x-hidden relative flex flex-col items-center justify-center p-4 md:p-8">
+        <div className="h-screen bg-[#020305] text-neutral-300 font-sans selection:bg-cyan-500/30 overflow-y-auto overflow-x-hidden relative flex items-center justify-center p-2 md:p-4">
             
             {/* Ambient Lighting Background */}
             <div className="fixed inset-0 z-0 pointer-events-none">
@@ -111,25 +111,25 @@ export default function ResumePage() {
                         variants={documentVariants}
                         initial="hidden"
                         animate="visible"
-                        className="relative z-10 max-w-[900px] w-full bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-6 md:p-10 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] my-auto"
+                        className="relative z-10 max-w-[1000px] w-full bg-[#050914]/80 backdrop-blur-2xl border border-white/5 rounded-sm p-5 md:p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
                     >
                         {/* Scanning Line Animation */}
                         <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
                         {/* --- HEADER --- */}
-                        <header className="border-b border-white/10 pb-8 mb-10 relative">
+                        <header className="border-b border-white/10 pb-4 mb-6 relative">
                             {/* Decorative corner brackets */}
                             <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
                             
-                            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 font-mono">
+                            <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1 font-mono">
                                 <TypewriterText text="NAVEEN KARIYAWASAM" delay={0.2} />
                             </h1>
-                            <h2 className="text-lg md:text-xl text-cyan-400 font-mono tracking-widest uppercase mb-6">
+                            <h2 className="text-xs md:text-sm text-cyan-400 font-mono tracking-widest uppercase mb-4">
                                 <TypewriterText text="FULL-STACK & AI SOLUTIONS DEVELOPER" delay={0.8} />
                             </h2>
                             
-                            <div className="flex flex-wrap gap-4 text-xs font-mono text-neutral-400">
+                            <div className="flex flex-wrap gap-3 text-[10px] font-mono text-neutral-400">
                                 <a href="mailto:contact@example.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
                                     <FiMail /> contact@example.com
                                 </a>
@@ -146,26 +146,28 @@ export default function ResumePage() {
                         </header>
 
                         {/* 2-COLUMN LAYOUT FOR SINGLE-SCREEN FIT */}
-                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
                             
                             {/* LEFT COLUMN: Summary, Skills, Edu */}
-                            <div className="lg:w-[40%] flex flex-col gap-8">
+                            <div className="lg:w-[35%] flex flex-col gap-5">
                                 {/* --- SUMMARY --- */}
                                 <section>
-                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
                                         <FiTerminal className="text-cyan-500" /> Summary
                                     </h3>
-                                    <p className="text-neutral-400 leading-relaxed text-xs text-justify">
-                                        <TypewriterText 
-                                            text="Agile Full-Stack & AI Solutions Remote Contractor. I bridge the gap between high-velocity product execution and scalable cloud engineering. Leveraging deep hands-on expertise in mobile architecture, modern backend services, and autonomous agent orchestration to ship production-ready systems on tight turnaround sprints." 
-                                            delay={1.5} 
-                                        />
-                                    </p>
+                                    <motion.p 
+                                        initial={{ opacity: 0 }} 
+                                        animate={{ opacity: 1 }} 
+                                        transition={{ delay: 1.5, duration: 1 }}
+                                        className="text-neutral-400 leading-relaxed text-[11px] text-justify"
+                                    >
+                                        Agile Full-Stack & AI Solutions Remote Contractor. I bridge the gap between high-velocity product execution and scalable cloud engineering. Leveraging deep hands-on expertise in mobile architecture, modern backend services, and autonomous agent orchestration to ship production-ready systems on tight turnaround sprints.
+                                    </motion.p>
                                 </section>
 
                                 {/* --- SKILLS MATRIX --- */}
                                 <section>
-                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiCode className="text-cyan-500" /> Skills
                                     </h3>
                                     
@@ -200,17 +202,17 @@ export default function ResumePage() {
 
                                 {/* --- EDUCATION & CERTS --- */}
                                 <section>
-                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
                                         <FiBook className="text-cyan-500" /> Education & Certs
                                     </h3>
-                                    <div className="flex flex-col gap-3">
-                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-xs mb-1">BSc (Hons) Computer Science</h4>
-                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1.5">Univ. of Kelaniya (2023-2027)</div>
+                                    <div className="flex flex-col gap-2">
+                                        <div className="p-2 rounded-lg border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-[11px] mb-1">BSc (Hons) Computer Science</h4>
+                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1">Univ. of Kelaniya (2023-2027)</div>
                                             <p className="text-[9px] text-neutral-500 leading-relaxed">Specialized in Artificial Intelligence.</p>
                                         </div>
-                                        <div className="p-3 rounded-lg border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-xs mb-1">Software Engineering Internship</h4>
+                                        <div className="p-2 rounded-lg border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-[11px] mb-1">Software Engineering Internship</h4>
                                             <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
                                         </div>
                                     </div>
@@ -218,13 +220,13 @@ export default function ResumePage() {
                             </div>
 
                             {/* RIGHT COLUMN: Experience */}
-                            <div className="lg:w-[60%]">
+                            <div className="lg:w-[65%]">
                                 <section>
-                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                         <FiBriefcase className="text-cyan-500" /> Experience
                                     </h3>
                                     
-                                    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
+                                    <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
                                                 role: "Full-Stack & AI Solutions Contractor",
@@ -257,17 +259,17 @@ export default function ResumePage() {
                                                 <div className="mt-1 flex items-center justify-center w-4 h-4 rounded-full border border-black bg-cyan-500 shadow-[0_0_10px_rgba(0,255,255,0.6)] shrink-0 z-10" />
                                                 
                                                 {/* Content */}
-                                                <div className="flex-1 p-3 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <h4 className="font-bold text-white text-sm">{job.role}</h4>
-                                                        <span className="text-[9px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-1.5 py-0.5 rounded-sm bg-cyan-500/10">
+                                                <div className="flex-1 p-2.5 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
+                                                    <div className="flex items-center justify-between mb-0.5">
+                                                        <h4 className="font-bold text-white text-[13px]">{job.role}</h4>
+                                                        <span className="text-[8px] font-mono text-cyan-500 tracking-widest uppercase border border-cyan-500/30 px-1 py-0.5 rounded-sm bg-cyan-500/10">
                                                             {job.date}
                                                         </span>
                                                     </div>
-                                                    <div className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest mb-2">{job.company}</div>
-                                                    <ul className="space-y-1.5">
+                                                    <div className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mb-1.5">{job.company}</div>
+                                                    <ul className="space-y-1">
                                                         {job.points.map((point, i) => (
-                                                            <li key={i} className="text-xs text-neutral-400 leading-relaxed pl-3 relative before:absolute before:left-0 before:top-1.5 before:w-1 before:h-1 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
+                                                            <li key={i} className="text-[11px] text-neutral-400 leading-relaxed pl-3 relative before:absolute before:left-0 before:top-1.5 before:w-1 before:h-1 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
                                                                 {point}
                                                             </li>
                                                         ))}
