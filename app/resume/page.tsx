@@ -24,10 +24,10 @@ export default function ResumePage() {
             title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
             skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
-                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2024-Present" },
-                { role: "Full Stack AI Engineer", company: "BizLangAI", year: "2024" },
+                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro", year: "2024-Present" },
                 { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live", year: "2023-2024" },
-                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro", year: "2023" }
+                { role: "Full Stack AI Engineer", company: "BizLangAI (Internship)", year: "2023" },
+                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2022-2023" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -211,23 +211,13 @@ export default function ResumePage() {
                                     <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
-                                                role: "Lead Full Stack Engineer",
-                                                company: "EstateCore (AI Vision)",
+                                                role: "Full Stack Mobile Developer",
+                                                company: "Fitness Tracker Pro (Play Store)",
                                                 date: "2024 — Present",
                                                 points: [
-                                                    "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
-                                                    "Built an event-driven Node.js backend to process multi-lingual (EN, HI, BN) conversations.",
-                                                    "Integrated Prisma ORM for automated entity extraction and relational lead management."
-                                                ]
-                                            },
-                                            {
-                                                role: "Full Stack AI Engineer",
-                                                company: "BizLangAI",
-                                                date: "2024",
-                                                points: [
-                                                    "Built a FastAPI backend using Pinecone and LangChain for enterprise PDF knowledge retrieval.",
-                                                    "Implemented autonomous Python code execution via LangChain Tool Calling for CSV chart generation.",
-                                                    "Developed a secure, responsive glassmorphism React frontend for corporate dashboards."
+                                                    "Published a cross-platform health aggregation app directly on the Google Play Store.",
+                                                    "Integrated Apple Health and Google Fit APIs to fetch real-time step counts and metrics.",
+                                                    "Implemented Firebase Auth and Cloud Firestore for seamless cloud syncing and local caching."
                                                 ]
                                             },
                                             {
@@ -241,13 +231,23 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
-                                                role: "Full Stack Mobile Developer",
-                                                company: "Fitness Tracker Pro (Play Store)",
+                                                role: "Full Stack AI Engineer",
+                                                company: "BizLangAI (Internship)",
                                                 date: "2023",
                                                 points: [
-                                                    "Published a cross-platform health aggregation app directly on the Google Play Store.",
-                                                    "Integrated Apple Health and Google Fit APIs to fetch real-time step counts and metrics.",
-                                                    "Implemented Firebase Auth and Cloud Firestore for seamless cloud syncing and local caching."
+                                                    "Built a FastAPI backend using Pinecone and LangChain for enterprise PDF knowledge retrieval.",
+                                                    "Implemented autonomous Python code execution via LangChain Tool Calling for CSV chart generation.",
+                                                    "Developed a secure, responsive glassmorphism React frontend for corporate dashboards."
+                                                ]
+                                            },
+                                            {
+                                                role: "Lead Full Stack Engineer",
+                                                company: "EstateCore (AI Vision)",
+                                                date: "2022 — 2023",
+                                                points: [
+                                                    "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
+                                                    "Built an event-driven Node.js backend to process multi-lingual (EN, HI, BN) conversations.",
+                                                    "Integrated Prisma ORM for automated entity extraction and relational lead management."
                                                 ]
                                             }
                                         ].map((job, index) => (
