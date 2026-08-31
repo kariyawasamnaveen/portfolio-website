@@ -137,7 +137,7 @@ export function useCvVoiceAssistant() {
             if (!hasGreetedRef.current) {
                 hasGreetedRef.current = true;
                 setTimeout(() => {
-                    speakResponse("Hi! I'm Naveen's AI. I'm looking at his CV right now. What would you like to know?");
+                    speakResponse("Hello, and welcome to Naveen's CV. I'm his personal AI representative. Naveen specializes in high-velocity Full-Stack and AI engineering. Would you like me to walk you through his recent freelance projects, or dive into his specific tech stack?");
                 }, 200);
             }
         } else {
