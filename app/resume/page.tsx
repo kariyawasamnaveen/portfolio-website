@@ -16,7 +16,38 @@ export default function ResumePage() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hoveredExp, setHoveredExp] = useState<number | null>(null);
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [scale, setScale] = useState(1);
     const resumeRef = useRef<HTMLDivElement>(null);
+    
+    // Calculate the dynamic scale to fit the 1123px tall A4 canvas inside the viewport
+    useEffect(() => {
+        const calculateScale = () => {
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const padding = 64; // 32px top and bottom padding
+            
+            // A4 pixel dimensions
+            const a4Height = 1123;
+            const a4Width = 794;
+            
+            // Calculate scale based on height first (most common constraint for a CV)
+            let newScale = (viewportHeight - padding) / a4Height;
+            
+            // If the calculated scale makes it wider than the screen, constrain by width instead
+            if (a4Width * newScale > viewportWidth - padding) {
+                newScale = (viewportWidth - padding) / a4Width;
+            }
+            
+            // Don't scale up past 1x unless on very large screens (optional, but looks better)
+            if (newScale > 1.2) newScale = 1.2;
+            
+            setScale(newScale);
+        };
+        
+        calculateScale();
+        window.addEventListener('resize', calculateScale);
+        return () => window.removeEventListener('resize', calculateScale);
+    }, []);
 
     useEffect(() => {
         setIsLoaded(true);
@@ -53,7 +84,8 @@ export default function ResumePage() {
                 pixelRatio: 2,
                 backgroundColor: '#050914',
                 style: {
-                    transform: 'none', // Ensure animations don't clip
+                    transform: 'scale(1)', // FORCE unscaled render for crisp high-res PDF
+                    transformOrigin: 'top left'
                 },
                 filter: (node) => {
                     // Exclude interactive buttons and scanner lines from the static PDF
@@ -159,13 +191,21 @@ export default function ResumePage() {
             {/* The Holographic Document (A4 Proportion) */}
             <AnimatePresence>
                 {isLoaded && (
-                    <motion.div
-                        ref={resumeRef}
-                        variants={documentVariants}
-                        initial="hidden"
-                        animate="visible"
-                        className="relative z-10 w-full max-w-[800px] max-h-[90vh] aspect-[1/1.414] bg-[#050914] border border-white/5 rounded-sm p-4 md:p-6 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] overflow-hidden flex flex-col"
+                    <div 
+                        className="relative z-10 flex items-center justify-center"
+                        style={{ 
+                            transform: `scale(${scale})`, 
+                            transformOrigin: 'center center',
+                            transition: 'transform 0.3s ease-out'
+                        }}
                     >
+                        <motion.div
+                            ref={resumeRef}
+                            variants={documentVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] overflow-hidden flex flex-col relative"
+                        >
                         {/* Scanning Line Animation (hidden in PDF) */}
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
@@ -411,6 +451,7 @@ export default function ResumePage() {
                         <div className="absolute -bottom-4 -right-4 w-4 h-4 border-b border-r border-cyan-500/50" />
                         
                     </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
             <style jsx global>{`
