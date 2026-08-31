@@ -57,8 +57,8 @@ export function useCvVoiceAssistant() {
             utterance.voice = preferredVoice;
         }
         
-        utterance.rate = 1.1; 
-        utterance.pitch = 0.8; 
+        utterance.rate = 0.95; // Slower, more deliberate pacing
+        utterance.pitch = 0.9; // Slightly deeper for professionalism
         utterance.volume = 1.0; 
         
         utterance.onend = () => {
