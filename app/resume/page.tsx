@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode } from 'react-icons/fi';
 import { BsFiletypeJson } from 'react-icons/bs';
+import Link from 'next/link';
 
 export default function ResumePage() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -124,6 +125,14 @@ export default function ResumePage() {
                                 <a href="https://linkedin.com/in/naveen-kariyawasam" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
                                     <FiLinkedin /> linkedin.com/in/naveen-kariyawasam
                                 </a>
+                            </div>
+
+                            {/* AI Agent CTA */}
+                            <div className="absolute top-0 right-0 mt-0 mr-0 hidden md:block">
+                                <Link href="/" className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-white transition-all duration-200 bg-cyan-500/10 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                                    <span className="mr-2 text-lg">🤖</span>
+                                    <span className="tracking-widest uppercase text-[10px]">Interview My AI</span>
+                                </Link>
                             </div>
                         </header>
 
