@@ -204,7 +204,7 @@ export default function ResumePage() {
                             variants={documentVariants}
                             initial="hidden"
                             animate="visible"
-                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] overflow-hidden flex flex-col relative"
+                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
                         >
                         {/* Scanning Line Animation (hidden in PDF) */}
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />

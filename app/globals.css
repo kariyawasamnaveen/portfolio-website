@@ -152,7 +152,7 @@ body {
 
 .hover-magnify:hover, .active-highlight {
   transform: scale(1.15);
-  z-index: 50;
+  z-index: 100;
   position: relative;
   background-color: #050914;
   box-shadow: 0 0 40px rgba(0, 255, 255, 0.15), inset 0 0 0 1px rgba(0, 255, 255, 0.3);
