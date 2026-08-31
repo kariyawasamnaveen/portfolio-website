@@ -120,7 +120,10 @@ export default function ResumePage() {
                             {/* AI Agent CTA */}
                             <div className="absolute top-0 right-0 mt-0 mr-0 hidden md:block">
                                 <Link href="/?source=cv" className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-white transition-all duration-200 bg-cyan-500/10 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-                                    <span className="mr-2 text-lg">🤖</span>
+                                    <div className="mr-3 relative w-3.5 h-3.5 rounded-full bg-red-600 shadow-[0_0_15px_3px_rgba(220,38,38,0.7)]" style={{ background: 'radial-gradient(circle at 30% 30%, #ef4444, #991b1b, #450a0a)' }}>
+                                        <div className="absolute top-[15%] left-[20%] w-[50%] h-[35%] rounded-full bg-white/40 blur-[1px] -rotate-12" />
+                                        <div className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-60 duration-1000" />
+                                    </div>
                                     <span className="tracking-widest uppercase text-[10px]">Interview My AI</span>
                                 </Link>
                             </div>
