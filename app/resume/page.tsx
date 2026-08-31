@@ -44,15 +44,22 @@ export default function ResumePage() {
             // Temporarily disable the animation properties that might mess up the canvas capture
             originalTransform = resumeRef.current.style.transform;
             resumeRef.current.style.transform = 'none';
+            resumeRef.current.classList.add('pdf-capture-mode');
 
             // html-to-image uses SVG foreignObject which bypasses html2canvas's manual CSS parsing
-            // This prevents the "Attempting to parse an unsupported color function 'oklab'" error caused by Tailwind v4
             const imgData = await toJpeg(resumeRef.current, {
                 quality: 1.0,
                 pixelRatio: 2,
                 backgroundColor: '#050914',
                 style: {
                     transform: 'none', // Ensure animations don't clip
+                },
+                filter: (node) => {
+                    // Exclude interactive buttons and scanner lines from the static PDF
+                    if (node.classList && node.classList.contains('exclude-from-pdf')) {
+                        return false;
+                    }
+                    return true;
                 }
             });
             
@@ -61,21 +68,33 @@ export default function ResumePage() {
             const pdfHeight = 297;
             const pdf = new jsPDF('p', 'mm', 'a4');
             
-            // Calculate image dimensions to fit A4 width
+            // Calculate image dimensions to fit A4 width while maintaining aspect ratio
             const imgProps = pdf.getImageProperties(imgData);
             const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
             
-            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeight);
+            // Fill background with dark theme color to prevent white gaps
+            pdf.setFillColor('#050914');
+            pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+            
+            // Center the CV vertically if it's shorter than A4
+            let yOffset = 0;
+            if (imgHeight < pdfHeight) {
+                yOffset = (pdfHeight - imgHeight) / 2;
+            }
+            
+            pdf.addImage(imgData, 'JPEG', 0, yOffset, pdfWidth, imgHeight);
             
             // If the CV is taller than one A4 page, add new pages
             let heightLeft = imgHeight - pdfHeight;
-            let position = 0;
+            let position = yOffset - pdfHeight;
             
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
+            while (heightLeft > 0) {
                 pdf.addPage();
+                pdf.setFillColor('#050914');
+                pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
                 pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
                 heightLeft -= pdfHeight;
+                position -= pdfHeight;
             }
             
             pdf.save('Naveen_Kariyawasam_Resume.pdf');
@@ -84,6 +103,7 @@ export default function ResumePage() {
         } finally {
             if (resumeRef.current) {
                 resumeRef.current.style.transform = originalTransform;
+                resumeRef.current.classList.remove('pdf-capture-mode');
             }
             setIsGeneratingPdf(false);
         }
@@ -147,8 +167,8 @@ export default function ResumePage() {
                         animate="visible"
                         className="relative z-10 max-w-[1000px] w-full bg-[#050914] border border-white/5 rounded-sm p-5 md:p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)]"
                     >
-                        {/* Scanning Line Animation */}
-                        <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
+                        {/* Scanning Line Animation (hidden in PDF) */}
+                        <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
                         {/* --- HEADER --- */}
                         <header className="border-b border-white/10 pb-4 mb-6 relative">
@@ -178,8 +198,8 @@ export default function ResumePage() {
                                 </a>
                             </div>
 
-                            {/* AI Agent CTA */}
-                            <div className="absolute top-0 right-0 mt-0 mr-0 hidden md:block">
+                            {/* AI Agent CTA (hidden in PDF) */}
+                            <div className="exclude-from-pdf absolute top-0 right-0 mt-0 mr-0 hidden md:block">
                                 <button 
                                     onClick={() => setIsActive(!isActive)}
                                     className={`group relative inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-white transition-all duration-200 border rounded-lg hover:shadow-[0_0_15px_rgba(34,211,238,0.3)] 
