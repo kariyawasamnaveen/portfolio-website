@@ -211,7 +211,7 @@ export default function ResumePage() {
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
                         {/* --- HEADER --- */}
-                        <header className="border-b border-white/10 pb-4 mb-6 relative">
+                        <header className="border-b border-white/10 pb-4 mb-5 relative">
                             {/* Decorative corner brackets */}
                             <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
@@ -267,7 +267,7 @@ export default function ResumePage() {
                         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 flex-1">
                             
                             {/* LEFT COLUMN: Summary, Skills, Edu */}
-                            <div className="lg:w-[35%] flex flex-col gap-6">
+                            <div className="lg:w-[35%] flex flex-col gap-5">
                                 {/* --- SUMMARY --- */}
                                 <section className={`hover-magnify-left p-2 -m-2 rounded ${activeHighlight === 'summary' ? 'active-highlight' : ''}`}>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
@@ -344,7 +344,7 @@ export default function ResumePage() {
                                         <FiBriefcase className="text-cyan-500" /> Experience
                                     </h3>
                                     
-                                    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
+                                    <div className="space-y-5 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
                                                 id: "fitness-tracker",
