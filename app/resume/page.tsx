@@ -77,10 +77,8 @@ export default function ResumePage() {
             pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
             
             // Center the CV vertically if it's shorter than A4
-            let yOffset = 0;
-            if (imgHeight < pdfHeight) {
-                yOffset = (pdfHeight - imgHeight) / 2;
-            }
+            // Wait, for a professional CV, it should ALWAYS start at the top, not the middle.
+            const yOffset = 0; // Set to 0 so it aligns to the top edge perfectly.
             
             pdf.addImage(imgData, 'JPEG', 0, yOffset, pdfWidth, imgHeight);
             
