@@ -201,29 +201,26 @@ export default function ResumePage() {
                     >
                         <motion.div
                             ref={resumeRef}
-                            variants={documentVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-6 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
+                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
                         >
                         {/* Scanning Line Animation (hidden in PDF) */}
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
 
                         {/* --- HEADER --- */}
-                        <header className="border-b border-white/10 pb-3 mb-4 relative">
+                        <header className="border-b border-white/10 pb-4 mb-6 relative">
                             {/* Decorative corner brackets */}
                             <div className="absolute -top-4 -left-4 w-4 h-4 border-t border-l border-cyan-500/50" />
                             <div className="absolute -top-4 -right-4 w-4 h-4 border-t border-r border-cyan-500/50" />
                             
-                            <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-1 font-mono hover:opacity-50 transition-opacity cursor-default">
+                            <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-1 font-mono hover:opacity-50 transition-opacity cursor-default">
                                 NAVEEN KARIYAWASAM
                             </h1>
-                            <h2 className="text-[10px] md:text-xs text-cyan-400 font-mono tracking-widest uppercase mb-3 hover:opacity-50 transition-opacity cursor-default">
+                            <h2 className="text-xs md:text-sm text-cyan-400 font-mono tracking-widest uppercase mb-4 hover:opacity-50 transition-opacity cursor-default">
                                 FULL-STACK & AI SOLUTIONS DEVELOPER
                             </h2>
                             
-                            <div className="flex flex-wrap gap-2 text-[9px] font-mono text-neutral-400">
-                                <a href="mailto:hknskariyawasamnaveen@gmail.com" className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors">
+                            <div className="flex flex-wrap gap-4 text-xs font-mono text-neutral-300">
+                                <a href="mailto:hknskariyawasamnaveen@gmail.com" className="flex items-center gap-2 hover:text-cyan-400 transition-colors">
                                     <FiMail /> hknskariyawasamnaveen@gmail.com
                                 </a>
                                 <span className="flex items-center gap-2">
@@ -263,20 +260,20 @@ export default function ResumePage() {
                         </header>
 
                         {/* 2-COLUMN LAYOUT FOR SINGLE-SCREEN FIT */}
-                        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 flex-1 overflow-hidden">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 flex-1 overflow-hidden">
                             
                             {/* LEFT COLUMN: Summary, Skills, Edu */}
-                            <div className="lg:w-[35%] flex flex-col gap-3">
+                            <div className="lg:w-[35%] flex flex-col gap-6">
                                 {/* --- SUMMARY --- */}
                                 <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'summary' ? 'active-highlight' : ''}`}>
-                                    <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiTerminal className="text-cyan-500" /> Summary
                                     </h3>
                                     <motion.p 
                                         initial={{ opacity: 0 }} 
                                         animate={{ opacity: 1 }} 
                                         transition={{ delay: 1.5, duration: 1 }}
-                                        className="text-neutral-400 leading-relaxed text-[10px] text-justify"
+                                        className="text-neutral-300 leading-relaxed text-[12px] text-justify"
                                     >
                                         Agile Full-Stack & AI Solutions Remote Contractor. I bridge the gap between high-velocity product execution and scalable cloud engineering. Leveraging deep hands-on expertise in mobile architecture, modern backend services, and autonomous agent orchestration to ship production-ready systems on tight turnaround sprints.
                                     </motion.p>
@@ -284,7 +281,7 @@ export default function ResumePage() {
 
                                 {/* --- SKILLS MATRIX --- */}
                                 <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'skills' ? 'active-highlight' : ''}`}>
-                                    <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiCode className="text-cyan-500" /> Skills
                                     </h3>
                                     
@@ -304,10 +301,10 @@ export default function ResumePage() {
                                             }
                                         ].map((group, index) => (
                                             <div key={index}>
-                                                <h4 className="text-[9px] font-mono text-neutral-500 uppercase tracking-widest mb-1">{group.category}</h4>
-                                                <div className="flex flex-wrap gap-1">
+                                                <h4 className="text-[11px] font-mono text-neutral-400 uppercase tracking-widest mb-1.5">{group.category}</h4>
+                                                <div className="flex flex-wrap gap-1.5">
                                                     {group.skills.map((skill, i) => (
-                                                        <span key={i} className="text-[9px] font-mono text-neutral-300 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded cursor-default">
+                                                        <span key={i} className="text-[10px] font-mono text-neutral-200 bg-white/5 border border-white/10 px-2 py-1 rounded cursor-default">
                                                             {skill}
                                                         </span>
                                                     ))}
@@ -319,18 +316,18 @@ export default function ResumePage() {
 
                                 {/* --- EDUCATION & CERTS --- */}
                                 <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'education' ? 'active-highlight' : ''}`}>
-                                    <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiBook className="text-cyan-500" /> Education & Certs
                                     </h3>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="p-2 rounded-md border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-[10px] mb-1">BSc (Hons) Computer Science</h4>
-                                            <div className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest mb-1">Univ. of Kelaniya (2023-2027)</div>
-                                            <p className="text-[9px] text-neutral-500 leading-relaxed">Specialized in Artificial Intelligence.</p>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="p-3 rounded-md border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-[12px] mb-1">BSc (Hons) Computer Science</h4>
+                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-1">Univ. of Kelaniya (2023-2027)</div>
+                                            <p className="text-[11px] text-neutral-400 leading-relaxed">Specialized in Artificial Intelligence.</p>
                                         </div>
-                                        <div className="p-2 rounded-md border border-white/5 bg-white/[0.01]">
-                                            <h4 className="font-bold text-white text-[10px] mb-1">Software Engineering Internship</h4>
-                                            <div className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
+                                        <div className="p-3 rounded-md border border-white/5 bg-white/[0.01]">
+                                            <h4 className="font-bold text-white text-[12px] mb-1">Software Engineering Internship</h4>
+                                            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest">Trace Expert City (T2T)</div>
                                         </div>
                                     </div>
                                 </section>
@@ -339,11 +336,11 @@ export default function ResumePage() {
                             {/* RIGHT COLUMN: Experience */}
                             <div className="lg:w-[65%] flex flex-col">
                                 <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'experience' ? 'active-highlight' : ''}`}>
-                                    <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
                                         <FiBriefcase className="text-cyan-500" /> Experience
                                     </h3>
                                     
-                                    <div className="space-y-3 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
+                                    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
                                                 role: "Full Stack Mobile Developer",
@@ -393,51 +390,24 @@ export default function ResumePage() {
                                                 onMouseLeave={() => setHoveredExp(null)}
                                             >
                                                 {/* Node */}
-                                                <div className="mt-1 flex items-center justify-center w-4 h-4 rounded-full border border-black bg-cyan-500 shadow-[0_0_10px_rgba(0,255,255,0.6)] shrink-0 z-10" />
+                                                <div className="mt-1.5 flex items-center justify-center w-5 h-5 rounded-full border border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.6)] shrink-0 z-10" />
                                                 
                                                 {/* Content */}
-                                                <div className="flex-1 p-2 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-0.5 gap-1">
-                                                        <h4 className="font-bold text-white text-[12px]">{job.role}</h4>
-                                                        <span className="text-[8px] font-mono text-cyan-400 font-bold tracking-widest uppercase border border-cyan-500/30 px-1.5 py-0.5 rounded bg-cyan-500/10">
+                                                <div className="flex-1 p-3 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2">
+                                                        <h4 className="font-bold text-white text-[14px]">{job.role}</h4>
+                                                        <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase border border-cyan-500/30 px-2 py-1 rounded bg-cyan-500/10">
                                                             {job.date}
                                                         </span>
                                                     </div>
-                                                    <div className="text-[9px] font-mono text-neutral-400 uppercase tracking-widest mb-1.5">{job.company}</div>
-                                                    <ul className="space-y-1">
+                                                    <div className="text-[11px] font-mono text-neutral-300 uppercase tracking-widest mb-2.5">{job.company}</div>
+                                                    <ul className="space-y-2">
                                                         {job.points.map((point, i) => (
-                                                            <li key={i} className="text-[10px] text-neutral-400 leading-relaxed pl-3 relative before:absolute before:left-0 before:top-1.5 before:w-1 before:h-1 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
+                                                            <li key={i} className="text-[12px] text-neutral-300 leading-relaxed pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:bg-white/20 before:rounded-full group-hover:before:bg-cyan-500/50">
                                                                 {point}
                                                             </li>
                                                         ))}
                                                     </ul>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-
-                                {/* --- NOTABLE PROJECTS --- */}
-                                <section className="mt-2">
-                                    <h3 className="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
-                                        <FiLayers className="text-cyan-500" /> Notable Projects
-                                    </h3>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {PROJECTS_DATA.filter(p => !['fitness-tracker', 'bizlangai', 'shemet', 'estate-core'].includes(p.id)).slice(0, 3).map((project, i) => (
-                                            <div key={i} className={`p-2 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors hover-magnify ${activeHighlight === project.id ? 'active-highlight' : ''}`}>
-                                                <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-1 gap-1">
-                                                    <h4 className="font-bold text-white text-[11px]">{project.title}</h4>
-                                                    <span className="text-[8px] font-mono font-bold text-cyan-400 tracking-widest uppercase">{project.role}</span>
-                                                </div>
-                                                <p className="text-[10px] text-neutral-400 leading-relaxed mb-2 line-clamp-2">
-                                                    {project.tagline}
-                                                </p>
-                                                <div className="flex flex-wrap gap-1.5">
-                                                    {project.tech.slice(0, 5).map((tech, j) => (
-                                                        <span key={j} className="text-[8px] font-mono text-neutral-300 bg-black/50 border border-white/10 px-1.5 py-0.5 rounded">
-                                                            {tech}
-                                                        </span>
-                                                    ))}
                                                 </div>
                                             </div>
                                         ))}
