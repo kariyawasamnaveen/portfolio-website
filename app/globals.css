@@ -145,12 +145,16 @@ body {
 /* 
  * Interactive Presentation Magnification
  */
-.hover-magnify {
+.hover-magnify, .hover-magnify-left {
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, z-index 0s;
   will-change: transform;
 }
 
-.hover-magnify:hover, .active-highlight {
+.hover-magnify-left {
+  transform-origin: left center;
+}
+
+.hover-magnify:hover, .hover-magnify-left:hover, .active-highlight {
   transform: scale(1.15);
   z-index: 100;
   position: relative;
@@ -158,6 +162,7 @@ body {
   box-shadow: 0 0 40px rgba(0, 255, 255, 0.15), inset 0 0 0 1px rgba(0, 255, 255, 0.3);
   border-radius: 0.5rem;
 }
+
 
 @keyframes pulseCrosshair { 
   0% { transform: scale(1); opacity: 0.8; }

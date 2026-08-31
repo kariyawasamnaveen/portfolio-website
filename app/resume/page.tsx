@@ -335,7 +335,7 @@ export default function ResumePage() {
 
                             {/* RIGHT COLUMN: Experience */}
                             <div className="lg:w-[65%] flex flex-col">
-                                <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'experience' ? 'active-highlight' : ''}`}>
+                                <section>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
                                         <FiBriefcase className="text-cyan-500" /> Experience
                                     </h3>
@@ -343,6 +343,7 @@ export default function ResumePage() {
                                     <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
+                                                id: "fitness-tracker",
                                                 role: "Full Stack Mobile Developer",
                                                 company: "Fitness Tracker Pro (Client Sprint)",
                                                 date: "2026",
@@ -353,6 +354,7 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
+                                                id: "bizlangai",
                                                 role: "Full Stack AI Engineer",
                                                 company: "BizLangAI (Internship)",
                                                 date: "2026",
@@ -363,6 +365,7 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
+                                                id: "shemet",
                                                 role: "Lead Mobile & Backend Developer",
                                                 company: "Shemet Dating & Live (Client Sprint)",
                                                 date: "2025",
@@ -373,6 +376,7 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
+                                                id: "estatecore",
                                                 role: "Lead Full Stack Engineer",
                                                 company: "EstateCore (Client Sprint)",
                                                 date: "2023 — 2024",
@@ -393,7 +397,7 @@ export default function ResumePage() {
                                                 <div className="mt-1.5 flex items-center justify-center w-5 h-5 rounded-full border border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.6)] shrink-0 z-10" />
                                                 
                                                 {/* Content */}
-                                                <div className="flex-1 p-3 rounded-lg border border-transparent group-hover:border-white/10 group-hover:bg-white/[0.02] transition-colors -mt-2">
+                                                <div className={`flex-1 p-3 rounded-lg border border-transparent transition-colors -mt-2 hover-magnify-left ${activeHighlight === job.id || activeHighlight === 'experience' ? 'active-highlight' : 'group-hover:border-white/10 group-hover:bg-white/[0.02]'}`}>
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2">
                                                         <h4 className="font-bold text-white text-[14px]">{job.role}</h4>
                                                         <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase border border-cyan-500/30 px-2 py-1 rounded bg-cyan-500/10">
