@@ -24,10 +24,10 @@ export default function ResumePage() {
             title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
             skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
-                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro", year: "2026" },
+                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro (Freelance/Fiverr)", year: "2026" },
                 { role: "Full Stack AI Engineer", company: "BizLangAI (Internship)", year: "2026" },
-                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live", year: "2025" },
-                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2023-2024" }
+                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live (Freelance/Fiverr)", year: "2025" },
+                { role: "Lead Full Stack Engineer", company: "EstateCore (Freelance/Fiverr)", year: "2023-2024" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -212,7 +212,7 @@ export default function ResumePage() {
                                         {[
                                             {
                                                 role: "Full Stack Mobile Developer",
-                                                company: "Fitness Tracker Pro (Play Store)",
+                                                company: "Fitness Tracker Pro (Freelance / Fiverr)",
                                                 date: "2026",
                                                 points: [
                                                     "Published a cross-platform health aggregation app directly on the Google Play Store.",
@@ -232,7 +232,7 @@ export default function ResumePage() {
                                             },
                                             {
                                                 role: "Lead Mobile & Backend Developer",
-                                                company: "Shemet Dating & Live",
+                                                company: "Shemet Dating & Live (Freelance / Fiverr)",
                                                 date: "2025",
                                                 points: [
                                                     "Architected a real-time ecosystem using Flutter and Firebase Cloud Functions.",
@@ -242,7 +242,7 @@ export default function ResumePage() {
                                             },
                                             {
                                                 role: "Lead Full Stack Engineer",
-                                                company: "EstateCore (AI Vision)",
+                                                company: "EstateCore (Freelance / Fiverr)",
                                                 date: "2023 — 2024",
                                                 points: [
                                                     "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
