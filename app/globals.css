@@ -142,6 +142,23 @@ body {
   filter: none !important;
 }
 
+/* 
+ * Interactive Presentation Magnification
+ */
+.hover-magnify {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, z-index 0s;
+  will-change: transform;
+}
+
+.hover-magnify:hover, .active-highlight {
+  transform: scale(1.15);
+  z-index: 50;
+  position: relative;
+  background-color: #050914;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.15), inset 0 0 0 1px rgba(0, 255, 255, 0.3);
+  border-radius: 0.5rem;
+}
+
 @keyframes pulseCrosshair { 
   0% { transform: scale(1); opacity: 0.8; }
   50% { transform: scale(2.5); opacity: 0; }

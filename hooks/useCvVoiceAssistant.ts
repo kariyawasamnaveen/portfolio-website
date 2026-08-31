@@ -17,6 +17,7 @@ export function useCvVoiceAssistant() {
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [isActive, setIsActive] = useState(false);
+    const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
     const router = useRouter();
 
     const recognitionRef = useRef<any>(null);
@@ -91,6 +92,10 @@ export function useCvVoiceAssistant() {
             if (data.spokenResponse) {
                 speakResponse(data.spokenResponse);
             }
+
+            if (data.highlight) {
+                setActiveHighlight(data.highlight);
+            }
             
             // Handle cross-navigation
             if (data.command === 'NAVIGATE' && data.target) {
@@ -142,18 +147,26 @@ export function useCvVoiceAssistant() {
             }
         } else {
             vad.pause();
+            setIsSpeaking(false);
             if (window.speechSynthesis.speaking) {
                 window.speechSynthesis.cancel();
-                setIsSpeaking(false);
             }
         }
     }, [isActive, vad, speakResponse]);
+
+    useEffect(() => {
+        if (!isActive) {
+            setActiveHighlight(null);
+        }
+    }, [isActive]);
 
     return {
         isActive,
         setIsActive,
         isListening,
         isSpeaking,
+        activeHighlight,
+        setActiveHighlight,
         vad
     };
 }

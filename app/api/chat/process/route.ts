@@ -115,6 +115,7 @@ export async function POST(request: Request) {
         3. **Brevity is King**: NEVER speak for more than 2-3 sentences. Long answers bore clients. Give a punchy, impactful answer.
         4. **Always Hook The Client**: Always end your answer with an engaging, low-friction question to keep the conversation flowing smoothly. (e.g., "Would you like to hear about the tech stack he used for that?", "Shall I show you the architecture?")
         5. **Show, Don't Tell (Auto-Navigate)**: If you mention a specific project (like EstateCore, BizLangAI, Shemet, or Fitness Tracker), you MUST use the \`command: "OPEN_PROJECT"\` and \`target\` fields in your JSON response to automatically navigate the user to that project in the 3D portfolio. Do not just talk about it; take them there!
+        6. **Presentation Magnification**: If you are talking about a specific project, company, or skill, YOU MUST output the \`highlight\` field with a short identifier (e.g., "shemet", "estatecore", "education", "skills"). This will physically magnify that section on the user's screen while you talk!
 
         Return a JSON object matching the required schema.`;
 
@@ -163,6 +164,10 @@ export async function POST(request: Request) {
                         highlightTarget: {
                             type: Type.STRING,
                             description: "The specific code or tech to highlight (only if command is HIGHLIGHT_CODE)."
+                        },
+                        highlight: {
+                            type: Type.STRING,
+                            description: "A keyword representing the section to magnify on the screen while you talk (e.g. 'shemet', 'estatecore', 'skills', 'education')."
                         },
                         formData: {
                             type: Type.OBJECT,
