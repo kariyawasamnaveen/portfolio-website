@@ -143,15 +143,6 @@ export default function Home() {
     useEffect(() => {
         // Force browser to load voices into memory as early as possible
         window.speechSynthesis.getVoices();
-        
-        // Fast-track load if coming from CV
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('source') === 'cv') {
-            setShowLoading(false);
-            setHasPoweredUp(true);
-            setStartDrift(true);
-            setIsUiRevealed(true);
-        }
     }, []);
 
     useEffect(() => {
