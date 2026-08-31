@@ -24,8 +24,9 @@ export default function ResumePage() {
             title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
             skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
-                { role: "Full-Stack & AI Solutions Contractor", company: "HelpA Global Service", year: "2024-Present" },
-                { role: "Mobile & Full-Stack Developer", company: "Freelance / Remote Contractor", year: "2023-2026" }
+                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2024-Present" },
+                { role: "Full Stack AI Engineer", company: "BizLangAI", year: "2024" },
+                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live", year: "2023-2024" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -209,23 +210,33 @@ export default function ResumePage() {
                                     <div className="space-y-4 relative before:absolute before:inset-0 before:ml-[7px] before:-translate-x-px before:h-full before:w-[1px] before:bg-gradient-to-b before:from-cyan-500/50 before:via-white/10 before:to-transparent">
                                         {[
                                             {
-                                                role: "Full-Stack & AI Solutions Contractor",
-                                                company: "HelpA Global Service",
+                                                role: "Lead Full Stack Engineer",
+                                                company: "EstateCore (AI Vision)",
                                                 date: "2024 — Present",
                                                 points: [
-                                                    "Architected an enterprise RAG knowledge engine using FastAPI, Pinecone, and LangChain.",
-                                                    "Engineered a multi-device low-latency WebRTC live-streaming app with on-device ML.",
-                                                    "Built automated lead booking engine syncing calendar webhooks with real-time Telegram/email alerts."
+                                                    "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
+                                                    "Built an event-driven Node.js backend to process multi-lingual (EN, HI, BN) conversations.",
+                                                    "Integrated Prisma ORM for automated entity extraction and relational lead management."
                                                 ]
                                             },
                                             {
-                                                role: "Mobile & Full-Stack Developer",
-                                                company: "Freelance / Remote Contractor",
-                                                date: "2023 — 2026",
+                                                role: "Full Stack AI Engineer",
+                                                company: "BizLangAI",
+                                                date: "2024",
                                                 points: [
-                                                    "Developed cross-platform production mobile apps in Flutter with clean state management.",
-                                                    "Built voice-driven automated scheduling PWAs (Next.js, NextAuth, Groq LLM pipelines).",
-                                                    "Designed RESTful backend services, db schemas (SQLAlchemy, PostgreSQL), and event workflows."
+                                                    "Built a FastAPI backend using Pinecone and LangChain for enterprise PDF knowledge retrieval.",
+                                                    "Implemented autonomous Python code execution via LangChain Tool Calling for CSV chart generation.",
+                                                    "Developed a secure, responsive glassmorphism React frontend for corporate dashboards."
+                                                ]
+                                            },
+                                            {
+                                                role: "Lead Mobile & Backend Developer",
+                                                company: "Shemet Dating & Live",
+                                                date: "2023 — 2024",
+                                                points: [
+                                                    "Architected a real-time ecosystem using Flutter and Firebase Cloud Functions.",
+                                                    "Integrated Agora WebRTC and DeepAR for low-latency live video with 3D AR face filters.",
+                                                    "Implemented Google ML-Kit for automated face verification to eliminate fake profiles."
                                                 ]
                                             }
                                         ].map((job, index) => (
