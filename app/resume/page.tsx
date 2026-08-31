@@ -71,6 +71,10 @@ export default function ResumePage() {
     const handleDownloadPdf = async () => {
         if (!resumeRef.current) return;
         setIsGeneratingPdf(true);
+        
+        // Wait for React to apply the w-[794px] class and for the CSS shrinking transition to finish
+        await new Promise(resolve => setTimeout(resolve, 400));
+        
         let originalTransform = '';
         try {
             // Temporarily disable the animation properties that might mess up the canvas capture
@@ -201,7 +205,7 @@ export default function ResumePage() {
                     >
                         <motion.div
                             ref={resumeRef}
-                            className="w-[794px] h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative"
+                            className={`${isGeneratingPdf ? 'w-[794px]' : 'w-[950px]'} h-[1123px] shrink-0 bg-[#050914] border border-white/5 rounded-sm p-8 shadow-[0_0_50px_rgba(0,255,255,0.05),inset_0_0_0_1px_rgba(255,255,255,0.02)] flex flex-col relative transition-all duration-300 ease-in-out`}
                         >
                         {/* Scanning Line Animation (hidden in PDF) */}
                         <div className="exclude-from-pdf absolute top-0 left-0 right-0 h-1 bg-cyan-500/50 shadow-[0_0_20px_rgba(0,255,255,1)] animate-scan opacity-30" />
