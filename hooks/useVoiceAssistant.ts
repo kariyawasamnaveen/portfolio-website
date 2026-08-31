@@ -252,7 +252,15 @@ export function useVoiceAssistant({
             hasGreetedRef.current = true;
             setTimeout(() => {
                 setIsBotActive(true); 
-                speakResponse("Oh, hey there! Welcome to Naveen's digital universe. I'm his personal AI, acting as your Sales Engineer today. You know, Naveen is an incredible Lead Architect. He builds these crazy high-performance Flutter apps and massive Node.js systems. My job is to guide you around... So, just tell me out loud: do you want to see his code, understand his architecture, or maybe we can just chat? What are you looking for today?");
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const isFromCV = urlParams.get('source') === 'cv';
+                
+                if (isFromCV) {
+                    speakResponse("Hey there! I see you just came from Naveen's CV. I've got his entire resume, all his timelines, and project details loaded into my neural network. Feel free to ask me anything about his experience, or ask me to show you a specific project architecture!");
+                } else {
+                    speakResponse("Oh, hey there! Welcome to Naveen's digital universe. I'm his personal AI, acting as your Sales Engineer today. You know, Naveen is an incredible Lead Architect. He builds these crazy high-performance Flutter apps and massive Node.js systems. My job is to guide you around... So, just tell me out loud: do you want to see his code, understand his architecture, or maybe we can just chat? What are you looking for today?");
+                }
             }, 200); 
         }
     }, [isUiRevealed, speakResponse, setIsBotActive]);

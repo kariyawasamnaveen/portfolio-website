@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode } from 'react-icons/fi';
 import { BsFiletypeJson } from 'react-icons/bs';
 import Link from 'next/link';
+import { RESUME_DATA } from '@/data/resume';
 
 export default function ResumePage() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -20,18 +21,7 @@ export default function ResumePage() {
     }, []);
 
     const handleDownloadJson = () => {
-        const resumeData = {
-            name: "NAVEEN KARIYAWASAM",
-            title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
-            skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
-            experience: [
-                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro (Freelance/Fiverr)", year: "2026" },
-                { role: "Full Stack AI Engineer", company: "BizLangAI (Internship)", year: "2026" },
-                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live (Freelance/Fiverr)", year: "2025" },
-                { role: "Lead Full Stack Engineer", company: "EstateCore (Freelance/Fiverr)", year: "2023-2024" }
-            ]
-        };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(RESUME_DATA, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
         downloadAnchorNode.setAttribute("download", "naveen_resume.json");
@@ -129,7 +119,7 @@ export default function ResumePage() {
 
                             {/* AI Agent CTA */}
                             <div className="absolute top-0 right-0 mt-0 mr-0 hidden md:block">
-                                <Link href="/" className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-white transition-all duration-200 bg-cyan-500/10 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                                <Link href="/?source=cv" className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-bold text-white transition-all duration-200 bg-cyan-500/10 border border-cyan-500/30 rounded-lg hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:shadow-[0_0_15px_rgba(34,211,238,0.3)]">
                                     <span className="mr-2 text-lg">🤖</span>
                                     <span className="tracking-widest uppercase text-[10px]">Interview My AI</span>
                                 </Link>

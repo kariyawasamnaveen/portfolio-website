@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { NextResponse } from 'next/server';
 import { PROJECTS_DATA } from '@/data/projects';
 import { AI_KNOWLEDGE_BASE } from '@/lib/ai-knowledge';
+import { RESUME_DATA } from '@/data/resume';
 
 export const maxDuration = 60; // Allow Vercel functions to run longer if needed
 
@@ -96,6 +97,11 @@ export async function POST(request: Request) {
         
         Here is the comprehensive data about his projects:
         ${projectsContext}
+
+        --- RESUME & CV DATA ---
+        The user might ask specific questions about his CV, timeline, or roles. Use the data below to answer them accurately.
+        If they ask about an experience that matches a project, combine the business value of the project with the CV timeline.
+        ${JSON.stringify(RESUME_DATA, null, 2)}
 
         Return a JSON object matching the required schema.`;
 
