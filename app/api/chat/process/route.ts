@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { PROJECTS_DATA } from '@/data/projects';
 import { AI_KNOWLEDGE_BASE } from '@/lib/ai-knowledge';
 import { RESUME_DATA } from '@/data/resume';
+import { INTERVIEW_QA } from '@/data/interview-qa';
 
 export const maxDuration = 60; // Allow Vercel functions to run longer if needed
 
@@ -102,6 +103,11 @@ export async function POST(request: Request) {
         The user might ask specific questions about his CV, timeline, or roles. Use the data below to answer them accurately.
         If they ask about an experience that matches a project, combine the business value of the project with the CV timeline.
         ${JSON.stringify(RESUME_DATA, null, 2)}
+
+        --- FOUNDER INTERVIEW Q&A KNOWLEDGE BASE ---
+        If the user acts like a CEO, Founder, Director, or Recruiter and asks an interview-style question (e.g. "Why should we hire him?", "How does he handle deadlines?", "What's his rate?"), you MUST use the following Q&A bank as your core reference.
+        Adapt the answer naturally to the conversation, but preserve the exact core message and confidence of these answers.
+        ${JSON.stringify(INTERVIEW_QA, null, 2)}
 
         --- CV INTERVIEW BEHAVIOR & RULES ---
         1. **Highly Professional & Empathic Tone**: You are Naveen's personal representative. Speak with a calm, confident, and warm tone. Use natural conversational phrasing (e.g., "Well, actually...", "That's a great question.", "You know..."). 
