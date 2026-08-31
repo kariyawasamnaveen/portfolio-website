@@ -264,12 +264,12 @@ export default function ResumePage() {
                         </header>
 
                         {/* 2-COLUMN LAYOUT FOR SINGLE-SCREEN FIT */}
-                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 flex-1 overflow-hidden">
+                        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 flex-1">
                             
                             {/* LEFT COLUMN: Summary, Skills, Edu */}
                             <div className="lg:w-[35%] flex flex-col gap-6">
                                 {/* --- SUMMARY --- */}
-                                <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'summary' ? 'active-highlight' : ''}`}>
+                                <section className={`hover-magnify-left p-2 -m-2 rounded ${activeHighlight === 'summary' ? 'active-highlight' : ''}`}>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiTerminal className="text-cyan-500" /> Summary
                                     </h3>
@@ -284,7 +284,7 @@ export default function ResumePage() {
                                 </section>
 
                                 {/* --- SKILLS MATRIX --- */}
-                                <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'skills' ? 'active-highlight' : ''}`}>
+                                <section className={`hover-magnify-left p-2 -m-2 rounded ${activeHighlight === 'skills' ? 'active-highlight' : ''}`}>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiCode className="text-cyan-500" /> Skills
                                     </h3>
@@ -319,7 +319,7 @@ export default function ResumePage() {
                                 </section>
 
                                 {/* --- EDUCATION & CERTS --- */}
-                                <section className={`hover-magnify p-2 -m-2 rounded ${activeHighlight === 'education' ? 'active-highlight' : ''}`}>
+                                <section className={`hover-magnify-left p-2 -m-2 rounded ${activeHighlight === 'education' ? 'active-highlight' : ''}`}>
                                     <h3 className="text-xs font-bold text-white uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                                         <FiBook className="text-cyan-500" /> Education & Certs
                                     </h3>
@@ -401,7 +401,7 @@ export default function ResumePage() {
                                                 <div className="mt-1.5 flex items-center justify-center w-5 h-5 rounded-full border border-black bg-cyan-500 shadow-[0_0_15px_rgba(0,255,255,0.6)] shrink-0 z-10" />
                                                 
                                                 {/* Content */}
-                                                <div className={`flex-1 p-3 rounded-lg border border-transparent transition-colors -mt-2 hover-magnify-left ${activeHighlight === job.id || activeHighlight === 'experience' ? 'active-highlight' : 'group-hover:border-white/10 group-hover:bg-white/[0.02]'}`}>
+                                                <div className={`flex-1 p-3 rounded-lg border border-transparent transition-colors -mt-2 hover-magnify-right ${activeHighlight === job.id || activeHighlight === 'experience' ? 'active-highlight' : 'group-hover:border-white/10 group-hover:bg-white/[0.02]'}`}>
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-1 gap-2">
                                                         <h4 className="font-bold text-white text-[14px]">{job.role}</h4>
                                                         <span className="text-[10px] font-mono text-cyan-400 font-bold tracking-widest uppercase border border-cyan-500/30 px-2 py-1 rounded bg-cyan-500/10">

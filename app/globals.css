@@ -145,7 +145,7 @@ body {
 /* 
  * Interactive Presentation Magnification
  */
-.hover-magnify, .hover-magnify-left {
+.hover-magnify, .hover-magnify-left, .hover-magnify-right {
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, z-index 0s;
   will-change: transform;
 }
@@ -154,7 +154,11 @@ body {
   transform-origin: left center;
 }
 
-.hover-magnify:hover, .hover-magnify-left:hover, .active-highlight {
+.hover-magnify-right {
+  transform-origin: right center;
+}
+
+.hover-magnify:hover, .hover-magnify-left:hover, .hover-magnify-right:hover, .active-highlight {
   transform: scale(1.15);
   z-index: 100;
   position: relative;
