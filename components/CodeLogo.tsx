@@ -183,6 +183,7 @@ function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking
 }
 
 useGLTF.preload('/avaturn_avatar.glb');
+useGLTF.preload('/avaturn_avatar_mobile.glb');
 
 // 2. THE MAIN COMPONENT
 export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: boolean, onReportTime?: (name: string, time: number) => void }) {
@@ -204,7 +205,8 @@ export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: bo
             opacity: 1,
             y: 0,
             filter: 'blur(0px)',
-            transition: { delay: i * 0.06, duration: 0.8, ease: [0.2, 0.65, 0.3, 0.9] }
+            color: "#00ffff", // Always bright cyan
+            transition: { delay: i * 0.02, duration: 0.4, ease: "easeOut" }
         }),
         hover: (i: number) => ({
             y: [0, -6, 0],
@@ -225,8 +227,8 @@ export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: bo
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto ${isHovered ? 'border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)]' : 'border-cyan-500/20 shadow-[0_0_30px_rgba(0,255,255,0.1)]'} bg-black/40 md:backdrop-blur-xl`}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)] bg-black/40 md:backdrop-blur-xl`}
             >
                 <Canvas 
                     camera={{ position: [0, 0, 5], fov: 45 }} 
@@ -267,11 +269,12 @@ export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: bo
                             key={index}
                             custom={index}
                             initial="hidden"
-                            animate={isHovered ? "hover" : "visible"}
+                            animate="visible"
+                            whileHover="hover"
                             variants={textVariants as any}
-                            className={`inline-block ${isHovered ? '' : 'bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500'}`}
+                            className="inline-block"
                             style={{ 
-                                textShadow: isHovered ? '0 0 15px rgba(0,255,255,0.8)' : 'none'
+                                textShadow: '0 0 15px rgba(0,255,255,0.8)'
                             }}
                             onAnimationComplete={index === nameText.length - 1 ? () => onReportTime && onReportTime('Kariyawasam Title', Date.now()) : undefined}
                         >
@@ -284,21 +287,19 @@ export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: bo
                 <motion.div 
                     initial={{ opacity: 0, y: 10, scale: 0.9 }} 
                     animate={{ opacity: 1, y: 0, scale: 1 }} 
-                    transition={{ delay: 0.8, type: 'spring' }}
-                    className={`relative px-5 py-1.5 rounded-full border ${isHovered ? 'border-cyan-400/60 bg-cyan-900/40' : 'border-white/10 bg-black/30'} backdrop-blur-md font-mono text-[10px] md:text-xs tracking-[0.4em] uppercase overflow-hidden transition-all duration-500 mt-2`}
+                    transition={{ delay: 0.2, type: 'spring' }}
+                    className="relative px-5 py-1.5 rounded-full border border-cyan-400/60 bg-cyan-900/40 backdrop-blur-md font-mono text-[10px] md:text-xs tracking-[0.4em] uppercase overflow-hidden transition-all duration-500 mt-2"
                 >
-                    <span className={`relative z-10 font-semibold ${isHovered ? "text-cyan-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" : "text-white/60"}`}>
+                    <span className="relative z-10 font-semibold text-cyan-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
                         Creative Coder
                     </span>
-                    {/* Framer Motion Shimmer on Hover */}
-                    {isHovered && (
-                        <motion.div 
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                            initial={{ x: '-100%' }}
-                            animate={{ x: '200%' }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                        />
-                    )}
+                    {/* Framer Motion Shimmer Always Active */}
+                    <motion.div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '200%' }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                    />
                 </motion.div>
             </div>
         </div>
