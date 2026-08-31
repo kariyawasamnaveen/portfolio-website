@@ -1,10 +1,11 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode } from 'react-icons/fi';
+import { FiDownload, FiGithub, FiLinkedin, FiMail, FiMapPin, FiTerminal, FiBriefcase, FiBook, FiCode, FiLayers } from 'react-icons/fi';
 import { BsFiletypeJson } from 'react-icons/bs';
 import Link from 'next/link';
 import { RESUME_DATA } from '@/data/resume';
+import { PROJECTS_DATA } from '@/data/projects';
 import { useCvVoiceAssistant } from '@/hooks/useCvVoiceAssistant';
 import { toJpeg } from 'html-to-image';
 import jsPDF from 'jspdf';
@@ -370,6 +371,33 @@ export default function ResumePage() {
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                {/* --- NOTABLE PROJECTS --- */}
+                                <section className="mt-8">
+                                    <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                        <FiLayers className="text-cyan-500" /> Notable Projects
+                                    </h3>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {PROJECTS_DATA.slice(0, 3).map((project, i) => (
+                                            <div key={i} className="p-3 rounded-lg border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h4 className="font-bold text-white text-[12px]">{project.title}</h4>
+                                                    <span className="text-[8px] font-mono text-cyan-500 tracking-widest uppercase">{project.role}</span>
+                                                </div>
+                                                <p className="text-[10px] text-neutral-400 leading-relaxed mb-2 line-clamp-2">
+                                                    {project.tagline}
+                                                </p>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {project.tech.slice(0, 5).map((tech, j) => (
+                                                        <span key={j} className="text-[8px] font-mono text-neutral-500 bg-black/50 border border-white/5 px-1.5 py-0.5 rounded">
+                                                            {tech}
+                                                        </span>
+                                                    ))}
                                                 </div>
                                             </div>
                                         ))}
