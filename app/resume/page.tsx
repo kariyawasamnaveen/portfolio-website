@@ -24,10 +24,10 @@ export default function ResumePage() {
             title: "FULL-STACK & AI SOLUTIONS DEVELOPER",
             skills: ["Flutter", "Python", "FastAPI", "Next.js", "LangChain", "OpenAI GPT"],
             experience: [
-                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro", year: "2024-Present" },
-                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live", year: "2023-2024" },
-                { role: "Full Stack AI Engineer", company: "BizLangAI (Internship)", year: "2023" },
-                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2022-2023" }
+                { role: "Full Stack Mobile Developer", company: "Fitness Tracker Pro", year: "2026" },
+                { role: "Full Stack AI Engineer", company: "BizLangAI (Internship)", year: "2026" },
+                { role: "Lead Mobile & Backend Developer", company: "Shemet Dating & Live", year: "2025" },
+                { role: "Lead Full Stack Engineer", company: "EstateCore (AI Vision)", year: "2023-2024" }
             ]
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
@@ -213,7 +213,7 @@ export default function ResumePage() {
                                             {
                                                 role: "Full Stack Mobile Developer",
                                                 company: "Fitness Tracker Pro (Play Store)",
-                                                date: "2024 — Present",
+                                                date: "2026",
                                                 points: [
                                                     "Published a cross-platform health aggregation app directly on the Google Play Store.",
                                                     "Integrated Apple Health and Google Fit APIs to fetch real-time step counts and metrics.",
@@ -221,19 +221,9 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
-                                                role: "Lead Mobile & Backend Developer",
-                                                company: "Shemet Dating & Live",
-                                                date: "2023 — 2024",
-                                                points: [
-                                                    "Architected a real-time ecosystem using Flutter and Firebase Cloud Functions.",
-                                                    "Integrated Agora WebRTC and DeepAR for low-latency live video with 3D AR face filters.",
-                                                    "Implemented Google ML-Kit for automated face verification to eliminate fake profiles."
-                                                ]
-                                            },
-                                            {
                                                 role: "Full Stack AI Engineer",
                                                 company: "BizLangAI (Internship)",
-                                                date: "2023",
+                                                date: "2026",
                                                 points: [
                                                     "Built a FastAPI backend using Pinecone and LangChain for enterprise PDF knowledge retrieval.",
                                                     "Implemented autonomous Python code execution via LangChain Tool Calling for CSV chart generation.",
@@ -241,9 +231,19 @@ export default function ResumePage() {
                                                 ]
                                             },
                                             {
+                                                role: "Lead Mobile & Backend Developer",
+                                                company: "Shemet Dating & Live",
+                                                date: "2025",
+                                                points: [
+                                                    "Architected a real-time ecosystem using Flutter and Firebase Cloud Functions.",
+                                                    "Integrated Agora WebRTC and DeepAR for low-latency live video with 3D AR face filters.",
+                                                    "Implemented Google ML-Kit for automated face verification to eliminate fake profiles."
+                                                ]
+                                            },
+                                            {
                                                 role: "Lead Full Stack Engineer",
                                                 company: "EstateCore (AI Vision)",
-                                                date: "2022 — 2023",
+                                                date: "2023 — 2024",
                                                 points: [
                                                     "Engineered a 'Neural Concierge' using GPT-4 Vision and LangChain for automated lead capture.",
                                                     "Built an event-driven Node.js backend to process multi-lingual (EN, HI, BN) conversations.",
