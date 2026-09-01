@@ -114,10 +114,11 @@ export default function Home() {
     const [currentReviewIndex, setCurrentReviewIndex] = useState(1)
     const [currentReelIndex, setCurrentReelIndex] = useState(1)
     const [isReelMuted, setIsReelMuted] = useState(true)
+    const skipIntro = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('skipIntro') === 'true' : false;
     const [isPoweringUp, setIsPoweringUp] = useState(false)
-    const [hasPoweredUp, setHasPoweredUp] = useState(false);
-    const [isUiRevealed, setIsUiRevealed] = useState(false);
-    const [showLoading, setShowLoading] = useState(true);
+    const [hasPoweredUp, setHasPoweredUp] = useState(skipIntro);
+    const [isUiRevealed, setIsUiRevealed] = useState(skipIntro);
+    const [showLoading, setShowLoading] = useState(!skipIntro);
     const [isAssetsReady, setIsAssetsReady] = useState(false);
     const [startDrift, setStartDrift] = useState(false);
     const [isRevealing, setIsRevealing] = useState(true)
@@ -212,7 +213,7 @@ export default function Home() {
                     {showLoading && (
                         <LoadingScreen 
                             onDriftStart={() => setStartDrift(true)}
-                            onLoadingComplete={() => setShowLoading(false)} 
+                            onLoadingComplete={() => { setShowLoading(false); }} 
                             isReady={isAssetsReady}
                             isSpeaking={isSpeaking}
                         />

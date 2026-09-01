@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMicVAD } from "@ricky0123/vad-react";
 import { utils } from "@ricky0123/vad-web";
 import { useAppStore, TechId, Zone } from '@/store/useAppStore';
@@ -28,6 +28,7 @@ export function useVoiceAssistant({
         isBotActive, setIsBotActive,
         isSpeaking, setIsSpeaking,
         isListening, setIsListening,
+        isPttActive,
         activeZone, setActiveZone,
         activeTech, setActiveTech,
         showHint, setShowHint,
@@ -37,6 +38,14 @@ export function useVoiceAssistant({
 
     // Refs
     const recognitionRef = useRef<any>(null);
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const isBotActiveRef = useRef(isBotActive);
     const isSpeakingRef = useRef(isSpeaking);
     const hasGreetedRef = useRef(false);
@@ -44,6 +53,7 @@ export function useVoiceAssistant({
     const nudgeCountRef = useRef(0);
     const visitedZonesRef = useRef<Set<string>>(new Set(['identity']));
     const visitedProjectsRef = useRef<Set<string>>(new Set());
+    const conversationHistoryRef = useRef<{role: string, text: string}[]>([]);
 
     useEffect(() => { isBotActiveRef.current = isBotActive; }, [isBotActive]);
     useEffect(() => { isSpeakingRef.current = isSpeaking; }, [isSpeaking]);
@@ -110,7 +120,8 @@ export function useVoiceAssistant({
             const payload = { 
                 audioData: base64data, 
                 mimeType: 'audio/wav',
-                currentContext: selectedProject ? `Looking at project: ${selectedProject.id}` : `Looking at zone: ${activeZone}`
+                currentContext: selectedProject ? `Looking at project: ${selectedProject.id}` : `Looking at zone: ${activeZone}`,
+                conversationHistory: conversationHistoryRef.current
             };
 
             const response = await fetch('/api/chat/process', {
@@ -125,6 +136,20 @@ export function useVoiceAssistant({
             
             if (data.spokenResponse) {
                 speakResponse(data.spokenResponse);
+            }
+            if (data.transcript && data.spokenResponse) {
+                conversationHistoryRef.current.push({ role: 'user', text: data.transcript });
+                conversationHistoryRef.current.push({ role: 'ai', text: data.spokenResponse });
+                if (conversationHistoryRef.current.length > 8) {
+                    conversationHistoryRef.current = conversationHistoryRef.current.slice(conversationHistoryRef.current.length - 8);
+                }
+            }
+            if (data.transcript && data.spokenResponse) {
+                conversationHistoryRef.current.push({ role: 'user', text: data.transcript });
+                conversationHistoryRef.current.push({ role: 'ai', text: data.spokenResponse });
+                if (conversationHistoryRef.current.length > 8) {
+                    conversationHistoryRef.current = conversationHistoryRef.current.slice(conversationHistoryRef.current.length - 8);
+                }
             }
             
             if (data.command === 'NAVIGATE' && data.target) {
@@ -162,7 +187,8 @@ export function useVoiceAssistant({
             
             const payload = { 
                 textPrompt, 
-                currentContext: selectedProject ? `Looking at project: ${selectedProject.id}` : `Looking at zone: ${activeZone}`
+                currentContext: selectedProject ? `Looking at project: ${selectedProject.id}` : `Looking at zone: ${activeZone}`,
+                conversationHistory: conversationHistoryRef.current
             };
 
             const response = await fetch('/api/chat/process', {
@@ -178,6 +204,20 @@ export function useVoiceAssistant({
             
             if (data.spokenResponse) {
                 speakResponse(data.spokenResponse);
+            }
+            if (data.transcript && data.spokenResponse) {
+                conversationHistoryRef.current.push({ role: 'user', text: data.transcript });
+                conversationHistoryRef.current.push({ role: 'ai', text: data.spokenResponse });
+                if (conversationHistoryRef.current.length > 8) {
+                    conversationHistoryRef.current = conversationHistoryRef.current.slice(conversationHistoryRef.current.length - 8);
+                }
+            }
+            if (data.transcript && data.spokenResponse) {
+                conversationHistoryRef.current.push({ role: 'user', text: data.transcript });
+                conversationHistoryRef.current.push({ role: 'ai', text: data.spokenResponse });
+                if (conversationHistoryRef.current.length > 8) {
+                    conversationHistoryRef.current = conversationHistoryRef.current.slice(conversationHistoryRef.current.length - 8);
+                }
             }
             
             if (data.command === 'NAVIGATE' && data.target) {
@@ -240,12 +280,27 @@ export function useVoiceAssistant({
     });
 
     useEffect(() => {
-        if (isBotActive && hasPoweredUp) {
-            vad.start();
-        } else {
+        if (!hasPoweredUp) {
             vad.pause();
+            return;
         }
-    }, [isBotActive, hasPoweredUp, vad]);
+        
+        if (isMobile) {
+            // Mobile: requires Push-to-Talk
+            if (isPttActive) {
+                vad.start();
+            } else {
+                vad.pause();
+            }
+        } else {
+            // Desktop: Always listening
+            if (isBotActive) {
+                vad.start();
+            } else {
+                vad.pause();
+            }
+        }
+    }, [isBotActive, hasPoweredUp, isPttActive, isMobile, vad]);
 
     useEffect(() => {
         if (isUiRevealed && !hasGreetedRef.current) {

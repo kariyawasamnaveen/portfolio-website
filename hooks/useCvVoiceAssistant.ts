@@ -92,6 +92,13 @@ export function useCvVoiceAssistant() {
             if (data.spokenResponse) {
                 speakResponse(data.spokenResponse);
             }
+            if (data.transcript && data.spokenResponse) {
+                conversationHistoryRef.current.push({ role: 'user', text: data.transcript });
+                conversationHistoryRef.current.push({ role: 'ai', text: data.spokenResponse });
+                if (conversationHistoryRef.current.length > 8) {
+                    conversationHistoryRef.current = conversationHistoryRef.current.slice(conversationHistoryRef.current.length - 8);
+                }
+            }
 
             if (data.highlight) {
                 setActiveHighlight(data.highlight);
@@ -99,7 +106,11 @@ export function useCvVoiceAssistant() {
             
             // Handle cross-navigation
             if (data.command === 'NAVIGATE' && data.target) {
-                router.push(`/?targetZone=${data.target}`);
+                if (data.target === 'identity' || data.target === 'home' || data.target === 'back') {
+                    router.push('/');
+                } else {
+                    router.push(`/?targetZone=${data.target}`);
+                }
             } else if (data.command === 'OPEN_PROJECT' && data.target) {
                 router.push(`/?targetProject=${data.target}`);
             } else if (data.command === 'HIGHLIGHT_CODE') {

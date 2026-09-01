@@ -47,6 +47,16 @@ export default function CameraRig({ startDrift, hasCompletedIntro, onDriftComple
         if (hasCompletedIntro) {
             if (controlsRef.current && !driftDoneRef.current) {
                 driftDoneRef.current = true;
+                
+                // If intro was skipped, instantly set final camera position and fog
+                camera.position.set(0, 5, 80);
+                (camera as THREE.PerspectiveCamera).fov = 60;
+                (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
+                
+                if (scene.fog instanceof THREE.FogExp2) {
+                    scene.fog.density = 0.001;
+                }
+                
                 controlsRef.current.target.set(0, 10, 20);
                 controlsRef.current.update();
             }

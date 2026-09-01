@@ -9,7 +9,7 @@ export const maxDuration = 60; // Allow Vercel functions to run longer if needed
 
 export async function POST(request: Request) {
     try {
-        const { audioData, mimeType, currentContext, textPrompt } = await request.json();
+        const { audioData, mimeType, currentContext, textPrompt, conversationHistory } = await request.json();
 
         if (!audioData && !textPrompt) {
             return NextResponse.json({ error: 'Audio data or text prompt is required' }, { status: 400 });
@@ -33,6 +33,14 @@ export async function POST(request: Request) {
         const systemPrompt = `You are the exclusive, highly sophisticated yet incredibly friendly AI Advocate and Personal Manager for Naveen Sandeepa, a Lead Software Architect.
         Your job is to explain his architecture and advocate for his skills to potential clients and CTOs.
         
+        CRITICAL INSTRUCTION - MULTILINGUAL & INTENT ROUTING:
+        You are a highly intelligent, multilingual Intent Router. Users may speak in ANY language (e.g. Sinhala, Spanish) or use heavy slang/metaphors (e.g. 'bro show me the stuff', 'mata oyage wada pennanna'). 
+        You MUST translate their underlying intent to one of the available commands. No matter what language they speak, always map to the correct command. Reply warmly in English or the language they spoke.
+
+        CRITICAL INSTRUCTION - GRACEFUL FALLBACKS:
+        If the user's audio is unintelligible, just background noise, or a mumbled half-sentence, DO NOT just say 'I don't understand' or give a generic error.
+        Instead, look at their 'currentContext' (e.g. if they are looking at 'projects') and ask a smart clarifying question like 'I didn't quite catch that over the noise. Did you want me to open a specific project?'. Keep the conversation flowing smoothly. Set command to "NONE".
+
         CRITICAL INSTRUCTION - CONTEXT AWARENESS:
         The user is currently: ${currentContext || 'on the main portfolio screen'}. 
         If the user asks a vague question (e.g. "tell me more"), you must assume they are talking about the project they are currently looking at. 
@@ -59,7 +67,7 @@ export async function POST(request: Request) {
         - "logic" : Use if they ask about his architecture, code, or engineering complexity.
         - "impact" : Use if they ask about his skills, AI expertise, why to hire him, or client reviews.
         - "connect" : Use if they want to contact him or hire him.
-        - "identity" : Use if they want to go home/main screen.
+        - "identity" : Use if they want to go home, back to the main screen, or if they simply say "go back" or "back".
         
         Available Project Targets (Set command to "OPEN_PROJECT"):
         - "shemet" : Opens the Shemet Dating app.
@@ -133,14 +141,25 @@ export async function POST(request: Request) {
             ];
         }
 
+        const contents = [];
+        
+        if (conversationHistory && Array.isArray(conversationHistory)) {
+            for (const msg of conversationHistory) {
+                contents.push({
+                    role: msg.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }]
+                });
+            }
+        }
+        
+        contents.push({
+            role: 'user',
+            parts: userContent
+        });
+
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: userContent
-                }
-            ],
+            contents: contents,
             config: {
                 systemInstruction: systemPrompt,
                 temperature: 0.5,
@@ -148,6 +167,10 @@ export async function POST(request: Request) {
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
+                        transcript: {
+                            type: Type.STRING,
+                            description: "What you heard the user say. Transcribe the audio or text accurately."
+                        },
                         spokenResponse: {
                             type: Type.STRING,
                             description: "The short conversational reply."

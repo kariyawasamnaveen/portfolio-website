@@ -12,6 +12,7 @@ interface AppState {
     setIsBotActive: (active: boolean) => void;
 
     isListening: boolean;
+    isPttActive: boolean;
     setIsListening: (listening: boolean) => void;
 
     isSpeaking: boolean;
@@ -36,6 +37,8 @@ interface AppState {
     setContactForm: (form: { email: string; message: string } | ((prev: { email: string; message: string }) => { email: string; message: string })) => void;
 
     globalSpeak: (text: string) => void;
+    hasSeenLoadingScreen: boolean;
+    setHasSeenLoadingScreen: (seen: boolean) => void;
     setGlobalSpeak: (fn: (text: string) => void) => void;
 }
 
@@ -47,6 +50,7 @@ export const useAppStore = create<AppState>((set) => ({
     setIsBotActive: (active) => set({ isBotActive: active }),
 
     isListening: false,
+    isPttActive: false,
     setIsListening: (listening) => set({ isListening: listening }),
 
     isSpeaking: false,
@@ -73,6 +77,8 @@ export const useAppStore = create<AppState>((set) => ({
     })),
 
     globalSpeak: () => {},
+    hasSeenLoadingScreen: false,
+    setHasSeenLoadingScreen: (seen) => set({ hasSeenLoadingScreen: seen }),
     setGlobalSpeak: (fn) => set({ globalSpeak: fn }),
 }));
 

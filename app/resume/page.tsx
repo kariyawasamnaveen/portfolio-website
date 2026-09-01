@@ -176,6 +176,12 @@ export default function ResumePage() {
 
             {/* Sticky Actions Bar */}
             <div className="fixed top-6 right-6 md:top-8 md:right-12 z-50 flex gap-4">
+                <Link 
+                    href="/?skipIntro=true"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-800/50 border border-neutral-700/50 text-neutral-400 font-bold text-[10px] uppercase tracking-widest hover:bg-neutral-800 hover:text-white hover:border-neutral-500 transition-all"
+                >
+                    <span className="text-[14px] leading-none">←</span> BACK
+                </Link>
                 <button 
                     onClick={handleDownloadPdf}
                     disabled={isGeneratingPdf}
