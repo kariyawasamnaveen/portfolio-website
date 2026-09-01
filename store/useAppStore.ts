@@ -14,6 +14,7 @@ interface AppState {
     isListening: boolean;
     isPttActive: boolean;
     setIsListening: (listening: boolean) => void;
+    setIsPttActive: (active: boolean) => void;
 
     isSpeaking: boolean;
     setIsSpeaking: (speaking: boolean) => void;

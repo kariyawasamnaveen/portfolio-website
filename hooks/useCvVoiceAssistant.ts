@@ -21,6 +21,7 @@ export function useCvVoiceAssistant() {
     const router = useRouter();
 
     const recognitionRef = useRef<any>(null);
+    const conversationHistoryRef = useRef<{role: string, text: string}[]>([]);
     const hasGreetedRef = useRef(false);
 
     const getPreferredVoice = useCallback((synth: SpeechSynthesis) => {
