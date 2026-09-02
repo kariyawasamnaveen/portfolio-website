@@ -174,6 +174,20 @@ export function useVoiceAssistant({
                         setActiveTech(data.highlightTarget.toLowerCase() as TechId);
                     }
                 }
+            } else if (data.command === 'CLOSE_MODAL') {
+                setSelectedProject(null);
+            } else if (data.command === 'SCROLL') {
+                if (data.target === 'down') {
+                    window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
+                } else if (data.target === 'up') {
+                    window.scrollBy({ top: -window.innerHeight * 0.7, behavior: 'smooth' });
+                } else if (data.target === 'top') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (data.target === 'bottom') {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
+            } else if (data.command === 'SUBMIT_FORM') {
+                window.dispatchEvent(new CustomEvent('ai-submit-form'));
             }
         } catch (err) {
             console.error("[Voice AI ❌] Massive failure in Chat API pipeline:", err);
@@ -242,6 +256,20 @@ export function useVoiceAssistant({
                         setActiveTech(data.highlightTarget.toLowerCase() as TechId);
                     }
                 }
+            } else if (data.command === 'CLOSE_MODAL') {
+                setSelectedProject(null);
+            } else if (data.command === 'SCROLL') {
+                if (data.target === 'down') {
+                    window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });
+                } else if (data.target === 'up') {
+                    window.scrollBy({ top: -window.innerHeight * 0.7, behavior: 'smooth' });
+                } else if (data.target === 'top') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else if (data.target === 'bottom') {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
+            } else if (data.command === 'SUBMIT_FORM') {
+                window.dispatchEvent(new CustomEvent('ai-submit-form'));
             }
         } catch (err) {
             setIsListening(false);
