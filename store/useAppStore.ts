@@ -53,6 +53,7 @@ export const useAppStore = create<AppState>((set) => ({
     isListening: false,
     isPttActive: false,
     setIsListening: (listening) => set({ isListening: listening }),
+    setIsPttActive: (active) => set({ isPttActive: active }),
 
     isSpeaking: false,
     setIsSpeaking: (speaking) => set({ isSpeaking: speaking }),
