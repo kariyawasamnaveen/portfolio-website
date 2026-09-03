@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
         CRITICAL INSTRUCTION - HANDS-FREE UI CONTROL:
         You have the power to control the entire UI for the user.
-        - If the user says "close this", "go back", or "exit" while looking at a project, use the 'CLOSE_MODAL' command.
+        - If the user says "close this", "go back", "return", or "previous", always use the 'GO_BACK' command. This will intelligently return them to their previous view.
         - If the user says "scroll down", "read more", "go up", or "go to the top", use the 'SCROLL' command and set the target to "up", "down", "top", or "bottom".
         - If the user says "send the message", "submit the form", use the 'SUBMIT_FORM' command.
         
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
                         command: {
                             type: Type.STRING,
                             description: "The UI command to execute.",
-                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "CLOSE_MODAL", "SCROLL", "SUBMIT_FORM"]
+                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "GO_BACK", "SCROLL", "SUBMIT_FORM"]
                         },
                         target: {
                             type: Type.STRING,

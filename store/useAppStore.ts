@@ -4,6 +4,13 @@ import { Project } from '@/data/projects';
 export type Zone = 'identity' | 'logic' | 'projects' | 'impact' | 'connect';
 export type TechId = 'flutter' | 'react' | 'node' | 'python' | 'agentic' | 'edge' | 'healing' | 'zerotrust' | 'web3' | 'cicd' | null;
 
+export interface HistorySnapshot {
+    route: string;
+    zone: Zone;
+    projectOpen: string | null;
+    highlight: string | null;
+}
+
 interface AppState {
     activeZone: Zone;
     setActiveZone: (zone: Zone) => void;
@@ -41,6 +48,10 @@ interface AppState {
     hasSeenLoadingScreen: boolean;
     setHasSeenLoadingScreen: (seen: boolean) => void;
     setGlobalSpeak: (fn: (text: string) => void) => void;
+
+    historyStack: HistorySnapshot[];
+    pushHistory: (snapshot: HistorySnapshot) => void;
+    popHistory: () => HistorySnapshot | null;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -82,5 +93,25 @@ export const useAppStore = create<AppState>((set) => ({
     hasSeenLoadingScreen: false,
     setHasSeenLoadingScreen: (seen) => set({ hasSeenLoadingScreen: seen }),
     setGlobalSpeak: (fn) => set({ globalSpeak: fn }),
+
+    historyStack: [],
+    pushHistory: (snapshot) => set((state) => {
+        // Prevent pushing duplicate consecutive states
+        const last = state.historyStack[state.historyStack.length - 1];
+        if (last && last.route === snapshot.route && last.zone === snapshot.zone && last.projectOpen === snapshot.projectOpen && last.highlight === snapshot.highlight) {
+            return state;
+        }
+        return { historyStack: [...state.historyStack, snapshot] };
+    }),
+    popHistory: () => {
+        let popped: HistorySnapshot | null = null;
+        set((state) => {
+            if (state.historyStack.length === 0) return state;
+            const newStack = [...state.historyStack];
+            popped = newStack.pop() || null;
+            return { historyStack: newStack };
+        });
+        return popped;
+    },
 }));
 

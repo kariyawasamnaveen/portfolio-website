@@ -33,7 +33,8 @@ export function useVoiceAssistant({
         activeTech, setActiveTech,
         showHint, setShowHint,
         selectedProject, setSelectedProject,
-        setContactForm, setCodeHighlight
+        setContactForm, setCodeHighlight,
+        pushHistory, popHistory, codeHighlight
     } = useAppStore();
 
     // Refs
@@ -152,13 +153,25 @@ export function useVoiceAssistant({
                 }
             }
             
+            const saveHistory = () => {
+                pushHistory({
+                    route: window.location.pathname,
+                    zone: activeZone,
+                    projectOpen: selectedProject ? selectedProject.id : null,
+                    highlight: codeHighlight
+                });
+            };
+
             if (data.command === 'NAVIGATE' && data.target) {
+                saveHistory();
                 setActiveZone(data.target as Zone);
                 setCodeHighlight(null);
             } else if (data.command === 'OPEN_PROJECT' && data.target) {
+                saveHistory();
                 const proj = PROJECTS_DATA.find(p => p.id === data.target);
                 if (proj) setSelectedProject(proj);
             } else if (data.command === 'FILL_FORM') {
+                saveHistory();
                 setActiveZone('connect');
                 if (data.formData) {
                     setContactForm(prev => ({
@@ -167,6 +180,7 @@ export function useVoiceAssistant({
                     }));
                 }
             } else if (data.command === 'HIGHLIGHT_CODE') {
+                saveHistory();
                 setActiveZone('logic');
                 if (data.highlightTarget) {
                     setCodeHighlight(data.highlightTarget.toLowerCase());
@@ -174,8 +188,23 @@ export function useVoiceAssistant({
                         setActiveTech(data.highlightTarget.toLowerCase() as TechId);
                     }
                 }
-            } else if (data.command === 'CLOSE_MODAL') {
-                setSelectedProject(null);
+            } else if (data.command === 'GO_BACK') {
+                const prev = popHistory();
+                if (prev) {
+                    if (prev.route !== window.location.pathname) {
+                        window.location.href = prev.route; // Hard redirect for simplicity, or we could dispatch an event
+                    } else {
+                        setActiveZone(prev.zone);
+                        setCodeHighlight(prev.highlight);
+                        const proj = PROJECTS_DATA.find(p => p.id === prev.projectOpen);
+                        setSelectedProject(proj || null);
+                    }
+                } else {
+                    // Fallback if no history
+                    setSelectedProject(null);
+                    setCodeHighlight(null);
+                    setActiveZone('identity');
+                }
             } else if (data.command === 'SCROLL') {
                 if (data.target === 'down') {
                     window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });

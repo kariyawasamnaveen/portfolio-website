@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMicVAD } from "@ricky0123/vad-react";
 import { utils } from "@ricky0123/vad-web";
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/useAppStore';
 
 function arrayBufferToBase64(buffer: ArrayBuffer) {
     let binary = '';
@@ -19,6 +20,7 @@ export function useCvVoiceAssistant() {
     const [isActive, setIsActive] = useState(false);
     const [activeHighlight, setActiveHighlight] = useState<string | null>(null);
     const router = useRouter();
+    const { pushHistory, popHistory } = useAppStore();
 
     const recognitionRef = useRef<any>(null);
     const conversationHistoryRef = useRef<{role: string, text: string}[]>([]);
