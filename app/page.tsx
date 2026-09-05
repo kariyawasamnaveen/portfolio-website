@@ -240,13 +240,25 @@ export default function Home() {
 
                 <AnimatePresence>
                     {isUiRevealed && (
-                        <>
+                        <motion.div
+                            variants={{
+                                hidden: { opacity: 0 },
+                                show: {
+                                    opacity: 1,
+                                    transition: { staggerChildren: 0, delayChildren: 0.5 }
+                                }
+                            }}
+                            initial={skipIntro ? false : "hidden"}
+                            animate="show"
+                            className="fixed inset-0 z-[100] pointer-events-none"
+                        >
                             {/* Header - slides in from top */}
                             <motion.header 
-                                initial={{ y: -80, opacity: 0, filter: "blur(10px)" }}
-                                animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                                transition={{ type: "spring", damping: 22, stiffness: 120, delay: 0.1 }}
-                                className="fixed top-0 left-0 w-full p-4 md:p-8 z-[100] flex justify-between items-center pointer-events-none"
+                                variants={{
+                                    hidden: { y: -40, opacity: 0, scale: 0.95, filter: "blur(10px)" },
+                                    show: { y: 0, opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
+                                }}
+                                className="absolute top-0 left-0 w-full p-4 md:p-8 flex justify-between items-center pointer-events-none"
                             >
                                 <div className="flex items-center gap-5 pointer-events-auto">
                                     <motion.div 
@@ -261,17 +273,16 @@ export default function Home() {
                                         <span className="text-[10px] font-black tracking-[0.5em] text-emerald-400 uppercase leading-none mb-1 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]">Architect</span>
                                         <span className="text-sm font-bold tracking-[0.2em] uppercase text-white/90">Naveen.K</span>
                                     </div>
-
-
                                 </div>
                             </motion.header>
 
                             {/* Top Right 'For Hire' Badge */}
                             <motion.div 
-                                className="fixed top-6 right-4 md:top-10 md:right-10 z-[100] flex items-center gap-3"
-                                initial={{ x: 40, opacity: 0, scale: 0.8 }}
-                                animate={{ x: 0, opacity: 1, scale: 1 }}
-                                transition={{ type: "spring", damping: 18, stiffness: 200, delay: 0.5 }}
+                                variants={{
+                                    hidden: { x: 40, opacity: 0, scale: 0.95, filter: "blur(10px)" },
+                                    show: { x: 0, opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
+                                }}
+                                className="absolute top-6 right-4 md:top-10 md:right-10 flex items-center gap-3 pointer-events-auto"
                                 whileHover={{ scale: 1.05, y: -2 }}
                             >
                                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.3)]">
@@ -279,30 +290,34 @@ export default function Home() {
                                     <span className="text-[10px] font-black tracking-[0.2em] text-emerald-400/90 uppercase">For Hire</span>
                                 </div>
                             </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
 
-                <VoiceAssistantWidget 
-                    isUiRevealed={isUiRevealed}
-                    hasPoweredUp={hasPoweredUp}
-                    startDrift={startDrift}
-                    setIsUiRevealed={setIsUiRevealed}
-                    setIsAssetsReady={setIsAssetsReady}
-                />
-
-                {/* Central Bottom Navigation - macOS Dock style spring pop */}
-                <AnimatePresence>
-                    {isUiRevealed && (
-                        <motion.div 
-                            initial={{ y: 120, opacity: 0, scale: 0.8 }}
-                            animate={{ y: 0, opacity: 1, scale: 1 }}
-                            transition={{ type: "spring", damping: 16, stiffness: 180, delay: 0.6 }}
-                            className="relative z-[100] pointer-events-auto"
-                        >
-                            <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
+                            {/* Central Bottom Navigation */}
+                            <motion.div 
+                                variants={{
+                                    hidden: { y: 60, opacity: 0, scale: 0.95, filter: "blur(10px)" },
+                                    show: { y: 0, opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
+                                }}
+                                className="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-auto"
+                            >
+                                <CentralPortalNav activeZone={activeZone} onZoneChange={setActiveZone} />
+                            </motion.div>
                         </motion.div>
                     )}
+                </AnimatePresence>
+                
+                {/* Ensure VoiceAssistant is unblocked by z-index */}
+                <div className="relative z-[110]">
+                    <VoiceAssistantWidget 
+                        isUiRevealed={isUiRevealed}
+                        hasPoweredUp={hasPoweredUp}
+                        startDrift={startDrift}
+                        setIsUiRevealed={setIsUiRevealed}
+                        setIsAssetsReady={setIsAssetsReady}
+                    />
+                </div>
+                
+                {/* Empty block to replace the old AnimatePresence */}
+                <AnimatePresence>
                 </AnimatePresence>
 
 

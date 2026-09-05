@@ -1,307 +1,140 @@
-import React, { useRef, useState, Suspense, useEffect } from 'react';
+'use client'
+
+import React, { useRef, useEffect, useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, Float, ContactShadows, Center, useAnimations, Html } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { EffectComposer, Vignette, ChromaticAberration } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
+import RealisticOcean from './RealisticOcean';
 
-// 1. THE TRUE 3D HACKER MODEL COMPONENT
-function HackerModel({ isHovered, isSpeaking }: { isHovered: boolean, isSpeaking?: boolean }) {
-    const modelPath = typeof window !== 'undefined' && window.innerWidth < 768 ? '/avaturn_avatar_mobile.glb' : '/avaturn_avatar.glb';
-    const { scene } = useGLTF(modelPath);
-    const groupRef = useRef<THREE.Group>(null);
-    const headBoneRef = useRef<THREE.Bone | null>(null);
-    const faceMeshesRef = useRef<{mesh: THREE.SkinnedMesh, smile: number, talk: number, blinkL: number, blinkR: number}[]>([]);
+function WaterLineCamera({ isClicked }: { isClicked?: boolean }) {
+    const { camera } = useThree();
+    const speed = useRef(0);
+    const startY = 1.2; 
+    
+    // Noise variables for handheld shake
+    const timeRef = useRef(0);
 
-    // Mathematically perfect scale and Y-offset for the circular portrait
-    const fixedScale = 6.2; // Scaled up slightly as requested
-    const fixedPositionY = -10.2; // Adjusted for new scale
-
-    React.useEffect(() => {
-        // Reset face meshes on mount/scene change
-        faceMeshesRef.current = [];
+    useFrame((state, delta) => {
+        timeRef.current += delta;
+        const t = timeRef.current;
         
-        scene.traverse((child: any) => {
-            // Find Head/Neck Bone for LookAt tracking
-            if (child.isBone) {
-                const name = child.name.toLowerCase();
-                if (name.includes('head') || name.includes('neck')) {
-                    if (!headBoneRef.current || name.includes('head')) { 
-                        headBoneRef.current = child;
-                    }
-                }
-                // Force Arms down and backwards (tucked behind back) to hide them perfectly!
-                if (name === 'leftarm') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -1.2); // Down
-                } else if (name === 'rightarm') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 1.2); // Down
-                } else if (name === 'leftshoulder') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), -0.2);
-                } else if (name === 'rightshoulder') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(0, 0, 1), 0.2);
-                }
-                
-                // Straighten forearms so they point straight down instead of bending up
-                if (name === 'leftforearm' || name === 'rightforearm') {
-                    child.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 0.5); // Backward
-                }
-            }
+        if (isClicked) {
+            speed.current = Math.min(speed.current + delta * 30, 60);
+            camera.position.y += speed.current * delta;
+            camera.position.z -= speed.current * delta * 1.2; 
             
-            // Find ALL SkinnedMeshes with facial blendshapes (Head, Teeth, etc)
-            if (child.isSkinnedMesh && child.morphTargetDictionary) {
-                const dict = child.morphTargetDictionary;
-                let smile = -1, talk = -1, blinkL = -1, blinkR = -1;
-                for (const key in dict) {
-                    const k = key.toLowerCase();
-                    // Exact matches to prevent asymmetric distortion (like jawLeft or mouthSmileLeft)
-                    if (k === 'mouthsmile' || k === 'smile') smile = dict[key];
-                    if (k === 'jawopen' || k === 'mouthopen' || k === 'vrc.v_aa') talk = dict[key];
-                    if (k === 'eyeblinkleft' || k === 'eyeblink_l' || k === 'blinkleft') blinkL = dict[key];
-                    if (k === 'eyeblinkright' || k === 'eyeblink_r' || k === 'blinkright') blinkR = dict[key];
-                }
-                // If it has ANY facial expressions, add it to our array!
-                if (smile !== -1 || talk !== -1 || blinkL !== -1 || blinkR !== -1) {
-                    faceMeshesRef.current.push({ mesh: child, smile, talk, blinkL, blinkR });
-                }
+            // Subtle FOV pull
+            if ((camera as THREE.PerspectiveCamera).fov > 50) {
+                (camera as THREE.PerspectiveCamera).fov -= 0.5;
+                (camera as THREE.PerspectiveCamera).updateProjectionMatrix();
             }
-
-            // Fix Materials: Glitch backup and Glass Transparency
-            if (child.isMesh && child.material) {
-                const matName = child.material.name ? child.material.name.toLowerCase() : '';
-                
-                // Fix Glasses Lenses being solid white
-                if (matName.includes('glass') || matName.includes('lens')) {
-                    child.material.transparent = true;
-                    child.material.opacity = 0.3;
-                    child.material.roughness = 0;
-                    child.material.metalness = 0.8;
-                }
-
-                child.material._originalWireframe = child.material.wireframe === true;
-                child.material._originalEmissive = child.material.emissive ? child.material.emissive.clone() : new THREE.Color(0x000000);
-                child.material._originalEmissiveIntensity = child.material.emissiveIntensity !== undefined ? child.material.emissiveIntensity : 1;
-                child.material._isGlowMaterial = child.material.emissiveMap || child.material._originalEmissive.getHex() > 0;
-            }
-        });
-    }, [scene]);
-
-    useFrame((state) => {
-        const mouseTargetX = (state.pointer.x * Math.PI) / 3;
-        const mouseTargetY = (state.pointer.y * Math.PI) / 3;
-        const idleRotation = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-        
-        const targetRotY = isHovered ? mouseTargetX : idleRotation;
-        const targetRotX = isHovered ? -mouseTargetY : idleRotation * 0.5;
-
-        // Bone Tracking: Make the Head Look At the Mouse
-        if (headBoneRef.current) {
-            headBoneRef.current.rotation.y = THREE.MathUtils.lerp(headBoneRef.current.rotation.y, targetRotY, 0.1);
-            headBoneRef.current.rotation.x = THREE.MathUtils.lerp(headBoneRef.current.rotation.x, targetRotX, 0.1);
+        } else {
+            // Complex realistic wave bobbing + Handheld shake
+            const waveBob = Math.sin(t * 1.5) * 0.4 + Math.cos(t * 0.8) * 0.2;
+            const shakeX = Math.sin(t * 3.2) * 0.05 + Math.cos(t * 4.1) * 0.02;
+            const shakeY = Math.cos(t * 2.7) * 0.05 + Math.sin(t * 3.8) * 0.02;
             
-            if (groupRef.current) {
-                groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0, 0.05);
-                groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0, 0.05);
-            }
-        } else if (groupRef.current) {
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.05);
-            groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.05);
-        }
-        
-        // Breathing Scale
-        if (groupRef.current) {
-            const targetScale = isHovered ? 1.05 : 1;
-            groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.05));
-        }
-
-        // Facial Expressions: AUTOMATIC DEMO MODE
-        const time = state.clock.elapsedTime;
-        
-        // Force smile: 3 seconds smiling, 3 seconds serious
-        const targetSmile = (time % 6) > 3 ? 1.0 : 0.0;
-        
-        // Force talking: Talk for 2 seconds, stop for 2 seconds
-        const isFakeTalking = (time % 4) > 2;
-        // Combine multiple sine waves for a much more natural, syllable-like lip sync!
-        const naturalTalk = (Math.sin(time * 25) * 0.5 + Math.sin(time * 12) * 0.5) * 0.6 + 0.2;
-        const targetTalk = isFakeTalking ? Math.max(0, naturalTalk) : 0.0;
-        
-        // Blinking Logic
-        const blinkCycle = time % 4; // Blink every ~4 seconds
-        const isBlinking = blinkCycle > 3.8;
-        const blinkValue = isBlinking ? Math.sin((blinkCycle - 3.8) * Math.PI * 5) : 0; // Quick pulse 0->1->0
-
-        faceMeshesRef.current.forEach(({ mesh, smile, talk, blinkL, blinkR }) => {
-            if (smile !== -1) {
-                const currentSmile = mesh.morphTargetInfluences![smile];
-                mesh.morphTargetInfluences![smile] = THREE.MathUtils.lerp(currentSmile, targetSmile, 0.1);
-            }
-            if (talk !== -1) {
-                const currentTalk = mesh.morphTargetInfluences![talk];
-                mesh.morphTargetInfluences![talk] = THREE.MathUtils.lerp(currentTalk, targetTalk, 0.3);
-            }
-            if (blinkL !== -1) {
-                mesh.morphTargetInfluences![blinkL] = Math.max(0, blinkValue);
-            }
-            if (blinkR !== -1) {
-                mesh.morphTargetInfluences![blinkR] = Math.max(0, blinkValue);
-            }
-        });
-
-        // 2036 CYBER-GOD GLITCH & GLOW PHYSICS (DESKTOP ONLY to save mobile CPU)
-        if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-            scene.traverse((child: any) => {
-                if (child.isMesh && child.material && !child.material.name?.toLowerCase().includes('glass')) {
-                    if (isHovered) {
-                        if (child.material._isGlowMaterial) {
-                            child.material.emissive = new THREE.Color(0x00ffff);
-                            const pulse = Math.sin(time * 15) * 0.5 + 0.5;
-                            child.material.emissiveIntensity = 5 + (pulse * 5);
-                        } else {
-                            const isGlitching = Math.random() > 0.98;
-                            child.material.wireframe = isGlitching;
-                        }
-                    } else {
-                        child.material.wireframe = child.material._originalWireframe;
-                        if (child.material._isGlowMaterial) {
-                            child.material.emissiveIntensity = 0;
-                        }
-                    }
-                }
-            });
+            camera.position.y = startY + waveBob;
+            camera.position.x = shakeX;
+            camera.position.z = 25;
+            
+            // Handheld rotation
+            camera.rotation.x = -0.02 + shakeY * 0.5;
+            camera.rotation.z = shakeX * 0.2;
         }
     });
-
-    return (
-        <group ref={groupRef}>
-            <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2} floatingRange={[-0.05, 0.05]}>
-                <primitive object={scene} scale={fixedScale} position={[0, fixedPositionY, 0]} />
-            </Float>
-        </group>
-    );
+    return null;
 }
 
-useGLTF.preload('/avaturn_avatar.glb');
-useGLTF.preload('/avaturn_avatar_mobile.glb');
-
-// 2. THE MAIN COMPONENT
-export default function CodeLogo({ isSpeaking, onReportTime }: { isSpeaking?: boolean, onReportTime?: (name: string, time: number) => void }) {
-    const [isHovered, setIsHovered] = useState(false);
-    const [boneNames, setBoneNames] = useState<string[]>([]);
-
-    const hasReported = useRef(false);
+export default function CodeLogo({
+    isClicked, isSpeaking, onReportTime
+}: {
+    isClicked?: boolean
+    isSpeaking?: boolean
+    onReportTime?: (name:string, time:number) => void
+}) {
+    const reported = useRef(false);
     useEffect(() => {
-        if (onReportTime && !hasReported.current) {
-            hasReported.current = true;
-            onReportTime('3D Avatar Model', Date.now());
-            onReportTime('Creative Coder Text', Date.now() + 1000); // Because it has a 1s CSS delay
+        if (onReportTime && !reported.current) {
+            reported.current = true;
+            onReportTime('Realistic Ocean Polished Intro', Date.now());
         }
     }, [onReportTime]);
 
-    const textVariants = {
-        hidden: { opacity: 0, y: 15, filter: 'blur(8px)' },
-        visible: (i: number) => ({
-            opacity: 1,
-            y: 0,
-            filter: 'blur(0px)',
-            color: "#00ffff", // Always bright cyan
-            transition: { delay: i * 0.02, duration: 0.4, ease: "easeOut" }
-        }),
-        hover: (i: number) => ({
-            y: [0, -6, 0],
-            color: "#00ffff", 
-            transition: { delay: i * 0.02, duration: 0.4, ease: "easeInOut" }
-        })
-    };
-
-    const nameText = "KARIYAWASAM".split("");
-
     return (
-        <div 
-            className="relative flex flex-col items-center justify-center w-[320px] h-[480px] md:w-[450px] md:h-[600px] cursor-pointer -mt-4 md:-mt-8"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            {/* 3. TRUE 3D CANVAS LAYER - PREMIUM ROUND FRAME */}
-            <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className={`relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-[2px] transition-all duration-500 z-30 pointer-events-auto border-cyan-400 shadow-[0_0_50px_rgba(0,255,255,0.4)] bg-black/40 md:backdrop-blur-xl`}
+        <div className="relative w-full h-full overflow-hidden bg-black flex items-center justify-center">
+            <motion.div
+                className="absolute inset-0 z-0 pointer-events-auto"
+                initial={{ opacity:0 }}
+                animate={{ opacity:1 }}
+                transition={{ duration: 2 }}
             >
-                <Canvas 
-                    camera={{ position: [0, 0, 5], fov: 45 }} 
-                    dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)}
-                    gl={{ alpha: true, antialias: false }}
+                <Canvas
+                    camera={{ position: [0, 1.2, 25], fov: 75 }}
+                    dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1}
+                    gl={{ alpha: false, antialias: false }}
+                    scene={{ background: new THREE.Color('#010000') }}
                 >
                     <Suspense fallback={null}>
-                        {/* Cinematic PBR Lighting */}
-                        <ambientLight intensity={0.6} />
-                        <directionalLight position={[-5, 5, 5]} intensity={2.0} color="#00ffff" />
-                        <directionalLight position={[5, 5, 2]} intensity={1.5} color="#ffffff" />
-                        <pointLight position={[0, 2, 2]} intensity={2} color="#ffffff" distance={5} />
+                        {/* Heavy Fog to blend horizon naturally */}
+                        <fogExp2 attach="fog" args={['#010000', 0.025]} />
+                        <ambientLight intensity={0.15} color="#440000" />
                         
-                        {/* The Model */}
-                        <HackerModel isHovered={isHovered} isSpeaking={isSpeaking} />
+                        <WaterLineCamera isClicked={isClicked} />
+                        <RealisticOcean isSpeaking={isSpeaking || false} />
                         
-                        {/* 2036 CYBER-GOD POST PROCESSING - DISABLED ON MOBILE FOR MAX PERFORMANCE */}
-                        {typeof window !== 'undefined' && window.innerWidth >= 768 && (
-                            <EffectComposer>
-                                <Bloom 
-                                    luminanceThreshold={0.5} 
-                                    mipmapBlur 
-                                    intensity={1.5} 
-                                />
-                            </EffectComposer>
-                        )}
+                        {/* Red glow that reflects heavily on water directly under the text */}
+                        <pointLight position={[0, 5, 10]} intensity={300} color="#ff2200" distance={50} />
+                        <pointLight position={[0, 10, -150]} intensity={8000} color="#ff0000" distance={400} />
+                        
+                        {/* Post Processing for Film Look */}
+                        <EffectComposer>
+                            <Vignette eskil={false} offset={0.3} darkness={0.9} blendFunction={BlendFunction.NORMAL} />
+                            <ChromaticAberration 
+                                blendFunction={BlendFunction.NORMAL} 
+                                offset={new THREE.Vector2(0.002, 0.002)} 
+                                radialModulation={false} modulationOffset={0} />
+                        </EffectComposer>
                     </Suspense>
                 </Canvas>
+                
+                {/* CSS Overlay for extra cinematic grading */}
+                <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.95) 100%)' }} />
             </motion.div>
 
-            {/* 4. PREMIUM TYPOGRAPHY */}
-            <div className={`mt-8 text-center flex flex-col items-center transition-all duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}>
-                
-                {/* Glitch / Staggered Name Reveal */}
-                <div className="flex space-x-1 mb-4 font-extrabold text-xl md:text-3xl tracking-[0.15em] md:tracking-[0.25em]">
-                    {nameText.map((char, index) => (
-                        <motion.span
-                            key={index}
-                            custom={index}
-                            initial="hidden"
-                            animate="visible"
-                            whileHover="hover"
-                            variants={textVariants as any}
-                            className="inline-block"
-                            style={{ 
-                                textShadow: '0 0 15px rgba(0,255,255,0.8)'
-                            }}
-                            onAnimationComplete={index === nameText.length - 1 ? () => onReportTime && onReportTime('Kariyawasam Title', Date.now()) : undefined}
-                        >
-                            {char === " " ? "\u00A0" : char}
-                        </motion.span>
-                    ))}
-                </div>
-
-                {/* Glassmorphism Title Badge */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.9 }} 
-                    animate={{ opacity: 1, y: 0, scale: 1 }} 
-                    transition={{ delay: 0.2, type: 'spring' }}
-                    className="relative px-5 py-1.5 rounded-full border border-cyan-400/60 bg-cyan-900/40 backdrop-blur-md font-mono text-[10px] md:text-xs tracking-[0.4em] uppercase overflow-hidden transition-all duration-500 mt-2"
+            <motion.div
+                className="relative z-20 flex flex-col items-center gap-4 pointer-events-none mix-blend-screen"
+                animate={ isClicked ? { scale: 1.5, opacity: 0, filter: 'blur(15px)', y: -100 } : { scale: 1, opacity: 1, filter: 'blur(0px)', y: 0 }}
+                transition={{ duration: 0.8, ease: "easeIn" }}
+            >
+                <h1 className="text-5xl md:text-7xl font-black tracking-[0.25em] text-white opacity-95"
+                    style={{ textShadow: '0 0 50px rgba(255,0,0,0.9), 0 0 15px rgba(255,100,100,0.6)' }}>
+                    KARIYAWASAM
+                </h1>
+                <p className="font-mono text-gray-300 tracking-[0.6em] text-sm md:text-base uppercase opacity-60">
+                    CREATIVE CODER
+                </p>
+                <motion.div
+                    className="mt-10 flex flex-col items-center gap-2 pointer-events-none select-none"
+                    animate={{ opacity: [0.3, 0.9, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                    <span className="relative z-10 font-semibold text-cyan-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]">
-                        Creative Coder
+                    <span className="text-xs md:text-sm font-mono tracking-[0.5em] text-white uppercase opacity-70">
+                        CLICK TO ENTER
                     </span>
-                    {/* Framer Motion Shimmer Always Active */}
-                    <motion.div 
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                        initial={{ x: '-100%' }}
-                        animate={{ x: '200%' }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                    />
+                    <div className="w-px h-10 bg-gradient-to-b from-white to-transparent opacity-60" />
                 </motion.div>
-            </div>
+            </motion.div>
+            
+            <motion.div 
+                className="absolute inset-0 z-50 pointer-events-none bg-red-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isClicked ? 1 : 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                style={{ mixBlendMode: 'overlay' }}
+            />
         </div>
     );
 }

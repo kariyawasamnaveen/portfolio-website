@@ -20,7 +20,7 @@ export default function VoiceAssistantWidget({
     setIsUiRevealed,
     setIsAssetsReady
 }: VoiceAssistantWidgetProps) {
-    const { isListening, isSpeaking, showHint, setShowHint, activeZone, isPttActive, setIsPttActive } = useAppStore();
+    const { isListening, isSpeaking, showHint, setShowHint, activeZone, isPttActive, setIsPttActive, setActiveZone } = useAppStore();
     
     // Initialize the logic hook here
     const { processText } = useVoiceAssistant({
@@ -79,8 +79,11 @@ export default function VoiceAssistantWidget({
             {activeZone === 'identity' && (
                 <FloatingVoicePrompts 
                     isVisible={showHint && !isSpeaking && !isListening} 
-                    onCommandClick={(text: string) => {
+                    onCommandClick={(text: string, targetZone?: string) => {
                         setShowHint(false);
+                        if (targetZone) {
+                            setActiveZone(targetZone as any);
+                        }
                         processText(text);
                     }} 
                 />

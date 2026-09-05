@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
 
 type Zone = 'identity' | 'projects' | 'logic' | 'impact' | 'connect'
@@ -68,14 +69,14 @@ export default function CentralPortalNav({ activeZone, onZoneChange }: CentralPo
                 ))}
                 
                 {/* Direct Link to the Standalone Resume Page */}
-                <a 
+                <Link 
                     href="/resume"
                     className="relative px-3 md:px-6 py-2 group flex items-center justify-center min-w-max border-l border-white/10 ml-2"
                 >
                     <span className="text-[8px] md:text-[9px] font-bold tracking-[0.15em] md:tracking-[0.25em] transition-all duration-300 z-10 text-cyan-400 group-hover:text-cyan-300 drop-shadow-[0_0_8px_rgba(0,255,255,0.4)]">
                         RESUME
                     </span>
-                </a>
+                </Link>
             </div>
         </div>
     )

@@ -1,26 +1,23 @@
 'use client';
 
 import React from 'react';
+import { VOICE_COMMANDS } from '@/data/voice-prompts';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface FloatingVoicePromptsProps {
-    onCommandClick: (text: string) => void;
+    onCommandClick: (text: string, targetZone?: string) => void;
     isVisible: boolean;
 }
 
-const COMMANDS = [
-    { text: "Tell me about Naveen's AI expertise", top: '20%', left: '15%' },
-    { text: "Show me his most complex architecture", top: '30%', right: '15%' },
-    { text: "What are his strongest skills?", bottom: '30%', left: '20%' },
-    { text: "Why should we hire him?", bottom: '25%', right: '20%' }
-];
+
 
 export default function FloatingVoicePrompts({ onCommandClick, isVisible }: FloatingVoicePromptsProps) {
     return (
         <AnimatePresence>
             {isVisible && (
                 <div className="absolute inset-0 z-50 pointer-events-none">
-                    {COMMANDS.map((cmd, idx) => (
+                    {VOICE_COMMANDS.map((cmd, idx) => (
                         <motion.div
                             key={idx}
                             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -47,7 +44,7 @@ export default function FloatingVoicePrompts({ onCommandClick, isVisible }: Floa
                                 right: cmd.right,
                                 bottom: cmd.bottom
                             }}
-                            onClick={() => onCommandClick(cmd.text)}
+                            onClick={() => onCommandClick(cmd.text, cmd.targetZone)}
                         >
                             <div className="relative">
                                 {/* Glow Behind */}

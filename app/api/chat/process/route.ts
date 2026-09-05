@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from '@google/genai';
+import { aiService } from '@/lib/services/ai-service';
 import { NextResponse } from 'next/server';
 import { PROJECTS_DATA } from '@/data/projects';
 import { AI_KNOWLEDGE_BASE } from '@/lib/ai-knowledge';
@@ -15,16 +15,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Audio data or text prompt is required' }, { status: 400 });
         }
 
-        const apiKey = process.env.GEMINI_API_KEY || 'dummy';
-        if (apiKey === 'dummy') {
-            return NextResponse.json({ 
-                spokenResponse: "I am functioning in dummy mode.", 
-                command: "NONE", 
-                target: "" 
-            });
-        }
-
-        const ai = new GoogleGenAI({ apiKey: apiKey });
+        
 
         const projectsContext = PROJECTS_DATA.map(p => 
             `Project ID: ${p.id}\nTitle: ${p.title}\nTagline: ${p.tagline}\nProblem: ${p.problem}\nSolution: ${p.solution}\nTechnologies: ${p.tech.join(', ')}\nDeep Dive Story: ${p.deepDive?.story}\nArchitecture: ${p.deepDive?.architecture}\nBusiness Value & ROI: ${p.deepDive?.businessValue || 'N/A'}\nDeep Architecture Details: ${p.deepDive?.architectureDetails || 'N/A'}\nBiggest Challenge Solved: ${p.deepDive?.biggestChallenge || 'N/A'}`

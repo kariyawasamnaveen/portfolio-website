@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import dynamic from 'next/dynamic'
-const CodeLogo = dynamic(() => import('./CodeLogo'), { ssr: false, loading: () => <div className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full bg-cyan-900/20 animate-pulse border border-cyan-500/30 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-t-2 border-cyan-400 animate-spin" /></div> })
+const CodeLogo = dynamic(() => import('./CodeLogo'), { ssr: false, loading: () => <div className="w-[180px] h-[180px] md:w-[220px] md:h-[220px] rounded-full bg-red-900/20 animate-pulse border border-red-900/30 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-t-2 border-red-700 animate-spin" /></div> })
 
 // The True Spherical Logo Mesh
 const LogoSphereMesh = () => {
@@ -91,7 +91,7 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
             setIsVisible(false)
             onDriftStart() 
             onLoadingComplete() 
-        }, 500) // Reduced from 3000ms to 500ms
+        }, 800) // Reduced from 3000ms to 500ms
     }
 
     return (
@@ -127,7 +127,7 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
 
                     {/* Interactive Logo Container - Geometric Masterpiece */}
                     <motion.div
-                        className="relative flex items-center justify-center cursor-pointer"
+                        className="relative w-full h-full flex items-center justify-center cursor-pointer"
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
                         onClick={handleClick}
@@ -135,74 +135,31 @@ export default function LoadingScreen({ onLoadingComplete, onDriftStart, isReady
                         transition={isClicked ? { duration: 0.5, ease: exquisiteEase as any } : {}}
                     >
                         
-                        {/* 10 YEARS FUTURE: THE QUANTUM NEURAL CORE */}
-                        <div className="relative w-[280px] h-[280px] md:w-[320px] md:h-[320px] flex items-center justify-center z-20">
+                                                {/* 10 YEARS FUTURE: THE QUANTUM NEURAL CORE */}
+                        <div className="absolute inset-0 w-screen h-screen flex items-center justify-center z-20 overflow-hidden">
                             
-                            {/* RINGS AND GLOW (Evaporates UP as colored smoke) */}
-                            <motion.div
-                                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                                animate={isClicked ? {
-                                    y: -300,           // Shoots up
-                                    scaleX: 0.5,
-                                    scaleY: 3,         // Stretches into smoke
-                                    opacity: 0,
-                                    filter: 'blur(30px) hue-rotate(180deg) brightness(2)' // Cyan smoke
-                                } : {
-                                    y: 0, scaleX: 1, scaleY: 1, opacity: 1, filter: 'blur(0px) hue-rotate(0deg) brightness(1)'
-                                }}
-                                transition={{ duration: 2, ease: "easeOut" }}
-                            >
-                                {/* Outer Dyson Data Rings (Erratic, Complex Orbit) */}
-                                <div className="absolute inset-0 rounded-full border border-white/5 border-t-red-500/50 animate-dyson-0" />
-                                <div className="absolute inset-0 rounded-full border border-white/5 border-b-white/30 animate-dyson-1" />
-                                <div className="absolute inset-0 rounded-full border border-white/5 border-t-red-500/50 animate-dyson-2" />
-                                <div className="absolute inset-0 rounded-full border border-white/5 border-b-white/30 animate-dyson-3" />
-
-                                {/* Inner High-Speed Accelerator Rings */}
-                                <div className="absolute w-[170px] h-[170px] md:w-[210px] md:h-[210px] rounded-full border-[2px] border-transparent border-l-red-500/80 animate-accel-0" />
-                                <div className="absolute w-[170px] h-[170px] md:w-[210px] md:h-[210px] rounded-full border-[2px] border-transparent border-r-white/80 animate-accel-1" />
-
-                                {/* Quantum Targeting Crosshair */}
-                                <div className="absolute w-[40px] h-[40px] border border-red-500/40 rounded-full animate-crosshair" />
-                            </motion.div>
-
                             {/* THE LOGO CORE (Dissolves on the spot) */}
                             <motion.div 
-                                className="relative w-[180px] h-[180px] md:w-[220px] md:h-[220px] z-30 flex items-center justify-center"
+                                className="relative w-full h-full z-30 flex items-center justify-center"
                                 animate={isClicked ? {
-                                    scale: 1.4,       // Expands as it dissipates
-                                    opacity: 0,       // Dissolves completely
-                                    filter: 'blur(25px) brightness(2)' // Bright flash and heavy blur to simulate disintegration
+                                    scale: 1.4,
+                                    opacity: 0,
+                                    filter: 'blur(25px) brightness(2)'
                                 } : {
                                     scale: [1, 1.05, 1], opacity: 1, filter: ['blur(0px) brightness(1)', 'blur(0px) brightness(1.3)', 'blur(0px) brightness(1)']
                                 }}
                                 transition={isClicked ? { duration: 1.2, ease: "easeOut" } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
                             >
                                 {/* Neural Energy Core Glow */}
-                                <div className="absolute inset-0 rounded-full bg-red-600/10 blur-[25px] animate-pulse pointer-events-none" />
+                                <div className="absolute inset-0 rounded-full bg-cyan-600/5 blur-[35px] animate-pulse pointer-events-none" />
                                 
                                 <CodeLogo 
+                                    isClicked={isClicked}
                                     isSpeaking={isSpeaking} 
                                     onReportTime={(name, time) => {
                                         setElementTimes(prev => ({ ...prev, [name]: (time - mountTimeRef.current) / 1000 }))
                                     }}
                                 />
-                                
-                                {/* DEBUG TELEMETRY */}
-                                <div className="absolute -bottom-24 w-max flex gap-2 pointer-events-none z-50">
-                                    <div className="bg-black/90 border border-amber-500/50 text-amber-500 text-[9px] font-mono p-2 rounded shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                                        <div className="font-bold border-b border-amber-500/30 mb-1 pb-1">TOTAL_LOAD_TIME</div>
-                                        <div>{loadTime !== null ? `${loadTime.toFixed(2)}s` : 'WAITING...'}</div>
-                                    </div>
-                                    <div className="bg-black/90 border border-cyan-500/50 text-cyan-400 text-[9px] font-mono p-2 rounded shadow-[0_0_10px_rgba(0,255,255,0.2)]">
-                                        <div className="font-bold border-b border-cyan-500/30 mb-1 pb-1">WIDGET_MOUNT_TIMES</div>
-                                        {Object.entries(elementTimes).map(([key, val]) => (
-                                            <div key={key} className="flex justify-between gap-4">
-                                                <span>{key}:</span><span>{val.toFixed(2)}s</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
                             </motion.div>
 
                         </div>
