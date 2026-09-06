@@ -76,11 +76,15 @@ export async function POST(request: Request) {
         - "identity" : Use if they want to go home, back to the main screen, or if they simply say "go back" or "back".
         
         Available Project Targets (Set command to "OPEN_PROJECT"):
-        - "shemet" : Opens the Shemet Dating app.
-        - "habit-flow" : Opens the Habit Flow app.
-        - "recapai" : Opens the Recap AI app.
-        - "bizlangai" : Opens the Bizlang AI app.
-        - "heartsync" : Opens the Heart Sync app.
+        - "shemet" : Use for "Shemet", "the dating app", "Shemet dating".
+        - "habit-tracker" : Use for "Habit Flow", "the habit app", "habit tracker".
+        - "fitness-tracker" : Use for "Fitness Tracker", "the workout app", "fitness app".
+        - "expense-tracker" : Use for "Expense Tracker", "the finance app", "expense app".
+        - "commish-ai" : Use for "Commish AI", "the fantasy sports AI", "Commish".
+        - "estate-core" : Use for "EstateCore", "the real estate project", "estate core".
+        - "bizlangai" : Use for "BizLang AI", "BizLang", "the language AI".
+        - "heartsync" : Use for "HeartSync", "Heart Sync", "the health monitor".
+        - "ig-engagement-bot" : Use for "IG Engagement Bot", "the Instagram bot", "engagement bot".
         
         CRITICAL INSTRUCTION - AUTO FORM FILLING:
         If the user wants to hire Naveen, contact him, or leave a message, and they provide an email or message, YOU MUST set command to "FILL_FORM".
