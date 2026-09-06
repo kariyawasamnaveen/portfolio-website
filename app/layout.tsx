@@ -6,6 +6,7 @@ import ClientWrapper from "@/components/ClientWrapper";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://kariyawasamnaveen.github.io'),
   title: "Naveen Sandeepa | Lead Software Architect",
   description: "Elite Mobile (Flutter) & Backend Developer. Specializing in Clean Architecture, BLoC Pattern, and high-performance, scalable systems.",
   keywords: ["Software Architect", "Flutter Developer", "Backend Developer", "Clean Architecture", "Firebase", "Node.js", "Naveen Sandeepa", "Sri Lanka Developer"],

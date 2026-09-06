@@ -1,3 +1,4 @@
+import Image from 'next/image';
 'use client'
 
 import { motion } from 'framer-motion'
@@ -72,11 +73,7 @@ export default function HeroSection() {
                             <div className="absolute inset-0 border-2 border-dashed border-neutral-800 rounded-full animate-[spin_20s_linear_infinite]" />
                             
                             <div className="absolute inset-4 rounded-full overflow-hidden border-4 border-[#171717] shadow-2xl">
-                                <img 
-                                    src="/naveen.png" 
-                                    alt="Naveen Kariyawasam" 
-                                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"
-                                />
+                                <Image src="/naveen.png" alt="Naveen Kariyawasam" fill className="object-cover grayscale hover:grayscale-0 transition-all duration-500" />
                             </div>
 
                             {/* Floating badge */}

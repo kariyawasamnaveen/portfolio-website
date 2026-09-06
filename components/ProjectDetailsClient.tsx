@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image';
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -129,12 +130,12 @@ export default function ProjectDetailsClient({ project }: { project: any }) {
                                     <button
                                         key={`thumb-${idx}`}
                                         onClick={() => selectMedia(idx, false)}
-                                        className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-3 transition-all ${selectedIndex === idx && !isVideo
+                                        className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-3 transition-all ${selectedIndex === idx && !isVideo
                                             ? 'border-blue-600 scale-105 shadow-lg'
                                             : 'border-gray-300 dark:border-gray-700 hover:border-blue-400'
                                             }`}
                                     >
-                                        <img src={img} alt={`View ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <Image src={img} alt={`View ${idx + 1}`} fill className="object-cover" />
                                     </button>
                                 ))}
 

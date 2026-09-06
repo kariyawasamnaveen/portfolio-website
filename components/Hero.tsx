@@ -1,3 +1,4 @@
+import Image from 'next/image';
 'use client'
 import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiMail, FiDownload, FiArrowDown } from 'react-icons/fi'
@@ -61,11 +62,7 @@ export default function Hero() {
               whileHover={{ scale: 1.05 }}
               className="absolute inset-2 rounded-full overflow-hidden border-4 border-black"
             >
-              <img 
-                src="/naveen.png" 
-                alt="Naveen Kariyawasam"
-                className="w-full h-full object-cover"
-              />
+              <Image src="/naveen.png" alt="Naveen Kariyawasam" fill className="object-cover" />
             </motion.div>
 
             {/* Status Badge */}

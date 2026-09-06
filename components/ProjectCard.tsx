@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import { FiGithub, FiExternalLink, FiX, FiZoomIn, FiPlay, FiPause } from 'react-icons/fi'
@@ -179,7 +180,7 @@ export default function ProjectCard({ project }: { project: Project }) {
                 }`}
               >
                 {media.type === 'image' ? (
-                  <img src={media.src} alt="" className="w-full h-full object-cover" />
+                  <Image src={media.src} alt="" fill className="object-cover" />
                 ) : (
                   <>
                     <video src={media.src} className="w-full h-full object-cover" />
@@ -276,11 +277,7 @@ export default function ProjectCard({ project }: { project: Project }) {
                 className="relative aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl"
               >
                 {currentMedia?.type === 'image' ? (
-                  <img 
-                    src={currentMedia.src} 
-                    alt={project.title} 
-                    className="w-full h-full object-contain" 
-                  />
+                  <Image src={currentMedia.src} alt={project.title || ""} fill className="object-contain" />
                 ) : (
                   <video
                     src={currentMedia?.src}
@@ -323,7 +320,7 @@ export default function ProjectCard({ project }: { project: Project }) {
                     }`}
                   >
                     {media.type === 'image' ? (
-                      <img src={media.src} alt="" className="w-full h-full object-cover" />
+                      <Image src={media.src} alt="" fill className="object-cover" />
                     ) : (
                       <>
                         <video src={media.src} className="w-full h-full object-cover" />

@@ -93,9 +93,8 @@ export default function CodeLogo({
                         <EffectComposer>
                             <Vignette eskil={false} offset={0.3} darkness={0.9} blendFunction={BlendFunction.NORMAL} />
                             <ChromaticAberration 
-                                blendFunction={BlendFunction.NORMAL} 
                                 offset={new THREE.Vector2(0.002, 0.002)} 
-                                radialModulation={false} modulationOffset={0} />
+                                />
                         </EffectComposer>
                     </Suspense>
                 </Canvas>
