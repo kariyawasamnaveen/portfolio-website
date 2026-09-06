@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image';
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiArrowLeft, FiPlay, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import Link from 'next/link'
@@ -36,6 +36,17 @@ export default function ProjectDetailsClient({ project }: { project: any }) {
             setIsVideo(false)
         }
     }
+
+    useEffect(() => {
+        const onNext = () => handleNext();
+        const onPrev = () => handlePrevious();
+        window.addEventListener('ai-gallery-next', onNext);
+        window.addEventListener('ai-gallery-previous', onPrev);
+        return () => {
+            window.removeEventListener('ai-gallery-next', onNext);
+            window.removeEventListener('ai-gallery-previous', onPrev);
+        };
+    }, [handleNext, handlePrevious]);
 
     const selectMedia = (index: number, isVideoClick: boolean = false) => {
         setSelectedIndex(index)

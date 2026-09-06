@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMicVAD } from "@ricky0123/vad-react";
 import { utils } from "@ricky0123/vad-web";
+import { useRouter } from 'next/navigation';
 import { useAppStore, TechId, Zone } from '@/store/useAppStore';
 import { PROJECTS_DATA, Project } from '@/data/projects';
 
@@ -23,6 +24,7 @@ export function useVoiceAssistant({
     hasPoweredUp: boolean;
     setIsAssetsReady: (ready: boolean) => void;
 }) {
+    const router = useRouter();
     // global states
     const {
         isBotActive, setIsBotActive,
@@ -164,7 +166,11 @@ export function useVoiceAssistant({
 
             if (data.command === 'NAVIGATE' && data.target) {
                 saveHistory();
-                setActiveZone(data.target as Zone);
+                if (['resume', 'guestbook', 'calculator', 'playground'].includes(data.target)) {
+                    router.push('/' + data.target);
+                } else {
+                    setActiveZone(data.target as Zone);
+                }
                 setCodeHighlight(null);
             } else if (data.command === 'OPEN_PROJECT' && data.target) {
                 saveHistory();
@@ -204,6 +210,19 @@ export function useVoiceAssistant({
                     setSelectedProject(null);
                     setCodeHighlight(null);
                     setActiveZone('identity');
+                }
+            } else if (data.command === 'GALLERY_NAV') {
+                if (data.target === 'next') {
+                    window.dispatchEvent(new CustomEvent('ai-gallery-next'));
+                } else if (data.target === 'previous') {
+                    window.dispatchEvent(new CustomEvent('ai-gallery-previous'));
+                }
+            } else if (data.command === 'OPEN_EXTERNAL_LINK') {
+                if (selectedProject) {
+                    const url = data.target === 'github' ? selectedProject.github_url : selectedProject.demo_url;
+                    if (url && url !== '#') {
+                        window.open(url, '_blank');
+                    }
                 }
             } else if (data.command === 'SCROLL') {
                 if (data.target === 'down') {
@@ -264,7 +283,11 @@ export function useVoiceAssistant({
             }
             
             if (data.command === 'NAVIGATE' && data.target) {
-                setActiveZone(data.target as Zone);
+                if (['resume', 'guestbook', 'calculator', 'playground'].includes(data.target)) {
+                    router.push('/' + data.target);
+                } else {
+                    setActiveZone(data.target as Zone);
+                }
                 setCodeHighlight(null); 
             } else if (data.command === 'OPEN_PROJECT' && data.target) {
                 const proj = PROJECTS_DATA.find(p => p.id === data.target);
@@ -287,6 +310,19 @@ export function useVoiceAssistant({
                 }
             } else if (data.command === 'CLOSE_MODAL') {
                 setSelectedProject(null);
+            } else if (data.command === 'GALLERY_NAV') {
+                if (data.target === 'next') {
+                    window.dispatchEvent(new CustomEvent('ai-gallery-next'));
+                } else if (data.target === 'previous') {
+                    window.dispatchEvent(new CustomEvent('ai-gallery-previous'));
+                }
+            } else if (data.command === 'OPEN_EXTERNAL_LINK') {
+                if (selectedProject) {
+                    const url = data.target === 'github' ? selectedProject.github_url : selectedProject.demo_url;
+                    if (url && url !== '#') {
+                        window.open(url, '_blank');
+                    }
+                }
             } else if (data.command === 'SCROLL') {
                 if (data.target === 'down') {
                     window.scrollBy({ top: window.innerHeight * 0.7, behavior: 'smooth' });

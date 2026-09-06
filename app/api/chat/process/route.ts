@@ -43,6 +43,11 @@ export async function POST(request: Request) {
         - If the user says "scroll down", "read more", "go up", or "go to the top", use the 'SCROLL' command and set the target to "up", "down", "top", or "bottom".
         - If the user says "send the message", "submit the form", use the 'SUBMIT_FORM' command.
         
+        CRITICAL INSTRUCTION - PROJECT INTERACTIONS:
+        ONLY use these commands if a project is currently open (check currentContext):
+        - If they say "next image", "next photo", "show the previous one", use 'GALLERY_NAV' with target "next" or "previous".
+        - If they say "open the github repo", "show me the live site", use 'OPEN_EXTERNAL_LINK' with target "github" or "live_demo".
+        
         CRITICAL INSTRUCTION - GRACEFUL FALLBACKS:
         If the user's audio is unintelligible, just background noise, or a mumbled half-sentence, DO NOT just say 'I don't understand'.
         Look at their 'currentContext' and ask a clarifying question. Keep the conversation flowing smoothly in English. Set command to "NONE".
@@ -74,6 +79,10 @@ export async function POST(request: Request) {
         - "impact" : Use if they ask about his skills, AI expertise, why to hire him, or client reviews.
         - "connect" : Use if they want to contact him or hire him.
         - "identity" : Use if they want to go home, back to the main screen, or if they simply say "go back" or "back".
+        - "resume" : Use if they ask for "show me your resume", "open your cv", "your resume".
+        - "guestbook" : Use if they ask to "open the guestbook", "sign the guestbook", "see guestbook".
+        - "calculator" : Use for "let's see the calculator", "open calculator", "ROI calculator".
+        - "playground" : Use for "open the code playground", "code playground", "playground".
         
         Available Project Targets (Set command to "OPEN_PROJECT"):
         - "shemet" : Use for "Shemet", "the dating app", "Shemet dating".
@@ -188,7 +197,7 @@ export async function POST(request: Request) {
                         command: {
                             type: Type.STRING,
                             description: "The UI command to execute.",
-                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "GO_BACK", "SCROLL", "SUBMIT_FORM"]
+                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "GO_BACK", "SCROLL", "SUBMIT_FORM", "GALLERY_NAV", "OPEN_EXTERNAL_LINK"]
                         },
                         target: {
                             type: Type.STRING,
