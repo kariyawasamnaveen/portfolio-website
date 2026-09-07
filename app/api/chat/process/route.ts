@@ -48,6 +48,11 @@ export async function POST(request: Request) {
         - If they say "next image", "next photo", "show the previous one", use 'GALLERY_NAV' with target "next" or "previous".
         - If they say "open the github repo", "show me the live site", use 'OPEN_EXTERNAL_LINK' with target "github" or "live_demo".
         
+        CRITICAL INSTRUCTION - CODE TERMINAL & SOCIAL:
+        - If they ask to switch to a code tab (e.g., "show me the AI code", "switch to web3", "open the security tab"), use 'SWITCH_CODE_TAB' with target matching one of: "agentic", "edge", "healing", "zerotrust", "web3", "cicd". Only use this when on the logic zone.
+        - If they ask to toggle between code and explanation (e.g., "show me the explanation", "show the code", "switch to logic view"), use 'TOGGLE_CODE_VIEW' with target "code" or "explanation".
+        - If they ask to open a social link (e.g., "open your LinkedIn", "go to your GitHub", "copy your email"), use 'OPEN_SOCIAL_LINK' with target "linkedin", "github", or "email".
+        
         CRITICAL INSTRUCTION - GRACEFUL FALLBACKS:
         If the user's audio is unintelligible, just background noise, or a mumbled half-sentence, DO NOT just say 'I don't understand'.
         Look at their 'currentContext' and ask a clarifying question. Keep the conversation flowing smoothly in English. Set command to "NONE".
@@ -197,7 +202,7 @@ export async function POST(request: Request) {
                         command: {
                             type: Type.STRING,
                             description: "The UI command to execute.",
-                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "GO_BACK", "SCROLL", "SUBMIT_FORM", "GALLERY_NAV", "OPEN_EXTERNAL_LINK"]
+                            enum: ["NONE", "NAVIGATE", "OPEN_PROJECT", "FILL_FORM", "HIGHLIGHT_CODE", "GO_BACK", "SCROLL", "SUBMIT_FORM", "GALLERY_NAV", "OPEN_EXTERNAL_LINK", "SWITCH_CODE_TAB", "TOGGLE_CODE_VIEW", "OPEN_SOCIAL_LINK"]
                         },
                         target: {
                             type: Type.STRING,

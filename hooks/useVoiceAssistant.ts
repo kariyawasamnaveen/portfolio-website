@@ -211,6 +211,20 @@ export function useVoiceAssistant({
                     setCodeHighlight(null);
                     setActiveZone('identity');
                 }
+            } else if (data.command === 'SWITCH_CODE_TAB') {
+                if (data.target) {
+                    setActiveTech(data.target as TechId);
+                }
+            } else if (data.command === 'TOGGLE_CODE_VIEW') {
+                window.dispatchEvent(new CustomEvent('ai-toggle-code-view', { detail: data.target }));
+            } else if (data.command === 'OPEN_SOCIAL_LINK') {
+                if (data.target === 'linkedin') {
+                    window.open('https://www.linkedin.com/in/naveen-kariyawasam-b85507229/', '_blank');
+                } else if (data.target === 'github') {
+                    window.open('https://github.com/kariyawasamnaveen', '_blank');
+                } else if (data.target === 'email') {
+                    navigator.clipboard.writeText('hknskariyawasamnaveen@gmail.com');
+                }
             } else if (data.command === 'GALLERY_NAV') {
                 if (data.target === 'next') {
                     window.dispatchEvent(new CustomEvent('ai-gallery-next'));
@@ -310,6 +324,20 @@ export function useVoiceAssistant({
                 }
             } else if (data.command === 'CLOSE_MODAL') {
                 setSelectedProject(null);
+            } else if (data.command === 'SWITCH_CODE_TAB') {
+                if (data.target) {
+                    setActiveTech(data.target as TechId);
+                }
+            } else if (data.command === 'TOGGLE_CODE_VIEW') {
+                window.dispatchEvent(new CustomEvent('ai-toggle-code-view', { detail: data.target }));
+            } else if (data.command === 'OPEN_SOCIAL_LINK') {
+                if (data.target === 'linkedin') {
+                    window.open('https://www.linkedin.com/in/naveen-kariyawasam-b85507229/', '_blank');
+                } else if (data.target === 'github') {
+                    window.open('https://github.com/kariyawasamnaveen', '_blank');
+                } else if (data.target === 'email') {
+                    navigator.clipboard.writeText('hknskariyawasamnaveen@gmail.com');
+                }
             } else if (data.command === 'GALLERY_NAV') {
                 if (data.target === 'next') {
                     window.dispatchEvent(new CustomEvent('ai-gallery-next'));

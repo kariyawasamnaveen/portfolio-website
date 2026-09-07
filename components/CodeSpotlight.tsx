@@ -24,6 +24,15 @@ export default function CodeSpotlight({
 }: CodeSpotlightProps) {
     const [activeTab, setActiveTab] = useState<'code' | 'explanation'>('code')
 
+    useEffect(() => {
+        const onToggle = (e: Event) => {
+            const view = (e as CustomEvent).detail;
+            if (view === 'code' || view === 'explanation') setActiveTab(view);
+        };
+        window.addEventListener('ai-toggle-code-view', onToggle);
+        return () => window.removeEventListener('ai-toggle-code-view', onToggle);
+    }, []);
+
     return (
         <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
             {/* Header */}
